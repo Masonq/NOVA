@@ -12,12 +12,6 @@ const GLYPH = {
   aperture: Camera, brush: Palette, hex: PenNib, cube: Cube, sparkle: Sparkle,
   calm: Waves, energy: Lightning, mic: Microphone, whisper: Feather,
 };
-/** How each picture comes alive while its tile is selected (like the equalizer of «Звук»). */
-export const ANIM = {
-  wave: "bob", rings: "spin", vinyl: "pulse", bars: "thump", grid: "thump", bolt: "wiggle", mist: "float", notes: "bob", film: "clap", leaf: "sway",
-  aperture: "flash", brush: "wiggle", hex: "write", cube: "turn", sparkle: "twinkle",
-  calm: "drift", energy: "flash", mic: "bob", whisper: "sway",
-};
 export function Motif({ m, size = 34 }) {
   const G = GLYPH[m];
   return G ? <G size={size} weight="duotone" color="#fff" /> : null;
@@ -34,7 +28,7 @@ export function Tiles({ label, hint, items, value, onChange, grid }) {
           return (
             <button key={it.v} role="radio" aria-checked={on} className={"g-tile" + (on ? " on" : "")} style={{ "--ga": it.a, "--gb": it.b }}
               onClick={() => { haptic("select"); onChange(it.v); }}>
-              <span className={"g-ic a-" + ANIM[it.m]} aria-hidden="true"><Motif m={it.m} size={grid ? 28 : 34} /></span>
+              <span className="g-ic" aria-hidden="true"><Motif m={it.m} size={grid ? 28 : 34} /></span>
               <span>{it.t}{it.sub && <small>{it.sub}</small>}</span>
               {on && <i className="g-check"><Icon n="check" s={11} w={3} /></i>}
             </button>);
@@ -82,7 +76,7 @@ export function CardChoice({ label, hint, items, value, onChange }) {
 
 function FIcon({ tone }) {
   const G = { wild: MagicWand, gold: Diamond, sound: SpeakerHigh }[tone] || Sparkle;
-  return <span className={"f-ic a-" + ({ wild: "wiggle", gold: "twinkle" }[tone] || "pulse")}><G size={20} weight="duotone" /></span>;
+  return <span className="f-ic"><G size={20} weight="duotone" /></span>;
 }
 export { MusicNotes, MicrophoneStage };
 
@@ -92,7 +86,6 @@ export function FeatureToggle({ on, onChange, title, sub, subOn, icon, tone = "w
     <button className={"wild t-" + tone + (on ? " on" : "")} role="switch" aria-checked={on} onClick={() => { haptic(on ? "select" : "medium"); onChange(!on); }}>
       <span className="wild-ic" aria-hidden="true">
         {tone === "sound" && on ? <span className="eq"><i /><i /><i /><i /></span> : <FIcon tone={tone} />}
-        {on && tone !== "sound" && <><i className="sp s1" /><i className="sp s2" /><i className="sp s3" /></>}
       </span>
       <span className="sr-t"><span>{title}</span><small>{on && subOn ? subOn : sub}</small></span>
       <span className={"switch" + (on ? " on" : "")} aria-hidden="true"><i /></span>

@@ -31,10 +31,10 @@ function Greeting({ text }) {
 }
 
 const TOOLS = [
-  { k: "image", t: "Фото", G: ImageSquare, an: "flash", c: "linear-gradient(135deg, #4FA3FF, #6E5BFF)" },
-  { k: "video", t: "Видео", G: VideoCamera, an: "bob", c: "linear-gradient(135deg, #FF6A5B, #FF3D8B)" },
-  { k: "music", t: "Музыка", G: MusicNotes, an: "wiggle", c: "linear-gradient(135deg, #B15CFF, #EC4899)" },
-  { k: "tts", t: "Озвучка", G: Waveform, an: "pulse", c: "linear-gradient(135deg, #2DD4BF, #4FA3FF)" },
+  { k: "image", t: "Фото", G: ImageSquare, c: "linear-gradient(135deg, #4FA3FF, #6E5BFF)" },
+  { k: "video", t: "Видео", G: VideoCamera, c: "linear-gradient(135deg, #FF6A5B, #FF3D8B)" },
+  { k: "music", t: "Музыка", G: MusicNotes, c: "linear-gradient(135deg, #B15CFF, #EC4899)" },
+  { k: "tts", t: "Озвучка", G: Waveform, c: "linear-gradient(135deg, #2DD4BF, #4FA3FF)" },
 ];
 const SUGGEST = [
   { t: "Обложка трека", go: "image", p: { prompt: "Обложка трека: ночной город в неоне, атмосферно", style: "Арт" } },
@@ -88,7 +88,7 @@ export default function Home({ go, me, reloadMe }) {
       </div>
       <nav className="tools" aria-label="Инструменты">
         {TOOLS.map((t) => <button key={t.k} className={"tool" + (t.k === "agent" ? " accent" : "")} onClick={() => tool(t)}>
-          <span className="tool-ic grad" style={{ background: t.c }}><span className={"f-ic a-" + t.an}><t.G size={26} weight="duotone" color="#fff" /></span></span><span className="tool-t">{t.t}</span></button>)}
+          <span className="tool-ic grad" style={{ background: t.c }}><span className="f-ic"><t.G size={26} weight="duotone" color="#fff" /></span></span><span className="tool-t">{t.t}</span></button>)}
       </nav>
       <section aria-labelledby="res-h">
         <div className="row-h"><h2 id="res-h">Ваши работы</h2>{done.length > 0 && <button className="link" onClick={() => go("archive")}>Архив</button>}</div>
