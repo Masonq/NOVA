@@ -53,7 +53,7 @@ class JobIn(BaseModel):
 ALLOWED = {
     "image": {"style": {"Фото", "Арт", "Логотип", "3D", "Аниме"}, "aspect": {"1:1", "16:9", "9:16", "3:4", "4:3"}},
     "video": {"duration": {5, 10, 15}, "quality": {"720p", "1080p"}, "aspect": {"16:9", "9:16", "1:1"}},
-    "music": {"genre": None, "instrumental": {True, False}},
+    "music": {"genre": None, "mood": None, "instrumental": {True, False}},
     "tts": {"tone": {"Спокойно", "Бодро", "Шёпот", "Диктор"}},
 }
 LIMITS = {"image": 1200, "video": 1500, "music": 2900, "tts": 5000}
@@ -80,8 +80,6 @@ def _clean(kind: str, params: dict) -> dict:
     if kind == "tts":
         from ..ai import VOICES
         out["voice"] = params.get("voice") if params.get("voice") in VOICES else s.tts_voice
-    if kind == "music" and "mood" in params:
-        out["mood"] = str(params["mood"])[:60]
     return out
 
 

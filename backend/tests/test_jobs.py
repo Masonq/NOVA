@@ -116,7 +116,8 @@ async def test_video_flow_and_failure_refund(client, monkeypatch):
 async def test_music_and_tts(client, monkeypatch):
     from app import runner, kie, storage, ai
     async def create(model, inp):
-        assert model == "ai-music-api/generate" and inp["model"] == "V6" and inp["instrumental"] is False and inp["style"] == "Lo-fi"
+        assert model == "ai-music-api/generate" and inp["model"] == "V6" and inp["custom_mode"] is True
+        assert inp["instrumental"] is False and inp["style"] == "Lo-fi" and inp["lyrics"].startswith("[Verse 1]") and inp["title"]
         return "m1"
     async def wait(task, tick, timeout):
         return {"data": [{"audio_url": "https://a/1.mp3", "image_url": "https://a/1.jpg", "title": "Night", "duration": 134},
@@ -126,7 +127,7 @@ async def test_music_and_tts(client, monkeypatch):
     h, jid = await _job(client, 8301, "music", "бит для работы", {"genre": "Lo-fi", "instrumental": False})
     await runner.run_job({}, jid)
     f = (await client.get(f"/api/jobs/{jid}", headers=h)).json()["files"]
-    assert len(f) == 2 and f[0]["title"] == "Night" and f[0]["cover"].endswith("cover1.jpg")
+    assert len(f) == 1 and f[0]["title"] == "Night" and f[0]["cover"].endswith("cover1.jpg")
     async def speech(text, voice=None, instructions=""):
         assert voice == "Puck" and "шёпот" in instructions.lower()
         return ai.pcm_to_wav(b"\x00\x00" * 24000)
@@ -188,7 +189,8 @@ async def test_music_brief_replaces_artist_name(client, monkeypatch):
     sent = {}
     async def brief(prompt, genre="", mood="", vocal=False):
         assert "icegergert" in prompt and vocal is True
-        return {"style": "melodic russian hip-hop, trap beats, autotune vocals, 140 bpm", "title": "Ночной город", "idea": "Песня о ночном городе"}
+        return {"style": "melodic russian hip-hop, trap beats, autotune vocals, 140 bpm", "title": "Ночной город",
+                "lyrics": "[Verse 1]\nНочной город не спит\n[Chorus]\nМы горим"}
     async def create(model, inp):
         sent.update(inp); return "m9"
     async def wait(task, tick, timeout):
@@ -201,3 +203,5 @@ async def test_music_brief_replaces_artist_name(client, monkeypatch):
     j = (await client.get(f"/api/jobs/{jid}", headers=h)).json()
     assert j["status"] == "done" and j["files"][0]["title"] == "Ночной город"
     assert "icegergert" not in json.dumps(sent, ensure_ascii=False).lower() and sent["style"].startswith("melodic") and sent["instrumental"] is False
+    assert sent["custom_mode"] is True and sent["title"] == "Ночной город" and "[Chorus]" in sent["lyrics"]
+    assert j["params"]["brief"]["lyrics"].startswith("[Verse 1]")

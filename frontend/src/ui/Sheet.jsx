@@ -67,6 +67,8 @@ export function JobSheet({ job, file, onClose, go, onChange }) {
       {f && job.kind === "image" && <img className="sheet-media" src={f.url} alt={job.prompt} />}
       {f && job.kind === "video" && <video className="sheet-media" src={f.url} poster={thumbOf(job) || undefined} controls playsInline preload="metadata" />}
       {f && (job.kind === "music" || job.kind === "tts") && <Player src={f.url} title={f.title || job.prompt.slice(0, 40)} sub={job.kind === "tts" ? job.params?.voice : job.params?.genre} cover={f.cover_url || null} />}
+      {job.kind === "music" && job.params?.brief?.lyrics && (
+        <details className="lyrics"><summary>Текст песни</summary><pre>{job.params.brief.lyrics}</pre></details>)}
       {f && <Row ic="download" t="Скачать" on={() => saveFile(f.url, name)} />}
       {f && <Row ic="share" t="Поделиться" sub="страница с превью для Telegram и соцсетей" on={() => shareJob(job)} />}
       {job.kind === "image" && f && <Row ic="video" t="Оживить в видео" sub="картинка станет первым кадром" cls="accent" on={() => { onClose(); go("video", { image: f.url }); }} />}

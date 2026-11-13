@@ -180,26 +180,30 @@ for photos: realistic camera and lens details; when a reference photo is attache
 Answer with the prompt only, 60–120 words, no preamble."""
 
 
-MUSIC_BRIEF = """You prepare a request for the Suno music model. Suno rejects real artist and band names, so never output them.
-From the user's request (usually Russian) and the chosen genre/mood return strict JSON:
-{"style": "comma-separated English style tags, 6–12 tags: genre, sub-genre, tempo/BPM, instruments, vocal type and gender, mood, production",
- "title": "short track title in the user's language, max 40 chars",
- "idea": "what the song is about, in the user's language, max 300 chars, no artist names"}
-When the user names an artist, describe that artist's typical sound in the tags instead of the name."""
+MUSIC_BRIEF = """You are a music producer preparing a request for the Suno model (custom mode).
+Suno rejects real artist and band names: never output them; describe the artist's typical sound instead.
+Follow the user's description first. Genre and mood, when given, refine it; when they are empty, infer them from the description.
+Return strict JSON:
+{"title": "track title in the user's language, max 40 chars",
+ "style": "comma-separated English tags, 8–14: genre and sub-genre, tempo/BPM, key instruments, vocal type and gender, mood, production style",
+ "lyrics": "the full song text in the user's language (Russian by default) with section tags on separate lines:
+[Verse 1] [Pre-Chorus] [Chorus] [Verse 2] [Chorus] [Bridge] [Chorus] [Outro]; 2–3 minutes of singing, vivid concrete images,
+natural rhymes, a catchy repeatable chorus, about the user's topic; empty string when the track is instrumental"}"""
 
 
 async def music_brief(prompt: str, genre: str = "", mood: str = "", vocal: bool = False) -> dict:
-    """Turns «a track like <artist>» into Suno-safe style tags, a title and an idea. Falls back to simple values."""
-    fallback = {"style": ", ".join(x for x in (genre, mood) if x), "title": "", "idea": prompt[:300]}
+    """Writes the lyrics, the style tags and the title for Suno custom mode. Falls back to simple values."""
+    fallback = {"title": prompt[:40], "style": ", ".join(x for x in (genre, mood) if x) or "modern pop, catchy, polished production", "lyrics": ""}
     try:
         raw = await complete("google/gemini-3.8-flash", [{"role": "system", "content": MUSIC_BRIEF}, {"role": "user", "content":
-                             f"Request: {prompt}\nGenre: {genre or 'any'}\nMood: {mood or 'any'}\nVocals: {'yes' if vocal else 'no, instrumental'}"}],
-                             timeout=20, temperature=0.5, max_tokens=400, response_format={"type": "json_object"})
+                             f"Description: {prompt}\nGenre: {genre or 'auto'}\nMood: {mood or 'auto'}\nVocals: {'yes, sung lyrics' if vocal else 'no, instrumental'}"}],
+                             timeout=40, temperature=0.8, max_tokens=2500, response_format={"type": "json_object"})
         import re as _re
         m = _re.search(r"\{.*\}", raw or "", _re.S)
         d = json.loads(m.group(0)) if m else {}
-        out = {"style": str(d.get("style") or "")[:900], "title": str(d.get("title") or "")[:80], "idea": str(d.get("idea") or "")[:2900]}
-        return {k: (v or fallback[k]) for k, v in out.items()}
+        out = {"title": str(d.get("title") or "")[:80], "style": str(d.get("style") or "")[:950],
+               "lyrics": str(d.get("lyrics") or "")[:4900] if vocal else ""}
+        return {k: (out[k] or fallback[k]) for k in out}
     except Exception:
         return fallback
 

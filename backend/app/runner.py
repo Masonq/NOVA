@@ -147,9 +147,13 @@ async def run_music(job: Job):
         brief = await ai.music_brief(job.prompt, p.get("genre", ""), p.get("mood", ""), vocal)
         p = {**p, "brief": brief}
         await _update(job.id, params=p)
-    inp = {"prompt": brief["idea"][:2900], "custom_mode": False, "instrumental": not vocal, "model": "V6"}
-    if brief.get("style"):
-        inp["style"] = brief["style"]
+    # custom mode: Suno sings exactly these lyrics in exactly this style
+    inp = {"custom_mode": True, "instrumental": not vocal, "model": "V6",
+           "title": (brief.get("title") or job.prompt)[:80], "style": brief.get("style") or "modern pop"}
+    if vocal and brief.get("lyrics"):
+        inp["lyrics"] = brief["lyrics"]
+    elif vocal:
+        inp["prompt"] = job.prompt[:2900]
     task = p.get("task")
     if not task:
         await _update(job.id, status="running", progress=5, stage="Пишу трек")
@@ -164,7 +168,7 @@ async def run_music(job: Job):
     if isinstance(res, dict) and not tracks and res.get("resultUrls"):
         tracks = [{"audio_url": u} for u in res["resultUrls"]]
     files = []
-    for i, t in enumerate(tracks[:2]):
+    for i, t in enumerate(tracks[:1]):      # Suno makes two takes; we keep the first one
         url = t.get("audio_url") or t.get("audioUrl") or t.get("stream_audio_url")
         if not url:
             continue
