@@ -29,7 +29,7 @@ async def test_track_options_reach_suno(client, monkeypatch):
     h, jid = await _song(client, monkeypatch, 9701, {"length": 60, "avoid": "без гитары, без автотюна", "wild": True}, sent)
     assert sent["model"] == "V6_WILD" and sent["duration"] == 60 and sent["negative_tags"] == "без гитары, без автотюна"
     assert sent["seconds"] == 60
-    r = await client.post("/api/jobs", json={"kind": "music", "prompt": "трек", "params": {"length": 45}}, headers=h)
+    r = await client.post("/api/jobs", json={"kind": "music", "prompt": "трек", "params": {"length": 50}}, headers=h)
     assert r.status_code == 422
 
 

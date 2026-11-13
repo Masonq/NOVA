@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { StudioTop, Opts, OptsMulti, PromptBox, Dock, Progress, Toggle } from "../ui/Studio.jsx";
+import { StudioTop, Opts, PromptBox, Dock, Progress } from "../ui/Studio.jsx";
+import { GenreTiles, MoodPad, LengthWave, VocalCards, AvoidField, WildToggle, moodText, moodColor, GENRE_ART } from "../ui/MusicControls.jsx";
 import Sheet, { JobSheet } from "../ui/Sheet.jsx";
 import Icon from "../ui/Icon.jsx";
 import { api } from "../api.js";
@@ -9,9 +10,6 @@ import { priceOf, parseSections } from "../jobs.js";
 import { toast } from "../ui/Toast.jsx";
 import { haptic } from "../tg.js";
 
-const GENRES = ["Авто", "Рэп", "Поп", "Lo-fi", "Хип-хоп", "Электроника", "Рок", "Эмбиент", "Джаз", "Кино"];
-const MOODS = ["Авто", "Спокойно", "Энергично", "Грустно", "Романтично", "Эпично"];
-const LENGTHS = [{ v: 0, t: "Авто" }, { v: 30, t: "30 с" }, { v: 60, t: "1 мин" }, { v: 120, t: "2 мин" }, { v: 180, t: "3 мин" }];
 const coverUrl = (f) => f.cover_url || null;
 const VOC = { male: "мужской вокал", female: "женский вокал", duet: "дуэт" };
 
@@ -22,7 +20,7 @@ export default function MusicStudio({ go, me, reloadMe, params }) {
   const openPick = () => { setPick(true); api("/api/jobs?limit=40").then((r) => setTts(r.filter((j) => j.kind === "tts" && j.status === "done"))).catch(() => setTts([])); };
   const [prompt, setPrompt] = useState(params?.prompt || "");
   const [genre, setGenre] = useState([]);
-  const [mood, setMood] = useState([]);
+  const [mood, setMood] = useState(null);
   const [voices, setVoices] = useState("auto");
   const [vjVoices, setVjVoices] = useState("same");
   const [vocal, setVocal] = useState(false);
@@ -47,7 +45,8 @@ export default function MusicStudio({ go, me, reloadMe, params }) {
   const s = useStudio("music", reloadMe);
   const list = s.current ? [s.current, ...s.recent.filter((j) => j.id !== s.current.id)] : s.recent;
   return (
-    <main className="screen studio">
+    <main className="screen studio mus">
+      <i className="mus-glow" aria-hidden="true" style={{ color: mood ? moodColor(mood) : genre.length ? GENRE_ART[genre[0]]?.a : "hsl(250 60% 50%)" }} />
       <StudioTop title="Музыка" me={me} go={go} />
       {vj ? (
         <div className="card voicejob">
@@ -61,9 +60,9 @@ export default function MusicStudio({ go, me, reloadMe, params }) {
       <PromptBox value={prompt} onChange={setPrompt} max={2900}
         placeholder={vj ? "Пожелания к музыке — необязательно: темп, инструменты, атмосфера" : vocal ? "О чём песня и как звучит: тема, история, на кого похоже" : "Для чего трек и как звучит: фон для видео, учёба, тренировка"} />
       {!vj && vocal && parseSections(prompt).length > 0 && <p className="muted small mus-tip">Ваш текст с разметкой — Suno споёт его как написано, голоса по пометкам</p>}
-      <OptsMulti label="Жанр" value={genre} options={GENRES} onChange={setGenre} />
-      <OptsMulti label="Настроение" value={mood} options={MOODS} onChange={setMood} />
-      {!vj && <Toggle label="С вокалом" sub={vocal ? "ИИ напишет текст, поёт по‑русски" : "только музыка, без голоса"} on={vocal} onChange={setVocal} />}
+      {!vj && <VocalCards vocal={vocal} onChange={setVocal} />}
+      <GenreTiles value={genre} onChange={setGenre} />
+      <MoodPad value={mood} onChange={setMood} />
       {vj && <Opts label="Кто поёт" value={vjVoices} onChange={setVjVoices}
         hint={{ same: `голос озвучки${vj.voice ? ` · ${vj.voice}` : ""}`, male: "мужской голос", female: "женский голос", duet: "ИИ поделит текст на партии" }[vjVoices]}
         options={[{ v: "same", t: "Как в озвучке" }, { v: "male", t: "Мужской" }, { v: "female", t: "Женский" }, { v: "duet", t: "Дуэт" }]} />}
@@ -75,12 +74,9 @@ export default function MusicStudio({ go, me, reloadMe, params }) {
       {!vj && vocal && !artist && <Opts label="Голос" value={voices} onChange={setVoices}
         hint={{ auto: "ИИ решит по смыслу песни", male: "", female: "", duet: "ИИ распределит части" }[voices]}
         options={[{ v: "auto", t: "Авто" }, { v: "male", t: "Мужской" }, { v: "female", t: "Женский" }, { v: "duet", t: "Дуэт" }]} />}
-      {!vj && <Opts label="Длина" value={length} onChange={setLength} hint={length ? "примерно" : "ИИ решит сам"} options={LENGTHS} />}
-      <label className="field">
-        <span className="opts-h"><span>Без чего</span><small>необязательно</small></span>
-        <input value={avoid} maxLength={200} onChange={(e) => setAvoid(e.target.value)} placeholder="Например: без гитары, без автотюна" />
-      </label>
-      {!vj && <Toggle label="Эксперимент" sub={wild ? "модель V6 Wild — смелее и необычнее, результат непредсказуем" : "необычное звучание на модели V6 Wild"} on={wild} onChange={setWild} />}
+      {!vj && <LengthWave value={length} onChange={setLength} />}
+      <AvoidField value={avoid} onChange={setAvoid} vocal={vocal || !!vj} />
+      {!vj && <WildToggle on={wild} onChange={setWild} />}
       {s.active && (
         <section className="card render" aria-label="Идёт генерация">
           <p className="render-p">{s.active.prompt}</p>
@@ -96,8 +92,8 @@ export default function MusicStudio({ go, me, reloadMe, params }) {
         </section>)}
       <Dock label={vj ? "Создать трек из озвучки" : vocal ? "Создать песню" : "Создать трек"} price={priceOf("music", vj ? { voice_chars: vj.text.length } : {})}
         balance={me?.balance} busy={s.busy} disabled={(!vj && prompt.trim().length < 2) || !!s.active}
-        onClick={() => s.run(prompt.trim() || "Трек из озвучки", { genre: genre.join(", "), mood: mood.join(", "),
-          instrumental: vj ? false : !vocal, ...(avoid.trim() ? { avoid: avoid.trim() } : {}),
+        onClick={() => s.run(prompt.trim() || "Трек из озвучки", { genre: genre.join(", "), mood: moodText(mood),
+          instrumental: vj ? false : !vocal, ...(avoid.trim() ? { avoid: avoid.trim().replace(/,\s*$/, "") } : {}),
           ...(vj ? { voice_job: vj.id, voices: vjVoices } : { ...(length ? { length } : {}), ...(wild ? { wild } : {}),
             ...(vocal ? (artist ? { artist: artist.id } : { voices }) : {}) }) })} />
       <Sheet open={artPick} onClose={() => setArtPick(false)} title="Исполнитель">

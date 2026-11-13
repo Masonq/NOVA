@@ -54,7 +54,7 @@ ALLOWED = {
     "image": {"style": {"Фото", "Арт", "Логотип", "3D", "Аниме"}, "aspect": {"1:1", "16:9", "9:16", "3:4", "4:3"}, "hq": {True, False}},
     "video": {"duration": {5, 10, 15}, "quality": {"720p", "1080p"}, "aspect": {"16:9", "9:16", "1:1"}},
     "music": {"genre": None, "mood": None, "instrumental": {True, False}, "voice_job": None, "voices": {"auto", "same", "male", "female", "duet"},
-              "length": {0, 30, 60, 120, 180}, "avoid": None, "wild": {True, False}, "artist": None},
+              "length": {0, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 210, 240}, "avoid": None, "wild": {True, False}, "artist": None},
     "tts": {"tone": {"Спокойно", "Бодро", "Шёпот", "Диктор"}},
 }
 LIMITS = {"image": 1200, "video": 1500, "music": 2900, "tts": 5000}
