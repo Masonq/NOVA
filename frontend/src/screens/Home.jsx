@@ -7,6 +7,7 @@ import { haptic } from "../tg.js";
 import { useActiveJobs, KIND, thumbOf } from "../jobs.js";
 import { JobSheet } from "../ui/Sheet.jsx";
 import Carousel from "../ui/Carousel.jsx";
+import Orb from "../ui/Orb.jsx";
 
 function greeting() {
   const h = new Date().getHours();
@@ -76,7 +77,7 @@ export default function Home({ go, me }) {
       </div>
       <nav className="tools" aria-label="Инструменты">
         {TOOLS.map((t) => <button key={t.k} className={"tool" + (t.k === "agent" ? " accent" : "")} onClick={() => tool(t)}>
-          <span className="tool-ic"><Icon n={t.i} s={20} /></span><span className="tool-t">{t.t}</span></button>)}
+          <span className="tool-ic">{t.k === "agent" ? <Orb size={52} /> : <Icon n={t.i} s={20} />}</span><span className="tool-t">{t.t}</span></button>)}
       </nav>
       <section aria-labelledby="res-h">
         <div className="row-h"><h2 id="res-h">Ваши работы</h2>{done.length > 0 && <button className="link" onClick={() => go("archive")}>Архив</button>}</div>

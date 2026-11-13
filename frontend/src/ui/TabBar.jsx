@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import Icon from "./Icon.jsx";
 import { haptic } from "../tg.js";
+import Orb from "./Orb.jsx";
 
 /** Glass capsule: icons, the active tab opens with its label, a lens slides between tabs. */
 export default function TabBar({ tabs, active, onSelect, side }) {
@@ -57,7 +58,7 @@ export default function TabBar({ tabs, active, onSelect, side }) {
       </div>
       {side && (
         <button className={"gnav-side" + (side.accent ? " accent" : "")} aria-label={side.label} onClick={() => { haptic("light"); side.onClick(); }}>
-          <Icon n={side.i} s={21} />
+          {side.orb ? <Orb size={48} /> : <Icon n={side.i} s={21} />}
           {side.badge ? <b className="gnav-badge">{side.badge}</b> : null}
         </button>)}
     </nav>);

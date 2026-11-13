@@ -75,7 +75,7 @@ export default function App() {
       {screen}
       {!["chat", "image", "video", "music", "tts", "feed"].includes(route) && (
         <TabBar tabs={TABS} active={TABS.find((t) => t.k === route) ? route : "home"} onSelect={(k) => go(k)}
-          side={{ i: "agent", label: "Голосовой агент", accent: true, onClick: () => toast("Голосовой агент появится в следующем обновлении") }} />)}
+          side={{ orb: true, label: "Голосовой агент", accent: true, onClick: () => toast("Голосовой агент появится в следующем обновлении") }} />)}
       <Toaster />
     </div>);
 }
