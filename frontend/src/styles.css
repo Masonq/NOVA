@@ -308,6 +308,8 @@ html.sheet-open .app *:not(.sheet-wrap):not(.sheet-wrap *) {
 @keyframes fade { from { opacity: 0; } }
 .sheet { will-change: transform; width: 100%; max-width: 560px; max-height: 92dvh; overflow-y: auto; background: #141418; border: 1px solid var(--line); border-bottom: none; border-radius: 26px 26px 0 0; padding: 8px 16px calc(16px + var(--safe-b)); display: flex; flex-direction: column; gap: 6px; transform: translateY(100%); transition: transform .34s cubic-bezier(.2,.9,.25,1); }
 .sheet-wrap.in .sheet { transform: none; }
+/* blocks inside a sheet keep their height; a tall sheet scrolls instead of squashing them */
+.sheet > * { flex-shrink: 0; }
 .grab { width: 38px; height: 5px; border-radius: 3px; background: #3A3A42; align-self: center; margin-bottom: 8px; }
 .sheet-head { display: flex; align-items: center; gap: 12px; padding: 4px 0 10px; }
 .sh-thumb { width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0; background-size: cover; background-position: center; }
