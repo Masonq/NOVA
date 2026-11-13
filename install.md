@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-13 23:16 UTC
+# Установка NOVA 2026-11-13 23:22 UTC
 
-- Версия: 65044a8 Music screen redesign: genre cover tiles, mood pad, stretchable length wave, vocal cards, «Без чего» quick picks, Эксперимент with sparks
+- Версия: 926f960 Studios redesign: style and intonation tiles, format shapes, duration/quality cards with prices, glowing switches, prompt ideas, voice avatars
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
