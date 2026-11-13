@@ -484,6 +484,10 @@ img.sheet-media { object-fit: contain; background: var(--card); }
 .qr svg path { fill: #0A0A0C; }
 .qr-steps { margin: 0; padding-left: 20px; text-align: left; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--soft); width: 250px; }
 .qr-steps li::marker { color: var(--accent); font-weight: 700; }
+@media (max-width: 560px) {                       /* narrow window: the code above, the steps below */
+  .qr-card { flex-direction: column; gap: 16px; padding: 18px 18px 20px; }
+  .qr-steps { width: auto; max-width: 280px; }
+}
 
 /* ---------- onboarding ---------- */
 .boot { position: fixed; inset: 0; background: var(--bg); }

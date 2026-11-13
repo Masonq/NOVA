@@ -4,7 +4,8 @@ import { api, auth } from "../api.js";
 import { openLink } from "../tg.js";
 import Orb from "../ui/Orb.jsx";
 
-const desktop = typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches && window.innerWidth >= 760;
+// a computer is recognised by its mouse, not by the window width (a narrow browser window is still a computer)
+const desktop = typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
 function QR({ text }) {
   const svg = (() => { const q = qrcode(0, "M"); q.addData(text); q.make(); return q.createSvgTag({ cellSize: 6, margin: 0, scalable: true }); })();
@@ -16,6 +17,7 @@ export default function Login({ onDone }) {
   const [code, setCode] = useState(null);
   const [state, setState] = useState("idle"); // idle | waiting | expired | error
   const [err, setErr] = useState("");
+  const [showQr, setShowQr] = useState(desktop);
   const timer = useRef();
   useEffect(() => () => clearInterval(timer.current), []);
 
@@ -43,15 +45,16 @@ export default function Login({ onDone }) {
       <div className="login-orb"><Orb size={desktop ? 150 : 180} dense /></div>
       <h1>NOVA</h1>
       <p className="muted">Голосовой ИИ-агент: картинки, видео, музыка и&nbsp;озвучка в&nbsp;одном месте.</p>
-      {desktop && code && state !== "expired" && (
+      {showQr && code && state !== "expired" && (
         <div className="qr-card">
           <QR text={code.link} />
           <ol className="qr-steps"><li>В&nbsp;Telegram откройте NOVA → Профиль → «Войти на&nbsp;компьютере»</li><li>Наведите сканер на&nbsp;код и&nbsp;подтвердите</li><li>Эта страница войдёт сама</li></ol>
         </div>)}
-      {desktop && state === "expired" && <button className="cta" onClick={() => fresh(false)}>Обновить код</button>}
-      {!desktop && <button className="cta" onClick={() => fresh(true)}>{state === "waiting" ? "Ждём подтверждения в Telegram…" : "Войти через Telegram"}</button>}
+      {showQr && state === "expired" && <button className="cta" onClick={() => fresh(false)}>Обновить код</button>}
+      {!desktop && <button className="cta" onClick={() => fresh(true)}>{state === "waiting" && !showQr ? "Ждём подтверждения в Telegram…" : "Войти через Telegram"}</button>}
       {desktop && code && <p className="muted small qr-alt">Или наведите камеру телефона и нажмите «Старт» в боте. <button className="link" onClick={() => openLink(code.link)}>Открыть Telegram на компьютере</button></p>}
-      {!desktop && state === "waiting" && <p className="muted small">Нажмите «Старт» в боте — страница войдёт сама. <button className="link" onClick={() => fresh(true)}>Открыть бота снова</button></p>}
+      {!desktop && state === "waiting" && !showQr && <p className="muted small">Нажмите «Старт» в боте — страница войдёт сама. <button className="link" onClick={() => fresh(true)}>Открыть бота снова</button></p>}
+      {!desktop && !showQr && <button className="link" onClick={() => { setShowQr(true); fresh(false); }}>Показать QR-код для входа с другого устройства</button>}
       {err && <p className="err">{err}</p>}
     </main>);
 }
