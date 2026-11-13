@@ -64,5 +64,7 @@ def cost(kind: str, params: dict, prompt: str = "") -> int:
             extra = max(int(PRICE["tts_min"]), int(math.ceil(int(params["voice_chars"]) / 1000 * PRICE["tts_1k"])))
         return int(PRICE["music"]) + extra
     if kind == "tts":
-        return max(int(PRICE["tts_min"]), int(math.ceil(len(prompt) / 1000 * PRICE["tts_1k"])))
+        import re
+        spoken = re.sub(r"(?m)^\s*\[[^\]]{1,82}\]\s*$", "", prompt or "")      # «[Куплет 1: мужской]» is not read aloud
+        return max(int(PRICE["tts_min"]), int(math.ceil(len(spoken.strip()) / 1000 * PRICE["tts_1k"])))
     raise ValueError(kind)

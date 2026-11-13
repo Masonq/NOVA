@@ -216,6 +216,16 @@ h2 { font-size: 12.5px; font-weight: 600; color: var(--mut); margin: 0; }
 .vj-add > svg:first-child { color: #8EC1FF; }
 .vj-add > svg:last-child { margin-left: 6px; color: var(--mut2); }
 
+.tts-tip { margin: -2px 2px 0; line-height: 1.55; }
+.tts-tip code, .mus-tip code { font: 12px ui-monospace, monospace; padding: 1px 5px; border-radius: 6px; background: rgba(255,255,255,.07); color: var(--soft); white-space: nowrap; }
+.parts { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; }
+.parts b { font-size: 13.5px; font-weight: 600; }
+.parts-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.part { font-size: 12px; padding: 5px 9px; border-radius: 9px; background: rgba(255,255,255,.06); color: var(--soft); }
+.part.male { background: rgba(10,132,255,.16); color: #9CC8FF; }
+.part.female { background: rgba(255,90,170,.15); color: #FFA6D0; }
+.part.duet { background: rgba(170,120,255,.16); color: #CDB0FF; }
+
 /* ---------- island, tasks ---------- */
 .island { position: relative; display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 16px; border-radius: 22px; background: #16161A; border: 1px solid var(--line2); overflow: hidden; text-align: left; }
 .isl-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px rgba(10,132,255,.2); animation: pulse 1.4s ease-in-out infinite; flex-shrink: 0; }

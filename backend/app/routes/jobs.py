@@ -80,6 +80,10 @@ def _clean(kind: str, params: dict) -> dict:
     if kind == "tts":
         from ..ai import VOICES
         out["voice"] = params.get("voice") if params.get("voice") in VOICES else s.tts_voice
+        for k, g in (("male", "мужской"), ("female", "женский")):      # voices for marked parts
+            v = params.get(k)
+            if v in VOICES and g in VOICES[v]:
+                out[k] = v
     return out
 
 

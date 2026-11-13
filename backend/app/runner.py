@@ -160,7 +160,11 @@ async def run_music_from_voice(job: Job, p: dict):
         await _update(job.id, status="running", progress=4, stage="Начитываю в ритм")
         rap = any(g.strip() in RHYTHM for g in (p.get("genre") or "").split(","))
         how = RHYTHM["Рэп"] if rap else RHYTHM_DEFAULT
-        if mode == "duet":       # the text is split between a male and a female voice and glued into one vocal track
+        sp = (src.params or {})
+        if sp.get("sections") and mode in ("same", "auto"):   # the voice-over was marked by parts: same parts, same voices
+            wav = await ai.read_sections(sp["sections"], sp.get("male") or "Orus", sp.get("female") or "Sulafat", voice, how)
+            p = {**p, "marked": True}
+        elif mode == "duet":       # the text is split between a male and a female voice and glued into one vocal track
             pair = {"male": voice if ai.voice_gender(voice) == "male" else "Orus", "female": voice if ai.voice_gender(voice) == "female" else "Sulafat"}
             parts = await ai.duet_split(text)
             p = {**p, "duet": [{"who": x["who"], "text": x["text"][:400]} for x in parts]}
@@ -181,7 +185,9 @@ async def run_music_from_voice(job: Job, p: dict):
         sung = {"duet": "duet", "male": "male", "female": "female"}.get(mode, ai.voice_gender(voice))
         brief = await ai.music_brief(f"Музыка под готовый вокал с таким текстом: {text[:600]}" + (f". Пожелания: {wish}" if wish else ""),
                                      p.get("genre", ""), p.get("mood", ""), True, sung)
-        lyr = "\n\n".join(f"[{'Male' if x['who'] == 'male' else 'Female'} Vocal]\n{x['text']}" for x in p["duet"]) if p.get("duet") else text
+        sp = (src.params or {})
+        lyr = (ai.suno_lyrics(sp["sections"]) if p.get("marked") and sp.get("sections")
+               else "\n\n".join(f"[{'Male' if x['who'] == 'male' else 'Female'} Vocal]\n{x['text']}" for x in p["duet"]) if p.get("duet") else text)
         p = {**p, "brief": {**brief, "lyrics": lyr[:4900]}}
         brief = p["brief"]
         await _update(job.id, params=p)
@@ -232,6 +238,12 @@ async def run_music(job: Job):
         p = {**p, "brief": brief}
         await _update(job.id, params=p)
     # custom mode: Suno sings exactly these lyrics in exactly this style
+    own = ai.parse_sections(job.prompt) if vocal else []
+    if own:                 # the user's own lyrics with marks: Suno sings them as written, with the voices they ask for
+        brief = {**brief, "lyrics": ai.suno_lyrics(own), "own": True,
+                 "vocals": "duet" if len({x["who"] for x in own if x["who"]}) > 1 else (own[0]["who"] if own[0]["who"] in ("male", "female") else brief.get("vocals", ""))}
+        p = {**p, "brief": brief}
+        await _update(job.id, params=p)
     inp = {"custom_mode": True, "instrumental": not vocal, "model": "V6",
            "title": (brief.get("title") or job.prompt)[:80], "style": brief.get("style") or "modern pop"}
     if vocal and brief.get("lyrics"):
@@ -280,7 +292,16 @@ async def run_tts(job: Job):
     p = job.params or {}
     from .routes.voices import TONES
     await _update(job.id, status="running", progress=15, stage="Озвучиваю")
-    wav = await ai.speech(job.prompt, p.get("voice"), TONES.get(p.get("tone"), ai.STYLE))
+    how = TONES.get(p.get("tone"), ai.STYLE)
+    sections = ai.parse_sections(job.prompt)
+    if sections:            # «[Куплет 1: мужской] … [Припев: женский] …» — every part by its own voice
+        default = p.get("voice") or "Sulafat"
+        male = p.get("male") or (default if ai.voice_gender(default) == "male" else "Orus")
+        female = p.get("female") or (default if ai.voice_gender(default) == "female" else "Sulafat")
+        wav = await ai.read_sections(sections, male, female, default, how)
+        await _update(job.id, params={**p, "sections": sections, "male": male, "female": female})
+    else:
+        wav = await ai.speech(job.prompt, p.get("voice"), how)
     rel = save_bytes(job, "voice.wav", wav)
     mp3 = rel[:-4] + ".mp3"
     if await ffmpeg("-i", str(abs_path(rel)), "-b:a", "96k", str(abs_path(mp3))):

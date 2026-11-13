@@ -5,7 +5,7 @@ import Icon from "../ui/Icon.jsx";
 import { api } from "../api.js";
 import Player from "../ui/Player.jsx";
 import { useStudio } from "../studio.js";
-import { priceOf } from "../jobs.js";
+import { priceOf, parseSections } from "../jobs.js";
 
 const GENRES = ["Авто", "Рэп", "Поп", "Lo-fi", "Хип-хоп", "Электроника", "Рок", "Эмбиент", "Джаз", "Кино"];
 const MOODS = ["Авто", "Спокойно", "Энергично", "Грустно", "Романтично", "Эпично"];
@@ -39,6 +39,7 @@ export default function MusicStudio({ go, me, reloadMe, params }) {
       )}
       <PromptBox value={prompt} onChange={setPrompt} max={2900}
         placeholder={vj ? "Пожелания к музыке — необязательно: темп, инструменты, атмосфера" : vocal ? "О чём песня и как звучит: тема, история, на кого похоже" : "Для чего трек и как звучит: фон для видео, учёба, тренировка"} />
+      {!vj && vocal && parseSections(prompt).length > 0 && <p className="muted small mus-tip">Ваш текст с разметкой — Suno споёт его как написано, голоса по пометкам</p>}
       <OptsMulti label="Жанр" value={genre} options={GENRES} onChange={setGenre} />
       <OptsMulti label="Настроение" value={mood} options={MOODS} onChange={setMood} />
       {!vj && <Toggle label="С вокалом" sub={vocal ? "ИИ напишет текст, поёт по‑русски" : "только музыка, без голоса"} on={vocal} onChange={setVocal} />}

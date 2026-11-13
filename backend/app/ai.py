@@ -269,6 +269,57 @@ async def music_brief(prompt: str, genre: str = "", mood: str = "", vocal: bool 
         return fallback
 
 
+SECTION = re.compile(r"^\s*\[([^\]:]{1,40})(?::\s*([^\]]{1,40}))?\]\s*$")
+
+
+def who_of(spec: str) -> str:
+    """«мужской», «Женский», «дуэт», «вместе», a voice name — to male / female / duet / a voice id ("" if not said)."""
+    t = (spec or "").strip().lower()
+    for name in VOICES:
+        if name.lower() in t:
+            return name
+    if any(w in t for w in ("дуэт", "вместе", "оба", "duet", "both")):
+        return "duet"
+    if "жен" in t or "female" in t or "она" == t:
+        return "female"
+    if "муж" in t or "male" in t or "он" == t:
+        return "male"
+    return ""
+
+
+def parse_sections(text: str) -> list[dict]:
+    """Lyrics marked like «[Куплет 1: мужской]» into parts. Empty when the text has no such marks."""
+    parts, cur = [], {"label": "", "who": "", "lines": []}
+    found = False
+    for line in (text or "").splitlines():
+        m = SECTION.match(line)
+        if m:
+            found = True
+            if any(l.strip() for l in cur["lines"]):
+                parts.append(cur)
+            cur = {"label": m.group(1).strip(), "who": who_of(m.group(2) or m.group(1)), "lines": []}
+        else:
+            cur["lines"].append(line)
+    if any(l.strip() for l in cur["lines"]):
+        parts.append(cur)
+    if not found:
+        return []
+    return [{"label": p["label"], "who": p["who"], "text": "\n".join(l for l in p["lines"]).strip()} for p in parts]
+
+
+def suno_lyrics(sections: list[dict]) -> str:
+    """Sections back to lyrics with Suno's vocal marks: [Куплет 1: Male Vocal]."""
+    tag = {"male": "Male Vocal", "female": "Female Vocal", "duet": "Male & Female Vocals"}
+    out = []
+    for p in sections:
+        who = p["who"] if p["who"] in tag else ("female" if voice_gender(p["who"]) == "female" else "male") if p["who"] in VOICES else ""
+        head = p["label"] or "Verse"
+        out.append(f"[{head}: {tag[who]}]" if who else f"[{head}]")
+        out.append(p["text"])
+        out.append("")
+    return "\n".join(out).strip()
+
+
 def voice_gender(voice: str) -> str:
     return "female" if "женский" in VOICES.get(voice, "") else "male"
 
@@ -277,6 +328,21 @@ DUET_SPLIT = """Split song lyrics between a male and a female singer, like a rea
 Keep the text exactly as given, in order, without changes; only decide who sings each part.
 Prefer whole lines and sections: e.g. verses alternate, the chorus is sung together or by the other voice,
 dialogue lines go to the speaker they belong to. Return strict JSON: {"parts": [{"who": "male|female", "text": "..."}]}"""
+
+
+async def read_sections(sections: list[dict], male: str, female: str, default: str, how: str) -> bytes:
+    """Each part by its voice, a duet part line by line in turns, glued with pauses into one recording."""
+    wavs = []
+    for p in sections:
+        who = p["who"] or ""
+        if who == "duet":
+            lines = [l for l in p["text"].splitlines() if l.strip()] or [p["text"]]
+            for i, l in enumerate(lines):
+                wavs.append(await speech(l, male if i % 2 == 0 else female, how))
+        else:
+            voice = who if who in VOICES else male if who == "male" else female if who == "female" else default
+            wavs.append(await speech(p["text"], voice, how))
+    return join_wavs(wavs, gap=0.45)
 
 
 async def duet_split(text: str) -> list[dict]:

@@ -9,7 +9,7 @@ export const loadPrices = () => api("/api/me/config").then((c) => Object.assign(
 export function priceOf(kind, p = {}, text = "") {
   if (kind === "image") return (p.refs?.length ? PRICE.image_edit : PRICE.image) + (p.hq ? PRICE.image_hq : 0);
   if (kind === "music") return PRICE.music + (p.voice_chars ? Math.max(PRICE.tts_min, Math.ceil((p.voice_chars / 1000) * PRICE.tts_1k)) : 0);
-  if (kind === "tts") return Math.max(PRICE.tts_min, Math.ceil((text.length / 1000) * PRICE.tts_1k));
+  if (kind === "tts") { const spoken = text.replace(/^\s*\[[^\]]{1,82}\]\s*$/gm, "").trim(); return Math.max(PRICE.tts_min, Math.ceil((spoken.length / 1000) * PRICE.tts_1k)); }
   const per = p.quality === "1080p" ? PRICE.video_pro_s : PRICE.video_std_s;
   return Math.ceil(((p.duration || 5) * per * (p.sound ? PRICE.video_sound_k : 1)) / 5) * 5;
 }
@@ -60,3 +60,23 @@ export function thumbOf(j) {
   if (im) return im.thumb_url || im.url;
   return f.find((x) => x.cover_url)?.cover_url || null;
 }
+
+
+/** «[Куплет 1: мужской]» marks in lyrics, the same rules as the server. */
+export function parseSections(text) {
+  const re = /^\s*\[([^\]:]{1,40})(?::\s*([^\]]{1,40}))?\]\s*$/;
+  const out = [];
+  for (const line of (text || "").split("\n")) {
+    const m = line.match(re);
+    if (m) out.push({ label: m[1].trim(), who: whoOf(m[2] || m[1]) });
+  }
+  return out;
+}
+function whoOf(spec) {
+  const t = (spec || "").toLowerCase();
+  if (/дуэт|вместе|оба|duet|both/.test(t)) return "duet";
+  if (/жен|female/.test(t)) return "female";
+  if (/муж|male/.test(t)) return "male";
+  return "";
+}
+export const WHO_RU = { male: "мужской", female: "женский", duet: "дуэт", "": "без пометки" };
