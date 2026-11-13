@@ -1,14 +1,3 @@
-Nov 13 04:39:28 impressed-jade.ptr.network systemd[1]: Started nova-api.service - NOVA API.
-Nov 13 04:39:28 impressed-jade.ptr.network uvicorn[381204]: INFO:     Uvicorn running on http://127.0.0.1:8795 (Press CTRL+C to quit)
-Nov 13 04:39:28 impressed-jade.ptr.network uvicorn[381204]: INFO:     Started parent process [381204]
-Nov 13 04:39:29 impressed-jade.ptr.network uvicorn[381219]: INFO:     Started server process [381219]
-Nov 13 04:39:29 impressed-jade.ptr.network uvicorn[381219]: INFO:     Waiting for application startup.
-Nov 13 04:39:29 impressed-jade.ptr.network uvicorn[381219]: INFO:     Application startup complete.
-Nov 13 04:39:29 impressed-jade.ptr.network uvicorn[381218]: INFO:     Started server process [381218]
-Nov 13 04:39:29 impressed-jade.ptr.network uvicorn[381218]: INFO:     Waiting for application startup.
-Nov 13 04:39:29 impressed-jade.ptr.network uvicorn[381218]: INFO:     Application startup complete.
-Nov 13 04:39:49 impressed-jade.ptr.network uvicorn[381218]: INFO:     89.208.113.147:0 - "GET /api/health HTTP/1.1" 200 OK
-Nov 13 04:39:49 impressed-jade.ptr.network uvicorn[381219]: INFO:     89.208.113.147:0 - "HEAD / HTTP/1.1" 405 Method Not Allowed
 Nov 13 04:39:50 impressed-jade.ptr.network uvicorn[381218]: 2026-11-13 04:39:50,367 httpx INFO HTTP Request: POST https://api.telegram.org/bot9146058422:AAFBUSTqEKWi7jE-uFJ0ymfmdo488IxSg3w/sendMessage "HTTP/1.1 200 OK"
 Nov 13 04:39:50 impressed-jade.ptr.network uvicorn[381218]: INFO:     91.108.5.69:0 - "POST /api/tg/webhook HTTP/1.1" 200 OK
 Nov 13 04:39:55 impressed-jade.ptr.network uvicorn[381218]: INFO:     87.116.135.226:0 - "GET / HTTP/1.1" 200 OK
@@ -34,3 +23,38 @@ Nov 13 04:40:21 impressed-jade.ptr.network uvicorn[381218]: INFO:     87.116.135
 Nov 13 04:40:21 impressed-jade.ptr.network uvicorn[381219]: INFO:     87.116.135.226:0 - "GET /api/me HTTP/1.1" 200 OK
 Nov 13 04:40:33 impressed-jade.ptr.network uvicorn[381219]: INFO:     149.50.96.188:0 - "GET / HTTP/1.1" 200 OK
 Nov 13 04:40:33 impressed-jade.ptr.network uvicorn[381219]: INFO:     149.50.96.188:0 - "GET /assets/index-DaR2U464.js HTTP/1.1" 200 OK
+Nov 13 04:42:29 impressed-jade.ptr.network uvicorn[381218]: INFO:     87.116.135.226:0 - "GET / HTTP/1.1" 200 OK
+Nov 13 04:42:29 impressed-jade.ptr.network uvicorn[381218]: INFO:     87.116.135.226:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 13 04:42:29 impressed-jade.ptr.network uvicorn[381218]: INFO:     87.116.135.226:0 - "POST /api/auth/webapp HTTP/1.1" 200 OK
+Nov 13 04:42:29 impressed-jade.ptr.network uvicorn[381219]: INFO:     87.116.135.226:0 - "GET /api/jobs?limit=8 HTTP/1.1" 200 OK
+Nov 13 04:42:33 impressed-jade.ptr.network uvicorn[381219]: INFO:     87.116.135.226:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 13 04:42:33 impressed-jade.ptr.network uvicorn[381218]: INFO:     87.116.135.226:0 - "GET /api/jobs?limit=60 HTTP/1.1" 200 OK
+Nov 13 04:42:34 impressed-jade.ptr.network uvicorn[381219]: INFO:     87.116.135.226:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 13 04:42:34 impressed-jade.ptr.network uvicorn[381218]: INFO:     87.116.135.226:0 - "GET /api/jobs?limit=8 HTTP/1.1" 200 OK
+Nov 13 04:43:02 impressed-jade.ptr.network systemd[1]: Stopping nova-api.service - NOVA API...
+Nov 13 04:43:02 impressed-jade.ptr.network uvicorn[381218]: INFO:     Shutting down
+Nov 13 04:43:02 impressed-jade.ptr.network uvicorn[381219]: INFO:     Shutting down
+Nov 13 04:43:02 impressed-jade.ptr.network uvicorn[381218]: INFO:     Waiting for application shutdown.
+Nov 13 04:43:02 impressed-jade.ptr.network uvicorn[381218]: INFO:     Application shutdown complete.
+Nov 13 04:43:02 impressed-jade.ptr.network uvicorn[381218]: INFO:     Finished server process [381218]
+Nov 13 04:43:02 impressed-jade.ptr.network uvicorn[381219]: INFO:     Waiting for application shutdown.
+Nov 13 04:43:02 impressed-jade.ptr.network uvicorn[381219]: INFO:     Application shutdown complete.
+Nov 13 04:43:02 impressed-jade.ptr.network uvicorn[381219]: INFO:     Finished server process [381219]
+Nov 13 04:43:03 impressed-jade.ptr.network uvicorn[381204]: INFO:     Received SIGTERM, exiting.
+Nov 13 04:43:03 impressed-jade.ptr.network uvicorn[381204]: INFO:     Waiting for child process [381218]
+Nov 13 04:43:03 impressed-jade.ptr.network uvicorn[381204]: INFO:     Waiting for child process [381219]
+Nov 13 04:43:03 impressed-jade.ptr.network uvicorn[381204]: INFO:     Stopping parent process [381204]
+Nov 13 04:43:03 impressed-jade.ptr.network systemd[1]: nova-api.service: Deactivated successfully.
+Nov 13 04:43:03 impressed-jade.ptr.network systemd[1]: Stopped nova-api.service - NOVA API.
+Nov 13 04:43:03 impressed-jade.ptr.network systemd[1]: nova-api.service: Consumed 2.217s CPU time, 143.5M memory peak, 0B memory swap peak.
+Nov 13 04:43:03 impressed-jade.ptr.network systemd[1]: Started nova-api.service - NOVA API.
+Nov 13 04:43:03 impressed-jade.ptr.network uvicorn[383454]: INFO:     Uvicorn running on http://127.0.0.1:8795 (Press CTRL+C to quit)
+Nov 13 04:43:03 impressed-jade.ptr.network uvicorn[383454]: INFO:     Started parent process [383454]
+Nov 13 04:43:04 impressed-jade.ptr.network uvicorn[383460]: INFO:     Started server process [383460]
+Nov 13 04:43:04 impressed-jade.ptr.network uvicorn[383460]: INFO:     Waiting for application startup.
+Nov 13 04:43:04 impressed-jade.ptr.network uvicorn[383460]: INFO:     Application startup complete.
+Nov 13 04:43:04 impressed-jade.ptr.network uvicorn[383459]: INFO:     Started server process [383459]
+Nov 13 04:43:04 impressed-jade.ptr.network uvicorn[383459]: INFO:     Waiting for application startup.
+Nov 13 04:43:04 impressed-jade.ptr.network uvicorn[383459]: INFO:     Application startup complete.
+Nov 13 04:43:06 impressed-jade.ptr.network uvicorn[383459]: INFO:     89.208.113.147:0 - "GET /api/health HTTP/1.1" 200 OK
+Nov 13 04:43:06 impressed-jade.ptr.network uvicorn[383459]: INFO:     89.208.113.147:0 - "GET / HTTP/1.1" 200 OK
