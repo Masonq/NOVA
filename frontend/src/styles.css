@@ -382,6 +382,9 @@ img.sheet-media { object-fit: contain; background: var(--card); }
 .payseg button.on { background: var(--txt); color: var(--bg); }
 .tp-what { margin: 6px 2px 2px; text-align: center; }
 .tp-note { margin: 2px 0 0; }
+.tp-site { width: 100%; justify-content: flex-start; gap: 12px; height: auto; min-height: 58px; padding: 10px 14px; margin-top: 4px; text-align: left; }
+.tp-site > svg:first-child { color: #7FB8FF; flex-shrink: 0; }
+.tp-site > svg:last-child { margin-left: auto; color: var(--mut2); flex-shrink: 0; }
 .sheet .cta.wide { width: 100%; height: 54px; margin-top: 4px; }
 .cta.short { background: var(--accent); color: #fff; }
 .cta.short .cta-price { background: rgba(255,255,255,.18); }

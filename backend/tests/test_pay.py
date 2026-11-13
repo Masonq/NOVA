@@ -115,3 +115,16 @@ async def test_yookassa_flow_and_fake_webhook(client, tg, monkeypatch):
     st = (await client.get(f"/api/pay/{pid}", headers=h)).json()
     assert st["status"] == "paid" and st["balance"] == bal + 500
     assert (await client.get(f"/api/pay/{pid}", headers=h)).json()["balance"] == bal + 500
+
+
+@A
+async def test_handoff_to_site_is_one_time(client):
+    h = await login(client, 7901)
+    url = (await client.post("/api/auth/handoff", headers=h)).json()["url"]
+    code = url.split("handoff=")[1].split("#")[0]
+    assert url.endswith("#/profile?topup=card")
+    r = (await client.get(f"/api/auth/code/{code}")).json()
+    assert r["status"] == "ok" and r["token"]
+    assert (await client.get("/api/me", headers={"Authorization": "Bearer " + r["token"]})).json()["id"] == (await client.get("/api/me", headers=h)).json()["id"]
+    assert (await client.get(f"/api/auth/code/{code}")).status_code == 410          # the link works once
+    assert (await client.post("/api/auth/handoff")).status_code == 401

@@ -27,6 +27,7 @@ const P = {
   keyboard: <><rect x="3" y="6" width="18" height="12" rx="3" /><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" /></>,
   search: <><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.2-4.2" /></>,
   gift: <><rect x="3.5" y="8" width="17" height="4" rx="1" /><path d="M5 12v8h14v-8M12 8v12" /><path d="M12 8c-1.5-3.5-5-4-5-1.5S10 8 12 8zM12 8c1.5-3.5 5-4 5-1.5S14 8 12 8z" /></>,
+  card: <><rect x="3" y="5.5" width="18" height="13" rx="2.5" /><path d="M3 10h18M7 15h4" /></>,
   logout: <><path d="M15 4h4v16h-4" /><path d="M10 8l-4 4 4 4" /><path d="M6 12h10" /></>,
 };
 export default function Icon({ n, s = 18, w = 1.8 }) {

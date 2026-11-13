@@ -51,6 +51,16 @@ export default function App() {
           const r = await api("/api/auth/webapp", { method: "POST", body: { initData: tg.initData } });
           auth.set(r.token); setAuthed(true);
         } catch (e) { setFatal(e.message); }
+      } else {
+        // one-time link from the Telegram mini app: sign in on the site without asking again
+        const q = new URLSearchParams(location.search), code = q.get("handoff");
+        if (code) {
+          history.replaceState(null, "", location.pathname + location.hash);
+          try {
+            const r = await api(`/api/auth/code/${code}`);
+            if (r.status === "ok") { auth.set(r.token); setAuthed(true); }
+          } catch (e) { if (!auth.get()) setFatal("Ссылка устарела — откройте пополнение в Telegram ещё раз"); }
+        }
       }
       setReady(true);
     })();

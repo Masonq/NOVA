@@ -6,7 +6,7 @@ import { tg, haptic, inTelegram } from "../tg.js";
 import { toast } from "./Toast.jsx";
 
 /** Anywhere in the app: openTopup() shows the credit packs. */
-export const openTopup = (need) => window.dispatchEvent(new CustomEvent("nova:topup", { detail: { need } }));
+export const openTopup = (need, method) => window.dispatchEvent(new CustomEvent("nova:topup", { detail: { need, method } }));
 
 const fmt = (n) => n.toLocaleString("ru-RU");
 const plural = (n, one, few, many) => { const a = n % 10, b = n % 100; return a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many; };
@@ -21,7 +21,7 @@ export default function Topup({ me, reloadMe }) {
   const [wait, setWait] = useState(null);
 
   useEffect(() => {
-    const on = (e) => { setNeed(e.detail?.need || 0); setOpen(true); haptic("light"); };
+    const on = (e) => { setNeed(e.detail?.need || 0); if (e.detail?.method) setMethod(e.detail.method); setOpen(true); haptic("light"); };
     window.addEventListener("nova:topup", on);
     return () => window.removeEventListener("nova:topup", on);
   }, []);
@@ -29,7 +29,7 @@ export default function Topup({ me, reloadMe }) {
     if (open && !data) api("/api/pay/packs").then((d) => {
       // Telegram asks to sell digital goods in mini apps for Stars: cards are offered on the site and in the installed app
       const methods = d.methods.filter((m) => m !== "yookassa" || !inTelegram || d.yookassa_in_telegram);
-      setData({ ...d, methods });
+      setData({ ...d, methods, cardOnSite: inTelegram && d.methods.includes("yookassa") && !methods.includes("yookassa") });
       if (!inTelegram && methods.includes("yookassa")) setMethod("yookassa");
     }).catch(() => toast("Не удалось загрузить пакеты", "error"));
   }, [open]);
@@ -71,6 +71,11 @@ export default function Topup({ me, reloadMe }) {
   };
 
   const p = data?.packs.find((x) => x.id === pack);
+  const toSite = async () => {
+    haptic("light");
+    try { const r = await api("/api/auth/handoff", { method: "POST" }); tg?.openLink ? tg.openLink(r.url) : window.open(r.url, "_blank"); }
+    catch (e) { toast(e.message, "error"); }
+  };
   const price = (x) => !x ? "" : method === "stars" ? `${fmt(x.stars)} ⭐` : method === "yookassa" ? `${fmt(x.rub)} ₽` : `$${x.usd}`;
   const M = { stars: "⭐ Stars", yookassa: "Карта / СБП", crypto: "Крипта" };
   return (
@@ -100,6 +105,10 @@ export default function Topup({ me, reloadMe }) {
           <p className="muted small center tp-note">{{ stars: "Оплата внутри Telegram, кредиты придут сразу",
             yookassa: "Карты, СБП, SberPay и T-Pay через ЮKassa. Кредиты придут сами после оплаты",
             crypto: "USDT, TON и другие монеты через @CryptoBot. Кредиты придут автоматически" }[method]}</p>
+          {data.cardOnSite && (
+            <button className="row-btn tp-site" onClick={toSite}>
+              <Icon n="card" s={18} /><span className="sr-t"><span>Картой или СБП — на сайте</span><small>{p ? `${fmt(p.rub)} ₽ · ` : ""}откроется в браузере</small></span><Icon n="chevron" s={15} />
+            </button>)}
         </>)}
     </Sheet>);
 }

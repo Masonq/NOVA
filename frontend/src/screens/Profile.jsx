@@ -10,6 +10,10 @@ export default function Profile({ me, reload, go }) {
   const [led, setLed] = useState(null);
   const [mem, setMem] = useState(null);
   useEffect(() => {
+    if (location.hash.includes("topup=card")) {           // came from Telegram to pay by card
+      history.replaceState(null, "", location.pathname + "#/profile");
+      setTimeout(() => openTopup(0, "yookassa"), 350);
+    }
     api("/api/me/ledger").then(setLed).catch(() => setLed([]));
     api("/api/me/memory").then(setMem).catch(() => setMem([]));
   }, []);
