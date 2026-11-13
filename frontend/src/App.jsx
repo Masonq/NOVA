@@ -15,7 +15,9 @@ import TtsStudio from "./screens/TtsStudio.jsx";
 import Tasks from "./screens/Tasks.jsx";
 import Feed from "./screens/Feed.jsx";
 import Agent from "./screens/Agent.jsx";
+import Admin from "./screens/Admin.jsx";
 import TabBar from "./ui/TabBar.jsx";
+import { loadPrices } from "./jobs.js";
 import Topup from "./ui/Topup.jsx";
 import { toast } from "./ui/Toast.jsx";
 
@@ -27,7 +29,7 @@ export default function App() {
   const [authed, setAuthed] = useState(!!auth.get());
   const [route, setRoute] = useState(parse());
   const prevRoute = useRef(route);
-  const DEPTH = { home: 0, archive: 0, profile: 0, image: 1, video: 1, music: 1, tts: 1, tasks: 1, chat: 1, agent: 1, feed: 2 };
+  const DEPTH = { admin: 1, home: 0, archive: 0, profile: 0, image: 1, video: 1, music: 1, tts: 1, tasks: 1, chat: 1, agent: 1, feed: 2 };
   const dir = useMemo(() => {
     const a = DEPTH[prevRoute.current] ?? 0, b = DEPTH[route] ?? 0;
     const d = prevRoute.current === route ? "tab" : b > a ? "fwd" : b < a ? "back" : "tab";
@@ -56,6 +58,7 @@ export default function App() {
     return () => { window.removeEventListener("nova:logout", out); window.removeEventListener("hashchange", hc); };
   }, []);
   useEffect(() => { if (authed) loadMe(); }, [authed, route]);
+  useEffect(() => { if (authed) loadPrices(); }, [authed]);
 
   const go = (r, p = null) => { setParams(p); if (parse() !== r) location.hash = "#/" + r; else setRoute(r); window.scrollTo(0, 0); };
 
@@ -74,17 +77,18 @@ export default function App() {
   const STUDIOS = { image: ImageStudio, video: VideoStudio, music: MusicStudio, tts: TtsStudio };
   const Studio = STUDIOS[route];
   const screen = Studio ? <Studio key={route + JSON.stringify(params || {})} {...sp} />
+    : route === "admin" && me?.is_admin ? <Admin go={go} params={params} />
     : route === "agent" ? <Agent go={go} me={me} reloadMe={loadMe} />
     : route === "tasks" ? <Tasks go={go} />
     : route === "feed" ? <Feed go={go} />
     : route === "chat" ? <Chat go={go} params={params} />
     : route === "archive" ? <Archive go={go} params={params} />
-    : route === "profile" ? <Profile me={me} reload={loadMe} />
+    : route === "profile" ? <Profile me={me} reload={loadMe} go={go} />
     : <Home go={go} me={me} />;
   return (
     <div className={"app r-" + route}>
       <div key={route} className={"page " + dir}>{screen}</div>
-      {!["chat", "image", "video", "music", "tts", "feed", "agent"].includes(route) && (
+      {!["chat", "image", "video", "music", "tts", "feed", "agent", "admin"].includes(route) && (
         <TabBar tabs={TABS} active={TABS.find((t) => t.k === route) ? route : "home"} onSelect={(k) => go(k)}
           side={{ orb: true, label: "Голосовой агент", accent: true, onClick: () => go("agent") }} />)}
       <Topup me={me} reloadMe={loadMe} />

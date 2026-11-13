@@ -23,14 +23,13 @@ from ..config import get_settings
 from ..credits import charge
 from ..db import Session, get_db
 from ..models import ChatMessage, Job, Memory, User
-from ..pricing import cost as price_of
+from ..pricing import PRICE, cost as price_of, refresh as refresh_prices
 from ..security import current_user
 from .jobs import job_out, start_job
 
 router = APIRouter(prefix="/api/agent", tags=["agent"])
 MODEL = "google/gemini-3.8-flash"
 HISTORY = 12
-PER_MIN = 5          # credits per minute of conversation (speech in + out)
 KINDS = {"image": "картинку", "video": "видео", "music": "трек", "tts": "озвучку"}
 
 SYSTEM = """Ты — NOVA, голосовой ИИ-агент в приложении NOVA. Говоришь по-русски живо и тепло, как умный друг.
@@ -142,7 +141,7 @@ class SettingsIn(BaseModel):
 
 @router.get("/settings")
 async def get_settings_(u: User = Depends(current_user)):
-    return {"voice": u.agent_voice, "voices": [{"id": k, "name": v} for k, v in ai.VOICES.items()], "per_min": PER_MIN}
+    return {"voice": u.agent_voice, "voices": [{"id": k, "name": v} for k, v in ai.VOICES.items()], "per_min": PRICE["agent_min"]}
 
 
 @router.put("/settings")
@@ -172,6 +171,10 @@ async def run_tool(name: str, args: dict, u: User, emit) -> str:
             params = {k: args[k] for k in ("style", "aspect", "duration", "sound", "genre", "instrumental") if k in args}
             if kind == "tts":
                 params["voice"] = user.agent_voice
+            from ..moderation import check
+            verdict, _ = await check(kind, args["prompt"])
+            if verdict == "block":
+                return "Этот запрос нарушает правила сервиса — вежливо откажи и предложи другую идею."
             price = price_of(kind, params, args["prompt"])
             await pending.set(u.id, {"kind": kind, "prompt": args["prompt"].strip(), "params": params, "cost": price})
             await emit({"type": "confirm", "kind": kind, "prompt": args["prompt"].strip(), "cost": price, "balance": user.balance})
@@ -231,6 +234,7 @@ async def run_tool(name: str, args: dict, u: User, emit) -> str:
 async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
     if not body.audio and not (body.text or "").strip():
         raise HTTPException(422, "Пустой запрос")
+    await refresh_prices(db)
     if u.balance < 1:
         raise HTTPException(402, "Кредиты закончились — пополните баланс, чтобы продолжить разговор")
     raw = b""
@@ -368,7 +372,7 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
         await prod
         out_sec = sum(nonlocal_out)
         reply = "".join(answer).strip()
-        price = max(1, math.ceil((in_sec + out_sec) / 60 * PER_MIN)) if (reply or heard) else 0
+        price = max(1, math.ceil((in_sec + out_sec) / 60 * PRICE["agent_min"])) if (reply or heard) else 0
         bal = None
         async with Session() as db2:
             user = await db2.get(User, uid)

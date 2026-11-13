@@ -64,7 +64,9 @@ async def upsert_tg_user(db: AsyncSession, tg: dict) -> User:
     u.last_seen = now()
     if not u.welcome_given:
         u.welcome_given = True
-        await grant(db, u, s.welcome_credits, "welcome", "Приветственный пакет")
+        from .pricing import PRICE, refresh
+        await refresh(db)
+        await grant(db, u, int(PRICE["welcome"]), "welcome", "Приветственный пакет")
     await db.commit()
     await db.refresh(u)
     return u
@@ -82,4 +84,15 @@ async def current_user(authorization: str = Header(default=""), db: AsyncSession
         raise HTTPException(401, "Нужен вход")
     if u.blocked:
         raise HTTPException(403, "Аккаунт заблокирован")
+    return u
+
+
+def is_admin(u: User) -> bool:
+    ids = {x.strip() for x in get_settings().admin_tg_ids.split(",") if x.strip()}
+    return str(u.tg_id) in ids
+
+
+async def admin_user(u: User = Depends(current_user)) -> User:
+    if not is_admin(u):
+        raise HTTPException(404, "Не найдено")
     return u

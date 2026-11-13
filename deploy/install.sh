@@ -88,6 +88,18 @@ MemoryMax=500M
 WantedBy=multi-user.target
 UNIT
 systemctl daemon-reload
+# --- admin: the very first NOVA user becomes the admin when none is set ---
+if [ -z "$(getv ADMIN_TG_IDS)" ]; then
+  FIRST=$(sudo -u postgres psql -d nova -tAc "SELECT tg_id FROM users ORDER BY id LIMIT 1" 2>/dev/null | tr -d ' ')
+  if [ -n "$FIRST" ]; then sed -i '/^ADMIN_TG_IDS=/d' "$ENV"; echo "ADMIN_TG_IDS=$FIRST" >> "$ENV"; fi
+fi
+ADM=$(getv ADMIN_TG_IDS)
+if [ -n "$ADM" ]; then
+  AN=$(sudo -u postgres psql -d nova -tAc "SELECT coalesce(nullif(username,''), first_name) FROM users WHERE tg_id IN ($ADM) LIMIT 3" 2>/dev/null | paste -sd, -)
+  log "Админ: ${AN:-$ADM}"
+else
+  log "Админ: пока никого — откройте бота и нажмите Старт, затем повторите установку"
+fi
 systemctl enable nova-api nova-worker >/dev/null 2>&1
 systemctl restart nova-api nova-worker
 

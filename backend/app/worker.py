@@ -14,6 +14,45 @@ from .storage import remove_job_files
 from .runner import run_job
 
 
+async def send_broadcast(ctx, bid: int):
+    """Sends a broadcast to everyone who can receive messages, ~20 messages per second, can be cancelled."""
+    import asyncio
+    from .models import Broadcast
+    async with Session() as db:
+        b = await db.get(Broadcast, bid)
+        if not b or b.status != "queued":
+            return
+        b.status = "sending"; await db.commit()
+        ids = (await db.execute(select(User.id, User.tg_id).where(User.can_message.is_(True), User.blocked.is_(False)).order_by(User.id))).all()
+    markup = bot.open_app_markup(b.button) if b.button else None
+    sent = failed = 0
+    for i, (uid, tg_id) in enumerate(ids):
+        if i % 50 == 0:
+            async with Session() as db:
+                x = await db.get(Broadcast, bid)
+                if x.status == "cancelled":
+                    return
+                x.sent, x.failed = sent, failed; await db.commit()
+        r = await bot.send(tg_id, b.text, markup)
+        if r.get("ok"):
+            sent += 1
+        else:
+            failed += 1
+            if r.get("error_code") == 403:
+                async with Session() as db:
+                    u = await db.get(User, uid); u.can_message = False; await db.commit()
+            elif r.get("error_code") == 429:
+                await asyncio.sleep(int((r.get("parameters") or {}).get("retry_after", 3)))
+        await asyncio.sleep(0.05)
+    async with Session() as db:
+        x = await db.get(Broadcast, bid)
+        x.sent, x.failed = sent, failed
+        if x.status != "cancelled":
+            x.status = "done"
+        x.finished_at = now(); await db.commit()
+    log.info("broadcast %s: sent %s, failed %s", bid, sent, failed)
+
+
 async def sync_crypto(ctx):
     """Pending crypto invoices of the last 2 hours: grant credits for the paid ones (no webhook needed)."""
     from datetime import timedelta
@@ -95,7 +134,7 @@ async def startup(ctx):
 
 
 class WorkerSettings:
-    functions = [run_job]
+    functions = [run_job, send_broadcast]
     job_timeout = 2400
     cron_jobs = [cron(cleanup_expired, minute={7, 37}), cron(remind_expiring, hour={9}, minute={0}),
                  cron(sync_crypto, second={20}, run_at_startup=False)]

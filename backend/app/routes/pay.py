@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import payments as P
+from ..pricing import refresh as refresh_prices
 from ..config import get_settings
 from ..db import get_db
 from ..models import Payment, User, now
@@ -23,7 +24,8 @@ def out(p: Payment) -> dict:
 
 
 @router.get("/packs")
-async def packs(u: User = Depends(current_user)):
+async def packs(u: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    await refresh_prices(db)
     methods = ["stars"] + (["crypto"] if get_settings().crypto_pay_token else [])
     return {"packs": [{**p, "total": P.total(p)} for p in P.PACKS], "methods": methods, "balance": u.balance}
 
@@ -36,7 +38,8 @@ async def _recent(db, u, method) -> int:
 
 @router.post("/stars")
 async def buy_stars(body: BuyIn, u: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
-    pack = P.BY_ID.get(body.pack)
+    await refresh_prices(db)
+    pack = P.pack_by_id(body.pack)
     if not pack:
         raise HTTPException(404, "Нет такого пакета")
     if await _recent(db, u, "stars") >= 10:
@@ -50,7 +53,8 @@ async def buy_stars(body: BuyIn, u: User = Depends(current_user), db: AsyncSessi
 
 @router.post("/crypto")
 async def buy_crypto(body: BuyIn, u: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
-    pack = P.BY_ID.get(body.pack)
+    await refresh_prices(db)
+    pack = P.pack_by_id(body.pack)
     if not pack:
         raise HTTPException(404, "Нет такого пакета")
     if not get_settings().crypto_pay_token:

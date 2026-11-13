@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Index, Integer, String, Text, JSON
+from sqlalchemy import UniqueConstraint, BigInteger, Boolean, DateTime, ForeignKey, Index, Integer, String, Text, JSON
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .db import Base
@@ -44,7 +44,8 @@ class Job(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     kind: Mapped[str] = mapped_column(String(16))
-    status: Mapped[str] = mapped_column(String(16), default="queued")  # queued|running|done|failed|cancelled|expired
+    status: Mapped[str] = mapped_column(String(16), default="queued")  # review|queued|running|done|failed|cancelled|rejected|expired
+    moderation: Mapped[str] = mapped_column(String(300), default="", server_default="")
     prompt: Mapped[str] = mapped_column(Text, default="")
     params: Mapped[dict] = mapped_column(JSON, default=dict)
     model: Mapped[str] = mapped_column(String(64), default="")
@@ -106,3 +107,54 @@ class Payment(Base):
     external_id: Mapped[str] = mapped_column(String(128), default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class Setting(Base):
+    __tablename__ = "settings"
+    key: Mapped[str] = mapped_column(String(40), primary_key=True)
+    value: Mapped[dict] = mapped_column(JSON, default=dict)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class PromoCode(Base):
+    __tablename__ = "promo_codes"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    code: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    credits: Mapped[int] = mapped_column(Integer)
+    max_uses: Mapped[int] = mapped_column(Integer, default=100)
+    used: Mapped[int] = mapped_column(Integer, default=0)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class PromoUse(Base):
+    __tablename__ = "promo_uses"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    promo_id: Mapped[int] = mapped_column(ForeignKey("promo_codes.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    __table_args__ = (UniqueConstraint("promo_id", "user_id"),)
+
+
+class AdminLog(Base):
+    __tablename__ = "admin_log"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    admin_id: Mapped[int] = mapped_column(Integer, index=True)
+    action: Mapped[str] = mapped_column(String(40))
+    target: Mapped[str] = mapped_column(String(80), default="")
+    detail: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, index=True)
+
+
+class Broadcast(Base):
+    __tablename__ = "broadcasts"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    text: Mapped[str] = mapped_column(Text)
+    button: Mapped[str] = mapped_column(String(40), default="")
+    status: Mapped[str] = mapped_column(String(12), default="queued")   # queued | sending | done | cancelled
+    total: Mapped[int] = mapped_column(Integer, default=0)
+    sent: Mapped[int] = mapped_column(Integer, default=0)
+    failed: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

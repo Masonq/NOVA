@@ -11,7 +11,7 @@ from ..models import Job, User
 from ..security import current_user
 from ..config import get_settings
 from ..credits import charge
-from ..pricing import cost as price_of
+from ..pricing import cost as price_of, refresh as refresh_prices
 from ..queue import enqueue
 from ..storage import new_upload_name, public_files, remove_job_files, upload_dir
 
@@ -58,6 +58,7 @@ ALLOWED = {
 }
 LIMITS = {"image": 1200, "video": 1500, "music": 2900, "tts": 5000}
 ACTIVE_LIMIT = 3
+KIND_RU = {"image": "картинка", "video": "видео", "music": "трек", "tts": "озвучка"}
 
 
 def _clean(kind: str, params: dict) -> dict:
@@ -86,20 +87,36 @@ def _clean(kind: str, params: dict) -> dict:
 
 async def start_job(db: AsyncSession, u: User, kind: str, prompt: str, raw_params: dict) -> Job:
     """Validates, charges and queues a generation. Used by the API and by the voice agent."""
+    await refresh_prices(db)
     prompt = prompt.strip()
     if len(prompt) > LIMITS[kind]:
         raise HTTPException(422, f"Слишком длинный текст: до {LIMITS[kind]} символов")
     params = _clean(kind, raw_params or {})
-    active = (await db.execute(select(Job.id).where(Job.user_id == u.id, Job.status.in_(("queued", "running"))))).all()
+    active = (await db.execute(select(Job.id).where(Job.user_id == u.id, Job.status.in_(("review", "queued", "running"))))).all()
     if len(active) >= ACTIVE_LIMIT:
         raise HTTPException(429, "Уже идут 3 генерации — дождитесь, пока одна закончится")
     price = price_of(kind, params, prompt)
-    j = Job(user_id=u.id, kind=kind, prompt=prompt, params=params, cost=price, stage="В очереди", progress=2)
+    if u.balance < price:
+        raise HTTPException(402, f"Не хватает кредитов: нужно {price}, на балансе {u.balance}")
+    from ..moderation import check
+    verdict, reason = await check(kind, prompt)
+    if verdict == "block":
+        raise HTTPException(422, "Такой запрос нельзя выполнить: он нарушает правила сервиса")
+    review = verdict == "review"
+    j = Job(user_id=u.id, kind=kind, prompt=prompt, params=params, cost=price, moderation=reason,
+            status="review" if review else "queued", stage="На проверке" if review else "В очереди", progress=2)
     db.add(j)
     await db.flush()
     await charge(db, u, price, {"image": "Фото", "video": "Видео", "music": "Музыка", "tts": "Озвучка"}[kind] + ": " + prompt[:60], j.id)
     await db.commit()
-    await enqueue(j.id)
+    if review:
+        from .. import bot
+        from ..config import get_settings
+        for tid in [x.strip() for x in get_settings().admin_tg_ids.split(",") if x.strip()]:
+            await bot.send(int(tid), f"🔍 На проверке: {KIND_RU[kind]} от {u.first_name or u.username or u.id}\n«{prompt[:300]}»\nПричина: {reason or '—'}",
+                           bot.open_app_markup("Открыть модерацию", "#/admin?tab=jobs"))
+    else:
+        await enqueue(j.id)
     return j
 
 
@@ -110,13 +127,14 @@ async def create_job(body: JobIn, u: User = Depends(current_user), db: AsyncSess
 
 @router.get("/active")
 async def active_jobs(u: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
-    rows = (await db.execute(select(Job).where(Job.user_id == u.id, Job.status.in_(("queued", "running")))
+    rows = (await db.execute(select(Job).where(Job.user_id == u.id, Job.status.in_(("review", "queued", "running")))
                              .order_by(Job.id.desc()))).scalars().all()
     return [job_out(j) for j in rows]
 
 
 @router.post("/price")
-async def quote(body: JobIn, u: User = Depends(current_user)):
+async def quote(body: JobIn, u: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    await refresh_prices(db)
     return {"cost": price_of(body.kind, _clean(body.kind, body.params or {}), body.prompt.strip()), "balance": u.balance}
 
 
@@ -137,7 +155,7 @@ async def toggle_favorite(jid: int, u: User = Depends(current_user), db: AsyncSe
 async def cancel(jid: int, u: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
     from ..credits import refund
     j = await _own(db, u, jid)
-    if j.status != "queued":
+    if j.status not in ("queued", "review"):
         raise HTTPException(409, "Генерация уже идёт — отменить можно только в очереди")
     j.status, j.stage = "cancelled", "Отменено"
     await refund(db, u, j.cost, "Возврат: генерация отменена", j.id)

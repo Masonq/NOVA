@@ -1,8 +1,10 @@
-"""Credits per action (1 credit ~ $0.01 retail, about cost x3). Stage 5 moves this into the admin panel."""
+"""Credits per action and credit packs. Defaults live here; the admin panel stores overrides in the
+`settings` table, and every API process re-reads them at most every 20 seconds."""
+import copy
 import math
+import time
 
-IMAGE_VARIANTS = 4
-PRICE = {
+DEFAULT_PRICE = {
     "image": 40,            # 4 variants, Nano Banana 2.1 (~$0.034 each)
     "video_std_s": 24,      # Kling 3.0 std, per second
     "video_pro_s": 36,      # Kling 3.0 pro (1080p), per second
@@ -10,19 +12,46 @@ PRICE = {
     "music": 30,            # Suno V6, 2 tracks + cover
     "tts_1k": 5,            # Gemini TTS, per 1000 characters
     "tts_min": 2,
+    "agent_min": 5,         # voice agent, per minute of speech
+    "welcome": 300,         # credits for a new user
 }
+DEFAULT_PACKS = [
+    {"id": "p500", "credits": 500, "bonus": 0, "stars": 400, "usd": "4.99"},
+    {"id": "p1500", "credits": 1500, "bonus": 150, "stars": 1150, "usd": "14.99", "hit": True},
+    {"id": "p5000", "credits": 5000, "bonus": 1000, "stars": 3700, "usd": "44.99"},
+]
+IMAGE_VARIANTS = 4
+PRICE = dict(DEFAULT_PRICE)
+PACKS = copy.deepcopy(DEFAULT_PACKS)
+_loaded = 0.0
+
+
+async def refresh(db, force: bool = False):
+    """Pulls admin overrides from the DB (cheap, at most every 20 s per process)."""
+    global _loaded
+    if not force and time.time() - _loaded < 20:
+        return
+    from .models import Setting
+    row = await db.get(Setting, "prices")
+    PRICE.clear(); PRICE.update(DEFAULT_PRICE)
+    PACKS.clear(); PACKS.extend(copy.deepcopy(DEFAULT_PACKS))
+    if row and isinstance(row.value, dict):
+        PRICE.update({k: v for k, v in (row.value.get("price") or {}).items() if k in DEFAULT_PRICE})
+        if row.value.get("packs"):
+            PACKS.clear(); PACKS.extend(row.value["packs"])
+    _loaded = time.time()
 
 
 def cost(kind: str, params: dict, prompt: str = "") -> int:
     if kind == "image":
-        return PRICE["image"]
+        return int(PRICE["image"])
     if kind == "video":
         sec = int(params.get("duration", 5))
         per = PRICE["video_pro_s"] if params.get("quality") == "1080p" else PRICE["video_std_s"]
         k = PRICE["video_sound_k"] if params.get("sound") else 1
         return int(math.ceil(sec * per * k / 5) * 5)
     if kind == "music":
-        return PRICE["music"]
+        return int(PRICE["music"])
     if kind == "tts":
-        return max(PRICE["tts_min"], int(math.ceil(len(prompt) / 1000 * PRICE["tts_1k"])))
+        return max(int(PRICE["tts_min"]), int(math.ceil(len(prompt) / 1000 * PRICE["tts_1k"])))
     raise ValueError(kind)

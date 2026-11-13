@@ -1,11 +1,12 @@
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import get_settings
 from ..db import get_db
-from ..models import Job, Ledger, Memory, User
-from ..security import current_user
+from ..models import Job, Ledger, Memory, User, now
+from ..security import current_user, is_admin
 from ..storage import remove_job_files
 
 router = APIRouter(prefix="/api/me", tags=["me"])
@@ -15,7 +16,38 @@ router = APIRouter(prefix="/api/me", tags=["me"])
 async def me(u: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
     jobs = (await db.execute(select(func.count()).select_from(Job).where(Job.user_id == u.id))).scalar_one()
     return {"id": u.id, "name": u.first_name, "username": u.username, "balance": u.balance,
-            "jobs": jobs, "keep_days": get_settings().keep_days, "since": u.created_at.isoformat()}
+            "jobs": jobs, "keep_days": get_settings().keep_days, "since": u.created_at.isoformat(),
+            "is_admin": is_admin(u)}
+
+
+@router.get("/config")
+async def config(u: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    from ..pricing import PRICE, refresh
+    await refresh(db)
+    return {"price": PRICE}
+
+
+class PromoIn(BaseModel):
+    code: str
+
+
+@router.post("/promo")
+async def promo(body: PromoIn, u: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    from ..credits import grant
+    from ..models import PromoCode, PromoUse
+    code = body.code.strip().upper()
+    pc = (await db.execute(select(PromoCode).where(PromoCode.code == code).with_for_update())).scalar_one_or_none()
+    if not pc or not pc.active or (pc.expires_at and pc.expires_at < now()):
+        raise HTTPException(404, "Такого промокода нет или он закончился")
+    if (await db.execute(select(PromoUse.id).where(PromoUse.promo_id == pc.id, PromoUse.user_id == u.id))).first():
+        raise HTTPException(409, "Вы уже активировали этот промокод")
+    if pc.used >= pc.max_uses:
+        raise HTTPException(410, "Промокод уже использовали максимальное число раз")
+    pc.used += 1
+    db.add(PromoUse(promo_id=pc.id, user_id=u.id))
+    await grant(db, u, pc.credits, "promo", f"Промокод {pc.code}")
+    await db.commit()
+    return {"credits": pc.credits, "balance": u.balance}
 
 
 @router.get("/ledger")

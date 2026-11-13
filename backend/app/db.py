@@ -25,5 +25,6 @@ async def init_db():
         from sqlalchemy import text
         for stmt in ("ALTER TABLE users ADD COLUMN IF NOT EXISTS agent_voice VARCHAR(32) NOT NULL DEFAULT 'Sulafat'",
                      "ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS channel VARCHAR(8) NOT NULL DEFAULT 'chat'",
-                     "CREATE INDEX IF NOT EXISTS ix_chat_messages_channel ON chat_messages (channel)"):
+                     "CREATE INDEX IF NOT EXISTS ix_chat_messages_channel ON chat_messages (channel)",
+                     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS moderation VARCHAR(300) NOT NULL DEFAULT ''"):
             await conn.execute(text(stmt))
