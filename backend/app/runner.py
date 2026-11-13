@@ -81,7 +81,7 @@ async def run_image(job: Job):
     if prompt == job.prompt and hint:
         prompt = f"{job.prompt}. Style: {hint}. Do not add any text unless asked."
     await _update(job.id, params={**p, "enhanced": prompt[:2000], "model": ai.IMAGE_ROUTES[route]["model"]})
-    n = int(p.get("variants", 4))
+    n = 1
     done = 0
 
     async def one(i):
@@ -90,7 +90,7 @@ async def run_image(job: Job):
         rel = save_bytes(job, f"v{i + 1}.png", data)
         th = await asyncio.to_thread(make_thumb, rel)
         done += 1
-        await _update(job.id, progress=int(10 + 85 * done / n), stage=f"Готово {done} из {n}")
+        await _update(job.id, progress=95, stage="Сохраняю")
         return {"path": rel, "type": "image", "w": 0, "h": 0, **({"thumb": th} if th else {})}
 
     await _update(job.id, progress=10, stage="Рисую варианты")

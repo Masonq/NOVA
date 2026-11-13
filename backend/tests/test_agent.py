@@ -48,13 +48,13 @@ async def test_voice_turn_confirm_and_launch(client, env):
     h = await login(client, 9501)
     env["script"] += [
         [("text", "[[Сделай логотип кофейни]] Секунду. "), ("tools", [{"id": "c1", "name": "create_media", "arguments": json.dumps({"kind": "image", "prompt": "Логотип кофейни", "style": "Логотип"})}])],
-        [("text", "Это будет стоить 40 кредитов. Запускаем?")],
+        [("text", "Это будет стоить 12 кредитов. Запускаем?")],
     ]
     r = await client.post("/api/agent/turn", json={"audio": wav_b64()}, headers=h)
     ev = events(r.text)
     types = [e["type"] for e in ev]
     assert types[0] == "heard" and ev[0]["text"] == "Сделай логотип кофейни"
-    assert "confirm" in types and next(e for e in ev if e["type"] == "confirm")["cost"] == 40
+    assert "confirm" in types and next(e for e in ev if e["type"] == "confirm")["cost"] == 12
     auds = [e for e in ev if e["type"] == "audio"]
     assert [a["seq"] for a in auds] == sorted(a["seq"] for a in auds) and len(auds) == 3
     done = ev[-1]
@@ -68,8 +68,8 @@ async def test_voice_turn_confirm_and_launch(client, env):
     r = await client.post("/api/agent/turn", json={"text": "да"}, headers=h)
     ev = events(r.text)
     job = next(e for e in ev if e["type"] == "job")
-    assert job["job"]["kind"] == "image" and job["job"]["cost"] == 40 and env["queue"] == [job["job"]["id"]]
-    assert ev[-1]["balance"] == 299 - 40 - 1
+    assert job["job"]["kind"] == "image" and job["job"]["cost"] == 12 and env["queue"] == [job["job"]["id"]]
+    assert ev[-1]["balance"] == 299 - 12 - 1
     hist = (await client.get("/api/chat", headers=h)).json()
     assert hist == []                                   # agent talk is not mixed into the text chat
 

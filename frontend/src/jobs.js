@@ -3,7 +3,7 @@ import { api } from "./api.js";
 import { haptic } from "./tg.js";
 import { toast } from "./ui/Toast.jsx";
 
-export const PRICE = { image: 40, video_std_s: 24, video_pro_s: 36, video_sound_k: 1.5, music: 30, tts_1k: 5, tts_min: 2 };
+export const PRICE = { image: 12, agent_min: 5, video_std_s: 24, video_pro_s: 36, video_sound_k: 1.5, music: 30, tts_1k: 5, tts_min: 2 };
 /** Prices can change from the admin panel: refresh them when the app starts. */
 export const loadPrices = () => api("/api/me/config").then((c) => Object.assign(PRICE, c.price)).catch(() => {});
 export function priceOf(kind, p = {}, text = "") {

@@ -5,7 +5,7 @@ import math
 import time
 
 DEFAULT_PRICE = {
-    "image": 40,            # 4 variants: Seedream 5.5 2K / GPT Image 2.6 / Nano Banana 2.1 2K (~$0.03–0.05 each)
+    "image": 12,            # one picture: Seedream 5.5 2K / GPT Image 2.6 / Nano Banana 2.1 2K (~$0.03–0.05)
     "video_std_s": 24,      # Kling 3.0 std, per second
     "video_pro_s": 36,      # Kling 3.0 pro (1080p), per second
     "video_sound_k": 1.5,   # sound on
@@ -22,7 +22,6 @@ DEFAULT_PACKS = [
     {"id": "p1500", "credits": 1500, "bonus": 150, "stars": 1150, "usd": "14.99", "rub": 1290, "hit": True},
     {"id": "p5000", "credits": 5000, "bonus": 1000, "stars": 3700, "usd": "44.99", "rub": 3790},
 ]
-IMAGE_VARIANTS = 4
 PRICE = dict(DEFAULT_PRICE)
 PACKS = copy.deepcopy(DEFAULT_PACKS)
 _loaded = 0.0

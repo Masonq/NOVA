@@ -15,12 +15,11 @@ export default function ImageStudio({ go, me, reloadMe, params }) {
   const [aspect, setAspect] = useState("1:1");
 
   const [ref, setRef] = useState(null);
-  const [sel, setSel] = useState(0);
   const [sheet, setSheet] = useState(null);
   const s = useStudio("image", reloadMe);
   const cur = s.current;
-  const imgs = (cur?.files || []).filter((f) => f.type === "image");
-  const pa = cur?.params?.aspect || "1:1";
+  const first = (j) => (j?.files || []).find((f) => f.type === "image");
+  const gallery = [cur, ...s.recent.filter((j) => j.id !== cur?.id)].filter((j) => first(j)).slice(0, 12).map((j) => ({ j, f: first(j) }));
   return (
     <main className="screen studio">
       <StudioTop title="Фото" me={me} go={go} />
@@ -36,28 +35,19 @@ export default function ImageStudio({ go, me, reloadMe, params }) {
           <div className="reveal-fill" style={{ height: `${s.active.progress}%` }} />
           <div className="reveal-cap"><Progress job={s.active} /></div>
         </section>
-      ) : cur && imgs.length > 0 && (
-        <section aria-label="Результат">
-          <Carousel key={cur.id} label="Варианты" height={imgs.length > 1 ? 400 : 380}
-            onChange={setSel} items={imgs.map((f, i) => ({
-              key: f.url, img: f.url, title: `Вариант ${i + 1}`, sub: `${cur.params?.style || "Фото"} · ${cur.prompt}`,
-              onOpen: () => setSheet(f), onMore: () => setSheet(f),
-            }))} />
+      ) : gallery.length > 0 && (
+        <section aria-label="Ваши картинки">
+          <Carousel key={cur?.id} label="Ваши картинки" height={400} items={gallery.map(({ j, f }) => ({
+            key: f.url, img: f.thumb_url || f.url, title: j.prompt,
+            sub: `${j.params?.style || "Фото"} · ${new Date(j.at).toLocaleDateString("ru-RU", { day: "numeric", month: "short" })}`,
+            onOpen: () => setSheet({ j, f }), onMore: () => setSheet({ j, f }),
+          }))} />
         </section>)}
 
-      {s.recent.length > 1 && (
-        <section aria-labelledby="ri-h">
-          <div className="row-h"><h2 id="ri-h">Недавние</h2><button className="link" onClick={() => go("archive", { kind: "image" })}>Все</button></div>
-          <div className="recent">{s.recent.slice(0, 10).map((j) => {
-            const f = j.files?.find((x) => x.type === "image");
-            return <button key={j.id} className="thumb img" style={{ backgroundImage: f ? `url(${f.url})` : undefined }} aria-label={j.prompt}
-              onClick={() => { s.setCurrent(j); setSel(0); window.scrollTo({ top: 0, behavior: "smooth" }); }} />;
-          })}</div>
-        </section>)}
-      <Dock label="Создать 4 варианта" price={priceOf("image")} balance={me?.balance} busy={s.busy}
+      <Dock label="Создать" price={priceOf("image")} balance={me?.balance} busy={s.busy}
         disabled={prompt.trim().length < 2 || !!s.active}
         onClick={() => s.run(prompt.trim(), { style, aspect, refs: ref ? [ref] : [] })} />
-      <JobSheet job={sheet && cur} file={sheet} onClose={() => setSheet(null)} go={go}
-        onChange={(j) => { if (!j) { s.setCurrent(null); s.reload(); } else s.setCurrent(j); }} />
+      <JobSheet job={sheet?.j} file={sheet?.f} onClose={() => setSheet(null)} go={go}
+        onChange={(j) => { setSheet(null); s.reload(); if (!j) s.setCurrent(null); }} />
     </main>);
 }

@@ -26,8 +26,8 @@ async def test_create_charges_and_queues(client, queued):
     r = await client.post("/api/jobs", json={"kind": "image", "prompt": "лиса логотип", "params": {"style": "Логотип", "aspect": "1:1"}}, headers=h)
     assert r.status_code == 200, r.text
     j = r.json()
-    assert j["cost"] == 40 and j["status"] == "queued" and queued == [j["id"]]
-    assert await balance(client, h) == 260
+    assert j["cost"] == 12 and j["status"] == "queued" and queued == [j["id"]]
+    assert await balance(client, h) == 288
     q = (await client.post("/api/jobs/price", json={"kind": "video", "prompt": "город", "params": {"duration": 10, "quality": "1080p", "sound": True}}, headers=h)).json()
     assert q["cost"] == 540
 
@@ -61,22 +61,26 @@ async def _job(client, uid, kind, prompt, params=None):
 
 
 @A
-async def test_image_partial_refund(client, monkeypatch):
+async def test_image_single_and_full_refund_on_failure(client, monkeypatch):
     from app import runner, ai
-    calls = {"n": 0}
-    async def fake_image(prompt, aspect, refs, quality="fast"):
-        calls["n"] += 1
+    state = {"fail": False}
+    async def fake_image(prompt, aspect, refs, route="picture"):
         assert "logo" in prompt
-        if calls["n"] == 2:
+        if state["fail"]:
             raise ai.AIError("boom")
         return PNG
     monkeypatch.setattr(ai, "image", fake_image)
     h, jid = await _job(client, 8101, "image", "лиса", {"style": "Логотип"})
     await runner.run_job({}, jid)
     j = (await client.get(f"/api/jobs/{jid}", headers=h)).json()
-    assert j["status"] == "done" and len(j["files"]) == 3 and j["expires"]
+    assert j["status"] == "done" and len(j["files"]) == 1 and j["expires"]
     assert all(f["url"].startswith("https://nova.test/files/") for f in j["files"])
-    assert await balance(client, h) == 300 - 40 + 10
+    assert await balance(client, h) == 300 - 12
+    state["fail"] = True
+    _, jid2 = await _job(client, 8101, "image", "ещё лиса", {"style": "Логотип"})
+    await runner.run_job({}, jid2)
+    assert (await client.get(f"/api/jobs/{jid2}", headers=h)).json()["status"] == "failed"
+    assert await balance(client, h) == 300 - 12
 
 
 @A
@@ -163,7 +167,7 @@ async def test_image_model_per_task_and_enhanced_prompt(client, monkeypatch):
         routes.setdefault(r, set()).add(p)
     assert set(routes) == {"picture", "logo", "edit"} and all(len(v) == 1 for v in routes.values())
     j = (await client.get(f"/api/jobs/{j1}", headers=h)).json()
-    assert j["status"] == "done" and j["cost"] == 40 and j["params"]["model"] == "bytedance-seed/seedream-5-5"
+    assert j["status"] == "done" and j["cost"] == 12 and j["params"]["model"] == "bytedance-seed/seedream-5-5"
     assert j["params"]["enhanced"].startswith("A detailed prompt")
     assert (await client.get(f"/api/jobs/{j2}", headers=h)).json()["params"]["model"] == "openai/gpt-image-2.6-flare"
     assert (await client.get(f"/api/jobs/{j3}", headers=h)).json()["params"]["model"] == "google/gemini-nano-banana-2.1"

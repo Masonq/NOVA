@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Sheet from "./Sheet.jsx";
 import Icon from "./Icon.jsx";
 import { api } from "../api.js";
+import { PRICE } from "../jobs.js";
 import { tg, haptic, inTelegram } from "../tg.js";
 import { toast } from "./Toast.jsx";
 
@@ -97,7 +98,7 @@ export default function Topup({ me, reloadMe }) {
             <div className={"payseg" + (data.methods.length > 2 ? " three" : "")} role="tablist" aria-label="Способ оплаты">
               {data.methods.map((m) => <button key={m} role="tab" aria-selected={method === m} className={method === m ? "on" : ""} onClick={() => setMethod(m)}>{M[m]}</button>)}
             </div>)}
-          {p && (() => { const im = Math.floor(p.total / 40), mi = Math.floor(p.total / 5);
+          {p && (() => { const im = Math.floor(p.total / PRICE.image), mi = Math.floor(p.total / PRICE.agent_min);
             return <p className="muted small tp-what">Хватит на {im} {plural(im, "картинку", "картинки", "картинок")} или {fmt(mi)} {plural(mi, "минуту", "минуты", "минут")} с&nbsp;агентом</p>; })()}
           <button className="cta wide" onClick={buy} disabled={busy || !!wait}>
             {wait ? "Жду подтверждение оплаты…" : busy ? "Открываю оплату…" : `Оплатить ${price(p)}`}
