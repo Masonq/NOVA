@@ -1,3 +1,4 @@
+import logging
 """Voice agent NOVA. One turn: the user's speech (WAV) or text in, a stream of events out:
 heard (what was understood), step (work in progress), text (answer as it is written), audio (spoken sentence),
 confirm / job / cards (actions), done. Generations need an explicit "yes"."""
@@ -27,6 +28,7 @@ from ..pricing import PRICE, cost as price_of, refresh as refresh_prices
 from ..security import current_user
 from .jobs import job_out, start_job
 
+log = logging.getLogger("nova.agent")
 router = APIRouter(prefix="/api/agent", tags=["agent"])
 MODEL = "google/gemini-3.8-flash"
 HISTORY = 12
@@ -301,11 +303,15 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
         async def emit(o):
             await q.put(o)
 
+        tts_gate = asyncio.Semaphore(2)          # two sentences at a time: the first plays at once, no burst into the rate limit
+
         async def speak(seq: int, text: str):
-            try:
-                wav = await ai.speech(text, voice)
-            except ai.AIError:
-                return None
+            async with tts_gate:
+                try:
+                    wav = await ai.speech(text, voice)
+                except Exception as e:           # logged, and the next sentences still play (see voices_in_order)
+                    log.warning("agent tts failed for user %s, sentence %s: %s", uid, seq, e)
+                    return None
             name = f"{secrets.token_urlsafe(8)}.wav"
             (d / name).write_bytes(wav)
             return {"seq": seq, "url": f"{s.public_url}/files/agent/{uid}/{name}", "sec": round(wav_seconds(wav), 2), "text": text}
@@ -363,14 +369,15 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
             await emit({"type": "_textdone"})
 
         async def voices_in_order():
-            sent = 0
+            sent, out_seq = 0, 0
             while True:
                 while sent < len(tts_tasks):
                     a = await tts_tasks[sent]
                     sent += 1
-                    if a:
+                    if a:                            # numbered when sent: a failed sentence leaves no gap the player would wait for
                         nonlocal_out.append(a["sec"])
-                        await emit({"type": "audio", **a})
+                        await emit({"type": "audio", **a, "seq": out_seq})
+                        out_seq += 1
                 if done_flag.is_set() and sent >= len(tts_tasks):
                     return
                 await asyncio.sleep(0.05)
@@ -419,3 +426,11 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
         yield _sse({"type": "done", "balance": bal, "cost": price, "heard": heard or ""})
 
     return StreamingResponse(gen(), media_type="text/event-stream", headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
+
+
+
+@router.post("/barge")
+async def barge():
+    """The user interrupted NOVA (or the mic took NOVA's own echo for speech): only a line in the server log."""
+    log.info("agent barge-in")
+    return {"ok": True}

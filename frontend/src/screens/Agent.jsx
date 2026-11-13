@@ -80,7 +80,7 @@ export default function Agent({ go, me, reloadMe }) {
     haptic("medium");
     const v = new Voice({
       onUtterance: (w) => send({ audio: w.b64 }),
-      onBargeIn: () => { ctrl.current?.abort(); },
+      onBargeIn: () => { ctrl.current?.abort(); navigator.sendBeacon?.("/api/agent/barge"); },     // visible in the server log
       onState: (s) => setPhase((p) => (s === "idle" ? (p === "thinking" ? p : "idle") : s)),
     });
     try { await v.start(); voice.current = v; setPhase("idle"); }

@@ -118,13 +118,18 @@ async def speech(text: str, voice: str | None = None, instructions: str = STYLE,
     body = {"model": model or s.tts_model, "input": text, "voice": voice if voice in VOICES else s.tts_voice,
             "instructions": instructions, "response_format": "pcm"}
     last = ""
+    import random
     async with httpx.AsyncClient(timeout=90) as cl:
-        for attempt in range(3):
+        for attempt in range(5):                     # backoff with jitter: parallel retries don't hit the limit together
+            if attempt:
+                await asyncio.sleep(min(8.0, 0.7 * 2 ** (attempt - 1)) + random.random() * 0.6)
             try:
                 r = await cl.post(f"{BASE}/audio/speech", headers=_headers(), json=body)
             except httpx.HTTPError as e:
                 last = type(e).__name__
-                await asyncio.sleep(1 + attempt)
+                continue
+            if r.status_code == 200 and not r.content:
+                last = "пустой ответ"
                 continue
             if r.status_code == 200 and r.content:
                 gid = r.headers.get("x-generation-id") or r.headers.get("x-openrouter-generation-id")
@@ -136,7 +141,6 @@ async def speech(text: str, voice: str | None = None, instructions: str = STYLE,
             last = f"{r.status_code} {r.text[:200]}"
             if r.status_code not in RETRY_STATUS:
                 break
-            await asyncio.sleep(1 + 2 * attempt)
     raise AIError(f"озвучка: {last}")
 
 

@@ -49,12 +49,15 @@ export class Voice {
       const rms = Math.sqrt(s / (d.length / 2));
       const copy = new Float32Array(d);
       if (this.muted) { this.level *= 0.8; return; }
-      const thr = Math.max(0.012, floor * 3) * (this.speaking ? 2.6 : 1);
+      // while NOVA speaks, the speaker's echo leaks into the mic (iPhone AEC isn't perfect): a much higher bar for barge-in,
+      // a longer run of loud chunks, and a short deaf window at the start of every sentence when the echo is strongest
+      const echo = this.speaking && performance.now() - (this.sentenceAt || 0) < 400;
+      const thr = Math.max(0.012, floor * 3) * (this.speaking ? 3.4 : 1);
       if (!rec) {
         floor = floor * 0.97 + Math.min(rms, 0.05) * 0.03;
         pre.push(copy); if (pre.length > preMax) pre.shift();
-        loud = rms > thr ? loud + 1 : 0;
-        if (loud >= (this.speaking ? 4 : 2)) {
+        loud = rms > thr && !echo ? loud + 1 : 0;
+        if (loud >= (this.speaking ? Math.ceil(350 / chunkMs) : 2)) {
           if (this.speaking) { this.stopPlayback(); this.onBargeIn?.(); }
           rec = [...pre]; quiet = 0; startT = performance.now(); this.listening = true; this.onState("listening");
         }
@@ -96,7 +99,7 @@ export class Voice {
     if (!buf) { if (this.speaking && this.turnDone && !this.pend.size) { this.speaking = false; this.onState("idle"); } return; }
     this.pend.delete(this.nextSeq); this.nextSeq++;
     const s = this.ctx.createBufferSource(); s.buffer = buf; s.connect(this.outAn);
-    this.playing = s; this.speaking = true; this.onState("speaking");
+    this.playing = s; this.speaking = true; this.sentenceAt = performance.now(); this.onState("speaking");
     s.onended = () => { if (this.playing === s) { this.playing = null; this._pump(); } };
     s.start();
   }

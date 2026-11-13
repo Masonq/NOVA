@@ -104,3 +104,40 @@ async def test_settings_and_empty_balance(client, env):
         await db.execute(update(User).where(User.tg_id == 9503).values(balance=0)); await db.commit()
     r = await client.post("/api/agent/turn", json={"text": "привет"}, headers=h)
     assert r.status_code == 402
+
+
+@A
+async def test_failed_sentence_leaves_no_gap(client, env, monkeypatch):
+    calls = []
+    async def speech(text, voice=None, instructions=""):
+        calls.append(text)
+        if "Второе" in text:
+            raise ai.AIError("озвучка: 429 rate limited")
+        return ai.pcm_to_wav(b"\x00\x00" * 24000)
+    monkeypatch.setattr(ai, "speech", speech)
+    h = await login(client, 9551)
+    env["script"] += [[("text", "[[Расскажи]] Первое предложение здесь. Второе предложение тоже здесь. Третье предложение в конце.")]]
+    ev = events((await client.post("/api/agent/turn", json={"audio": wav_b64()}, headers=h)).text)
+    auds = [e for e in ev if e["type"] == "audio"]
+    assert len(calls) == 3 and [a["seq"] for a in auds] == [0, 1] and auds[1]["text"].startswith("Третье")
+
+
+@A
+async def test_speech_survives_rate_limits(monkeypatch):
+    import httpx
+    tries = []
+    class R:
+        def __init__(self, code, content=b""): self.status_code, self.content, self.text, self.headers = code, content, "busy", {}
+    class C:
+        def __init__(self, *a, **k): pass
+        async def __aenter__(self): return self
+        async def __aexit__(self, *a): pass
+        async def post(self, url, headers=None, json=None):
+            tries.append(1)
+            return R(429) if len(tries) < 3 else R(200, b"\x00\x00" * 100)
+    monkeypatch.setattr(httpx, "AsyncClient", C)
+    sleeps = []
+    async def nosleep(s): sleeps.append(s)
+    monkeypatch.setattr(ai.asyncio, "sleep", nosleep)
+    wav = await ai.speech("Привет", "Sulafat")
+    assert wav[:4] == b"RIFF" and len(tries) == 3 and len(sleeps) == 2 and sleeps[1] > sleeps[0]
