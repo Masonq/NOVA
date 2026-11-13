@@ -168,6 +168,9 @@ timeout 300 "$APP/venv/bin/python" tools/services_check.py /tmp/services.md $IMG
 
 echo >> "$REPORT"; log "Статус: $STATUS"
 
+# --- bot profile: photo, description, commands (only when they change) ---
+"$APP/venv/bin/python" "$APP/tools/bot_profile.py" 2>&1 | tee -a "$REPORT" >/dev/null || log "Профиль бота: ошибка скрипта"
+
 # --- autodeploy: a timer checks main every minute and installs new commits ---
 cat > /etc/systemd/system/nova-autodeploy.service << UNIT
 [Unit]
