@@ -2,6 +2,9 @@
 # NOVA: idempotent install/update. Safe to run any number of times.
 set -euo pipefail
 APP=/opt/nova; ENV=$APP/.env; DOMAIN=nova.89-208-113-147.sslip.io
+if [ "${AUTODEPLOY:-0}" != "1" ]; then                      # a manual run waits for a running autodeploy (and blocks it)
+  exec 9>/run/nova-autodeploy.lock; flock -w 900 9 || true
+fi
 REPORT=$(mktemp); STATUS=ok
 log(){ echo "- $*" | tee -a "$REPORT"; }
 fail(){ STATUS=fail; log "ОШИБКА: $*"; }
@@ -164,6 +167,32 @@ timeout 300 "$APP/venv/bin/python" tools/services_check.py /tmp/services.md $IMG
 
 echo >> "$REPORT"; log "Статус: $STATUS"
 
+# --- autodeploy: a timer checks main every minute and installs new commits ---
+cat > /etc/systemd/system/nova-autodeploy.service << UNIT
+[Unit]
+Description=NOVA autodeploy (install new commits from main)
+After=network-online.target
+[Service]
+Type=oneshot
+ExecStart=/bin/bash $APP/deploy/autodeploy.sh
+TimeoutStartSec=1800
+UNIT
+cat > /etc/systemd/system/nova-autodeploy.timer << UNIT
+[Unit]
+Description=NOVA autodeploy every minute
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=60s
+AccuracySec=5s
+[Install]
+WantedBy=timers.target
+UNIT
+systemctl daemon-reload
+systemctl enable --now nova-autodeploy.timer >/dev/null 2>&1
+git -C "$APP" rev-parse HEAD > "$APP/.autodeploy-sha"          # this version is installed: the timer won't redo it
+systemctl is-active --quiet nova-autodeploy.timer && log "Автодеплой: включён — новые версии ставятся сами в течение минуты" || fail "автодеплой не запустился"
+[ "${AUTODEPLOY:-0}" = "1" ] && log "Запуск: автодеплой"
+
 # --- report to git (branch reports) ---
 R=/opt/nova-reports
 URL=$(git -C "$APP" remote get-url origin)
@@ -175,6 +204,6 @@ git -C "$R" fetch -q origin reports 2>/dev/null && git -C "$R" reset -q --hard o
 cp "$REPORT" "$R/install.md"; [ -f /tmp/russian.md ] && cp /tmp/russian.md "$R/russian.md"; [ -f /tmp/services.md ] && cp /tmp/services.md "$R/services.md"
 journalctl -u nova-api -n 200 --no-pager > "$R/api.log" 2>/dev/null || true
 journalctl -u nova-worker -n 200 --no-pager > "$R/worker.log" 2>/dev/null || true
-git -C "$R" add -A && git -C "$R" -c user.email=server@nova -c user.name=NOVA-server commit -qm "install $(date -u +%F_%H%M) $STATUS" >/dev/null 2>&1 || true
+git -C "$R" add -A && git -C "$R" -c user.email=server@nova -c user.name=NOVA-server commit -qm "$([ "${AUTODEPLOY:-0}" = "1" ] && echo auto)install $(date -u +%F_%H%M) $STATUS" >/dev/null 2>&1 || true
 git -C "$R" push -q origin HEAD:refs/heads/reports 2>/dev/null && echo "Отчёт отправлен в git" || echo "Отчёт: не удалось отправить"
 cat "$REPORT"
