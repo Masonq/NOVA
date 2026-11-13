@@ -15,8 +15,10 @@ router = APIRouter(prefix="/api/me", tags=["me"])
 @router.get("")
 async def me(u: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
     jobs = (await db.execute(select(func.count()).select_from(Job).where(Job.user_id == u.id))).scalar_one()
+    # has the user ever spent credits (works can be deleted, the history stays): «new» texts are for those who haven't
+    spent = (await db.execute(select(Ledger.id).where(Ledger.user_id == u.id, Ledger.delta < 0).limit(1))).first() is not None
     return {"id": u.id, "name": u.first_name, "username": u.username, "balance": u.balance,
-            "jobs": jobs, "keep_days": get_settings().keep_days, "since": u.created_at.isoformat(),
+            "jobs": jobs, "spent": spent, "keep_days": get_settings().keep_days, "since": u.created_at.isoformat(),
             "is_admin": is_admin(u)}
 
 
