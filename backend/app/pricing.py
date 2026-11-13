@@ -18,9 +18,9 @@ DEFAULT_PRICE = {
     "ref_bonus": 100,       # credits for the inviter after the friend's first payment
 }
 DEFAULT_PACKS = [
-    {"id": "p500", "credits": 500, "bonus": 0, "stars": 400, "usd": "4.99"},
-    {"id": "p1500", "credits": 1500, "bonus": 150, "stars": 1150, "usd": "14.99", "hit": True},
-    {"id": "p5000", "credits": 5000, "bonus": 1000, "stars": 3700, "usd": "44.99"},
+    {"id": "p500", "credits": 500, "bonus": 0, "stars": 400, "usd": "4.99", "rub": 449},
+    {"id": "p1500", "credits": 1500, "bonus": 150, "stars": 1150, "usd": "14.99", "rub": 1290, "hit": True},
+    {"id": "p5000", "credits": 5000, "bonus": 1000, "stars": 3700, "usd": "44.99", "rub": 3790},
 ]
 IMAGE_VARIANTS = 4
 PRICE = dict(DEFAULT_PRICE)

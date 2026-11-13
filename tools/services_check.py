@@ -26,6 +26,13 @@ def main(path, image):
                 out.append(f"- Kie: ошибка {type(e).__name__} {e}")
         else:
             out.append("- Kie: ключа нет")
+        if env("YOOKASSA_SHOP_ID") and env("YOOKASSA_SECRET"):
+            try:
+                r = cl.get("https://api.yookassa.ru/v3/me", auth=(env("YOOKASSA_SHOP_ID"), env("YOOKASSA_SECRET")))
+                d = r.json()
+                out.append(f"- ЮKassa: {r.status_code}, магазин {d.get('account_id', '?')}, статус {d.get('status', d.get('description', '?'))}, тестовый {d.get('test')}, методы {', '.join(d.get('payment_methods', []))[:120]}")
+            except Exception as e:
+                out.append(f"- ЮKassa: ошибка {type(e).__name__} {e}")
         o = env("OPENROUTER_KEY")
         try:
             r = cl.get("https://openrouter.ai/api/v1/key", headers={"Authorization": "Bearer " + o}).json().get("data", {})

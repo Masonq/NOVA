@@ -38,7 +38,7 @@ async def credit(db: AsyncSession, pay_id: int, external_id: str = "") -> Paymen
         p.external_id = external_id
     u = await db.get(User, p.user_id)
     pk = pack_by_id(p.pack) or {}
-    price = f"{p.amount} ⭐" if p.currency == "XTR" else f"${p.amount}"
+    price = f"{p.amount} ⭐" if p.currency == "XTR" else f"{p.amount} ₽" if p.currency == "RUB" else f"${p.amount}"
     await grant(db, u, p.credits, "purchase", f"Пополнение: {p.credits} кредитов ({price})")
     inviter = None
     if u.referrer_id and not u.ref_rewarded:          # the friend paid for the first time: reward the inviter once
@@ -115,6 +115,64 @@ async def crypto_sync(db: AsyncSession, payments: list[Payment]) -> int:
             if await credit(db, p.id, str(it.get("invoice_id"))):
                 n += 1
         elif it.get("status") == "expired" and p.status == "pending":
+            p.status = "expired"
+            await db.commit()
+    return n
+
+
+
+# ---------- YooKassa (cards, SBP, SberPay, T-Pay) ----------
+YK_API = "https://api.yookassa.ru/v3"
+
+
+def yk_enabled() -> bool:
+    s = get_settings()
+    return bool(s.yookassa_shop_id and s.yookassa_secret)
+
+
+async def yk_call(method: str, path: str, body: dict | None = None, idem: str | None = None) -> dict:
+    s = get_settings()
+    headers = {"Content-Type": "application/json"}
+    if idem:
+        headers["Idempotence-Key"] = idem
+    async with httpx.AsyncClient(timeout=25, auth=(s.yookassa_shop_id, s.yookassa_secret)) as cl:
+        r = await cl.request(method, f"{YK_API}{path}", headers=headers, json=body)
+    d = r.json()
+    if r.status_code >= 400:
+        raise RuntimeError(f"{r.status_code}: {d.get('description') or d.get('code') or d}"[:200])
+    return d
+
+
+async def yk_invoice(db: AsyncSession, u: User, pack: dict, return_url: str) -> tuple[Payment, str]:
+    rub = int(pack.get("rub") or 0)
+    if rub < 1:
+        raise RuntimeError("для пакета не задана цена в рублях")
+    p = Payment(user_id=u.id, method="yookassa", pack=pack["id"], credits=total(pack), amount=str(rub), currency="RUB", payload=new_payload())
+    db.add(p)
+    await db.flush()
+    d = await yk_call("POST", "/payments", {
+        "amount": {"value": f"{rub}.00", "currency": "RUB"}, "capture": True,
+        "confirmation": {"type": "redirect", "return_url": return_url},
+        "description": f"NOVA: {total(pack)} кредитов",
+        "metadata": {"payload": p.payload, "user": str(u.id)},
+    }, idem=p.payload)
+    p.external_id = d["id"]
+    await db.commit()
+    return p, d["confirmation"]["confirmation_url"]
+
+
+async def yk_sync(db: AsyncSession, payments: list[Payment]) -> int:
+    """Asks YooKassa about pending payments; grants credits for succeeded ones. Works without the webhook."""
+    n = 0
+    for p in payments:
+        if p.method != "yookassa" or p.status != "pending" or not p.external_id:
+            continue
+        d = await yk_call("GET", f"/payments/{p.external_id}")
+        if d.get("status") == "succeeded" and (d.get("metadata") or {}).get("payload") == p.payload \
+                and d.get("amount", {}).get("value") == f"{p.amount}.00" and d.get("paid"):
+            if await credit(db, p.id, d["id"]):
+                n += 1
+        elif d.get("status") == "canceled":
             p.status = "expired"
             await db.commit()
     return n

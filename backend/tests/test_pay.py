@@ -84,3 +84,34 @@ async def test_bad_pack_and_foreign_payment(client, tg):
     assert (await client.post("/api/pay/crypto", json={"pack": "p500"}, headers=h1)).status_code == 503
     pid = (await client.post("/api/pay/stars", json={"pack": "p500"}, headers=h1)).json()["payment"]["id"]
     assert (await client.get(f"/api/pay/{pid}", headers=h2)).status_code == 404
+
+
+@A
+async def test_yookassa_flow_and_fake_webhook(client, tg, monkeypatch):
+    s = get_settings()
+    monkeypatch.setattr(s, "yookassa_shop_id", "123"); monkeypatch.setattr(s, "yookassa_secret", "sk")
+    remote = {}
+    async def yk_call(method, path, body=None, idem=None):
+        if method == "POST":
+            assert body["amount"] == {"value": "449.00", "currency": "RUB"} and body["capture"] is True and idem
+            remote.update(id="yk-1", status="pending", paid=False, amount=body["amount"], metadata=body["metadata"])
+            return {**remote, "confirmation": {"confirmation_url": "https://yoomoney.ru/checkout/x"}}
+        return dict(remote)
+    monkeypatch.setattr(P, "yk_call", yk_call)
+    h = await login(client, 7801)
+    bal = (await client.get("/api/me", headers=h)).json()["balance"]
+    assert "yookassa" in (await client.get("/api/pay/packs", headers=h)).json()["methods"]
+    r = (await client.post("/api/pay/yookassa", json={"pack": "p500"}, headers=h)).json()
+    assert r["link"].startswith("https://yoomoney.ru/") and r["payment"]["currency"] == "RUB"
+    pid = r["payment"]["id"]
+    # a forged notification changes nothing: the payment is re-read from YooKassa, where it is still pending
+    await client.post("/api/pay/yookassa/webhook", json={"event": "payment.succeeded", "object": {"id": "yk-1", "status": "succeeded", "metadata": remote["metadata"]}})
+    assert (await client.get(f"/api/pay/{pid}", headers=h)).json()["status"] == "pending"
+    # a different amount on the YooKassa side is not accepted
+    remote.update(status="succeeded", paid=True, amount={"value": "1.00", "currency": "RUB"})
+    assert (await client.get(f"/api/pay/{pid}", headers=h)).json()["status"] == "pending"
+    remote.update(amount={"value": "449.00", "currency": "RUB"})
+    await client.post("/api/pay/yookassa/webhook", json={"event": "payment.succeeded", "object": {"id": "yk-1", "metadata": remote["metadata"]}})
+    st = (await client.get(f"/api/pay/{pid}", headers=h)).json()
+    assert st["status"] == "paid" and st["balance"] == bal + 500
+    assert (await client.get(f"/api/pay/{pid}", headers=h)).json()["balance"] == bal + 500

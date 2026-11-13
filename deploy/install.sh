@@ -26,7 +26,8 @@ setv BOT_USERNAME "NovaAI_Agent"
 [ -n "$(getv BOT_TOKEN)" ] || fail "нет BOT_TOKEN в $ENV"
 [ -n "$(getv OPENROUTER_KEY)" ] || fail "нет OPENROUTER_KEY в $ENV"
 [ -n "$(getv KIE_KEY)" ] || log "Ключа Kie.ai пока нет — нужен с этапа 2 (видео)"
-[ -n "$(getv CRYPTO_PAY_TOKEN)" ] && log "Оплата криптой: токен есть" || log "Оплата криптой: токена нет — в приложении будут только Stars"
+[ -n "$(getv CRYPTO_PAY_TOKEN)" ] && log "Оплата криптой: токен есть" || log "Оплата криптой: токена нет"
+[ -n "$(getv YOOKASSA_SHOP_ID)" ] && [ -n "$(getv YOOKASSA_SECRET)" ] && log "ЮKassa: ключи есть (магазин $(getv YOOKASSA_SHOP_ID))" || log "ЮKassa: ключей нет"
 mkdir -p "$APP/storage"; chown -R www-data:www-data "$APP/storage" 2>/dev/null || true; chmod 755 "$APP/storage"
 
 # --- system packages (only what is missing) ---

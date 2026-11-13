@@ -16,6 +16,7 @@ from ..storage import remove_job_files
 from .jobs import job_out
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
+RUB_PER_USD = 90   # for the revenue estimate only
 COST_USD = {"image": 0.136, "video_s": 0.08, "music": 0.08, "tts_1k": 0.017, "agent_turn": 0.003}   # rough model cost
 
 
@@ -52,6 +53,7 @@ async def stats(days: int = 30, a: User = Depends(admin_user), db: AsyncSession 
         series.append({"day": d, "users": new.get(d, 0),
                        "stars": sum(int(s or 0) for dd, c, n, s in pays if str(dd) == d and c == "XTR"),
                        "usd": round(sum(float(s or 0) for dd, c, n, s in pays if str(dd) == d and c == "USD"), 2),
+                       "rub": round(sum(float(s or 0) for dd, c, n, s in pays if str(dd) == d and c == "RUB")),
                        "jobs": sum(n for dd, k, st, n, c in jobs if str(dd) == d)})
     by_kind = {}
     for d, k, st, n, c in jobs:
@@ -61,14 +63,14 @@ async def stats(days: int = 30, a: User = Depends(admin_user), db: AsyncSession 
             x[st] += n
         if st == "done":
             x["credits"] += int(c or 0)
-    stars = sum(r["stars"] for r in series); usd = sum(r["usd"] for r in series)
-    revenue = round(stars * 0.013 + usd * 0.97, 2)          # Stars payout ~$0.013 each, Crypto Pay fee ~3%
+    stars = sum(r["stars"] for r in series); usd = sum(r["usd"] for r in series); rub = sum(r["rub"] for r in series)
+    revenue = round(stars * 0.013 + usd * 0.97 + rub * 0.965 / RUB_PER_USD, 2)   # Stars ~$0.013, Crypto Pay ~3%, YooKassa ~3.5%
     vid_sec = (await db.execute(select(func.coalesce(func.sum(cast(Job.params["duration"].as_string(), pricing_float())), 0))
                                 .where(Job.kind == "video", Job.status == "done", Job.created_at > since))).scalar_one()
     cost = (by_kind.get("image", {}).get("done", 0) * COST_USD["image"] + float(vid_sec or 0) * COST_USD["video_s"]
             + by_kind.get("music", {}).get("done", 0) * COST_USD["music"] + agent_turns * COST_USD["agent_turn"])
     return {"days": days, "users": {"total": total, "dau": dau, "wau": wau}, "series": series, "by_kind": by_kind,
-            "money": {"stars": stars, "usd": round(usd, 2), "revenue_usd": revenue, "cost_usd": round(cost, 2),
+            "money": {"stars": stars, "usd": round(usd, 2), "rub": rub, "revenue_usd": revenue, "cost_usd": round(cost, 2),
                       "margin_usd": round(revenue - cost, 2), "credits_spent": int(spent), "agent_turns": agent_turns}}
 
 
@@ -197,7 +199,7 @@ async def set_prices(body: PricesIn, a: User = Depends(admin_user), db: AsyncSes
     for i, p in enumerate(body.packs[:6]):
         try:
             pk = {"id": str(p.get("id") or f"p{i}")[:16], "credits": int(p["credits"]), "bonus": int(p.get("bonus") or 0),
-                  "stars": int(p["stars"]), "usd": f"{float(p['usd']):.2f}"}
+                  "stars": int(p["stars"]), "usd": f"{float(p['usd']):.2f}", "rub": int(float(p.get("rub") or 0))}
         except (KeyError, TypeError, ValueError):
             raise HTTPException(422, f"Пакет {i + 1}: заполните кредиты, звёзды и цену в $")
         if pk["credits"] < 1 or pk["stars"] < 1 or float(pk["usd"]) < 0.5:

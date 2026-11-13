@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     openrouter_key: str = ""
     kie_key: str = ""
     crypto_pay_token: str = ""
+    yookassa_shop_id: str = ""
+    yookassa_secret: str = ""
+    yookassa_in_telegram: bool = False   # Telegram asks to sell digital goods inside mini apps for Stars
     database_url: str = "postgresql+asyncpg://nova:nova@127.0.0.1:5432/nova"
     redis_url: str = "redis://127.0.0.1:6379/5"
     jwt_secret: str = "dev-secret-change-me"

@@ -34,13 +34,13 @@ function Stats() {
   const [m, setM] = useState("revenue");
   useEffect(() => { api("/api/admin/stats?days=30").then(setS).catch((e) => toast(e.message, "error")); }, []);
   if (!s) return <div className="skeleton" />;
-  const val = (r) => m === "revenue" ? r.stars * 0.013 + r.usd : m === "users" ? r.users : r.jobs;
+  const val = (r) => m === "revenue" ? r.stars * 0.013 + r.usd + (r.rub || 0) / 90 : m === "users" ? r.users : r.jobs;
   const max = Math.max(1, ...s.series.map(val));
   return (
     <>
       <div className="kpis">
         <div className="kpi"><span>Пользователи</span><b>{fmt(s.users.total)}</b><small>{s.users.dau} за день · {s.users.wau} за неделю</small></div>
-        <div className="kpi"><span>Выручка 30 дн.</span><b>${fmt(s.money.revenue_usd)}</b><small>{fmt(s.money.stars)} ⭐ · ${s.money.usd} крипта</small></div>
+        <div className="kpi"><span>Выручка 30 дн.</span><b>${fmt(s.money.revenue_usd)}</b><small>{fmt(s.money.stars)} ⭐ · {fmt(s.money.rub)} ₽ · ${s.money.usd}</small></div>
         <div className="kpi"><span>Расходы на модели</span><b>${fmt(s.money.cost_usd)}</b><small>оценка по выполненным</small></div>
         <div className={"kpi" + (s.money.margin_usd < 0 ? " neg" : " pos")}><span>Маржа</span><b>${fmt(s.money.margin_usd)}</b><small>{fmt(s.money.credits_spent)} кредитов потрачено</small></div>
       </div>
@@ -108,7 +108,7 @@ function UserSheet({ id, onClose, onChange }) {
           <span className="sr-t"><b>{u.name || "Без имени"}</b><small>{u.username ? "@" + u.username + " · " : ""}ID {u.tg_id} · с {when(u.created)}</small></span></div>
         <div className="kpis two">
           <div className="kpi"><span>Баланс</span><b>{fmt(u.balance)}</b></div>
-          <div className="kpi"><span>Оплатил</span><b>{u.paid.XTR ? fmt(u.paid.XTR) + " ⭐" : ""}{u.paid.USD ? ` $${u.paid.USD}` : ""}{!u.paid.XTR && !u.paid.USD ? "—" : ""}</b></div>
+          <div className="kpi"><span>Оплатил</span><b>{[u.paid.XTR && fmt(u.paid.XTR) + " ⭐", u.paid.RUB && fmt(u.paid.RUB) + " ₽", u.paid.USD && "$" + u.paid.USD].filter(Boolean).join(" · ") || "—"}</b></div>
         </div>
         <div className="card adm-form">
           <div className="adm-row"><input inputMode="numeric" value={delta} onChange={(e) => setDelta(e.target.value.replace(/\D/g, ""))} placeholder="Кредиты" aria-label="Кредиты" />
@@ -190,10 +190,10 @@ function Prices() {
       </section>
       <section className="card adm-form">
         <div className="row-h"><h2>Пакеты</h2></div>
-        <div className="pk-head"><span>Кредиты</span><span>Бонус</span><span>⭐</span><span>$</span></div>
+        <div className="pk-head five"><span>Кредиты</span><span>Бонус</span><span>⭐</span><span>$</span><span>₽</span></div>
         {d.packs.map((p, i) => (
-          <div key={i} className="pk-row">
-            {["credits", "bonus", "stars", "usd"].map((k) => <input key={k} inputMode="decimal" value={p[k]} aria-label={k} onChange={(e) => setPack(i, k, e.target.value.replace(",", "."))} />)}
+          <div key={i} className="pk-row five">
+            {["credits", "bonus", "stars", "usd", "rub"].map((k) => <input key={k} inputMode="decimal" value={p[k]} aria-label={k} onChange={(e) => setPack(i, k, e.target.value.replace(",", "."))} />)}
           </div>))}
         <p className="muted small">1 ⭐ ≈ $0.013 при выводе. Бонус показывается зелёным в листе пополнения.</p>
       </section>

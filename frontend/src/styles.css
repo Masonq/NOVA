@@ -412,6 +412,7 @@ img.sheet-media { object-fit: contain; background: var(--card); }
 .kpi small { font-size: 11.5px; color: var(--mut2); }
 .kpi.pos b { color: #5BD07F; } .kpi.neg b { color: var(--red); }
 .payseg.three { grid-template-columns: repeat(3, 1fr); margin: 0 0 12px; }
+.sheet .payseg.three { margin: 6px 0 0; }
 .bars { display: flex; align-items: flex-end; gap: 3px; height: 130px; }
 .bars span { flex: 1; min-width: 0; border-radius: 3px 3px 1px 1px; background: linear-gradient(180deg, #4C9BFF, #2B5CD6); transition: height .4s var(--ease-out); }
 .bars-x { display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; color: var(--mut2); }
@@ -436,6 +437,7 @@ img.sheet-media { object-fit: contain; background: var(--card); }
 .adm-field.wide input { text-align: left; }
 .adm-hint { margin: -2px 2px 0; }
 .pk-head, .pk-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.pk-head.five, .pk-row.five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .pk-head span { font-size: 11.5px; color: var(--mut); text-align: center; }
 .pk-row input { text-align: center; padding: 0 6px; }
 .adm-jobs { display: flex; flex-direction: column; gap: 8px; }

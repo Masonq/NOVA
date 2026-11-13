@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Sheet from "./Sheet.jsx";
 import Icon from "./Icon.jsx";
 import { api } from "../api.js";
-import { tg, haptic } from "../tg.js";
+import { tg, haptic, inTelegram } from "../tg.js";
 import { toast } from "./Toast.jsx";
 
 /** Anywhere in the app: openTopup() shows the credit packs. */
@@ -25,7 +25,14 @@ export default function Topup({ me, reloadMe }) {
     window.addEventListener("nova:topup", on);
     return () => window.removeEventListener("nova:topup", on);
   }, []);
-  useEffect(() => { if (open && !data) api("/api/pay/packs").then(setData).catch(() => toast("Не удалось загрузить пакеты", "error")); }, [open]);
+  useEffect(() => {
+    if (open && !data) api("/api/pay/packs").then((d) => {
+      // Telegram asks to sell digital goods in mini apps for Stars: cards are offered on the site and in the installed app
+      const methods = d.methods.filter((m) => m !== "yookassa" || !inTelegram || d.yookassa_in_telegram);
+      setData({ ...d, methods });
+      if (!inTelegram && methods.includes("yookassa")) setMethod("yookassa");
+    }).catch(() => toast("Не удалось загрузить пакеты", "error"));
+  }, [open]);
 
   const poll = async (pid, tries = 40) => {
     setWait(pid);
@@ -52,6 +59,9 @@ export default function Topup({ me, reloadMe }) {
             else if (status === "failed") toast("Оплата не прошла", "error");
           });
         } else { window.open(r.link, "_blank"); poll(r.payment.id, 80); }
+      } else if (method === "yookassa") {
+        if (tg?.openLink && inTelegram) tg.openLink(r.link); else window.location.href = r.link;
+        poll(r.payment.id, 200);
       } else {
         if (tg?.openTelegramLink && r.link.startsWith("https://t.me/")) tg.openTelegramLink(r.link); else window.open(r.link, "_blank");
         poll(r.payment.id, 120);
@@ -61,6 +71,8 @@ export default function Topup({ me, reloadMe }) {
   };
 
   const p = data?.packs.find((x) => x.id === pack);
+  const price = (x) => !x ? "" : method === "stars" ? `${fmt(x.stars)} ⭐` : method === "yookassa" ? `${fmt(x.rub)} ₽` : `$${x.usd}`;
+  const M = { stars: "⭐ Stars", yookassa: "Карта / СБП", crypto: "Крипта" };
   return (
     <Sheet open={open} onClose={() => { setOpen(false); setWait(null); }} title="Пополнение">
       <h3 className="sheet-title">Пополнить баланс</h3>
@@ -73,20 +85,21 @@ export default function Topup({ me, reloadMe }) {
                 {x.hit && <span className="pk-hit">Выгодно</span>}
                 <span className="pk-c"><Icon n="spark" s={15} w={2} />{fmt(x.total)}</span>
                 <span className={"pk-b" + (x.bonus ? " bonus" : "")}>{x.bonus ? `+${fmt(x.bonus)} бонусом` : "кредитов"}</span>
-                <span className="pk-p">{method === "stars" ? `${fmt(x.stars)} ⭐` : `$${x.usd}`}</span>
+                <span className="pk-p">{price(x)}</span>
               </button>))}
           </div>
           {data.methods.length > 1 && (
-            <div className="payseg" role="tablist" aria-label="Способ оплаты">
-              <button role="tab" aria-selected={method === "stars"} className={method === "stars" ? "on" : ""} onClick={() => setMethod("stars")}>⭐ Telegram Stars</button>
-              <button role="tab" aria-selected={method === "crypto"} className={method === "crypto" ? "on" : ""} onClick={() => setMethod("crypto")}>Крипта</button>
+            <div className={"payseg" + (data.methods.length > 2 ? " three" : "")} role="tablist" aria-label="Способ оплаты">
+              {data.methods.map((m) => <button key={m} role="tab" aria-selected={method === m} className={method === m ? "on" : ""} onClick={() => setMethod(m)}>{M[m]}</button>)}
             </div>)}
           {p && (() => { const im = Math.floor(p.total / 40), mi = Math.floor(p.total / 5);
             return <p className="muted small tp-what">Хватит на {im} {plural(im, "картинку", "картинки", "картинок")} или {fmt(mi)} {plural(mi, "минуту", "минуты", "минут")} с&nbsp;агентом</p>; })()}
           <button className="cta wide" onClick={buy} disabled={busy || !!wait}>
-            {wait ? "Жду подтверждение оплаты…" : busy ? "Открываю оплату…" : `Оплатить ${method === "stars" ? `${fmt(p?.stars || 0)} ⭐` : `$${p?.usd}`}`}
+            {wait ? "Жду подтверждение оплаты…" : busy ? "Открываю оплату…" : `Оплатить ${price(p)}`}
           </button>
-          <p className="muted small center tp-note">{method === "stars" ? "Оплата внутри Telegram, кредиты придут сразу" : "USDT, TON и другие монеты через @CryptoBot. Кредиты придут автоматически"}</p>
+          <p className="muted small center tp-note">{{ stars: "Оплата внутри Telegram, кредиты придут сразу",
+            yookassa: "Карты, СБП, SberPay и T-Pay через ЮKassa. Кредиты придут сами после оплаты",
+            crypto: "USDT, TON и другие монеты через @CryptoBot. Кредиты придут автоматически" }[method]}</p>
         </>)}
     </Sheet>);
 }

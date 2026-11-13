@@ -58,16 +58,16 @@ async def sync_crypto(ctx):
     from datetime import timedelta
     from . import payments as P
     from .models import Payment, now
-    if not get_settings().crypto_pay_token:
-        return
     async with Session() as db:
-        rows = (await db.execute(select(Payment).where(Payment.method == "crypto", Payment.status == "pending",
+        rows = (await db.execute(select(Payment).where(Payment.method.in_(("crypto", "yookassa")), Payment.status == "pending",
                                                        Payment.created_at > now() - timedelta(hours=2)))).scalars().all()
-        if rows:
-            try:
-                await P.crypto_sync(db, list(rows))
-            except Exception as e:
-                log.warning("crypto sync: %s", e)
+        for method, sync, on in (("crypto", P.crypto_sync, bool(get_settings().crypto_pay_token)), ("yookassa", P.yk_sync, P.yk_enabled())):
+            part = [r for r in rows if r.method == method]
+            if part and on:
+                try:
+                    await sync(db, part)
+                except Exception as e:
+                    log.warning("%s sync: %s", method, e)
 
 log = logging.getLogger("nova.worker")
 
