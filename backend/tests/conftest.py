@@ -31,8 +31,11 @@ def no_network(monkeypatch):
     monkeypatch.setattr(costs, "balances", nobal)
     async def same(prompt, style="", has_ref=False): return prompt
     monkeypatch.setattr(ai, "enhance_prompt", same)
-    async def brief(prompt, genre="", mood="", vocal=False):
-        return {"style": ", ".join(x for x in (genre, mood) if x), "title": prompt[:40], "lyrics": "[Verse 1]\nтекст" if vocal else ""}
+    async def brief(prompt, genre="", mood="", vocal=False, voices="auto"):
+        v = voices if voices in ("male", "female", "duet") else ("male" if vocal else "")
+        tag = {"male": "Male Vocal", "female": "Female Vocal", "duet": "Duet"}.get(v, "")
+        return {"style": ", ".join(x for x in (genre, mood) if x), "title": prompt[:40], "vocals": v,
+                "lyrics": f"[Verse 1: {tag}]\nтекст" if vocal else ""}
     monkeypatch.setattr(ai, "music_brief", brief)
     sent = []
     async def send(chat_id, text, markup=None):

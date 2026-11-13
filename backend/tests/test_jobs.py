@@ -117,7 +117,7 @@ async def test_music_and_tts(client, monkeypatch):
     from app import runner, kie, storage, ai
     async def create(model, inp):
         assert model == "ai-music-api/generate" and inp["model"] == "V6" and inp["custom_mode"] is True
-        assert inp["instrumental"] is False and inp["style"] == "Lo-fi" and inp["lyrics"].startswith("[Verse 1]") and inp["title"]
+        assert inp["instrumental"] is False and inp["style"] == "Lo-fi" and inp["lyrics"].startswith("[Verse 1") and inp["title"]
         return "m1"
     async def wait(task, tick, timeout):
         return {"data": [{"audio_url": "https://a/1.mp3", "image_url": "https://a/1.jpg", "title": "Night", "duration": 134},
@@ -187,7 +187,7 @@ def test_kie_requests_go_over_ipv4():
 async def test_music_brief_replaces_artist_name(client, monkeypatch):
     from app import runner, kie, storage, ai
     sent = {}
-    async def brief(prompt, genre="", mood="", vocal=False):
+    async def brief(prompt, genre="", mood="", vocal=False, voices="auto"):
         assert "icegergert" in prompt and vocal is True
         return {"style": "melodic russian hip-hop, trap beats, autotune vocals, 140 bpm", "title": "Ночной город",
                 "lyrics": "[Verse 1]\nНочной город не спит\n[Chorus]\nМы горим"}
@@ -246,3 +246,23 @@ async def test_track_from_voice_over(client, monkeypatch):
     h2 = await login(client, 8802)
     bad = await client.post("/api/jobs", json={"kind": "music", "prompt": "Трек из озвучки", "params": {"voice_job": tid}}, headers=h2)
     assert bad.status_code == 404                                                     # someone else's voice-over
+
+
+
+@A
+async def test_music_vocals_male_female_duet(client, monkeypatch):
+    from app import runner, kie, storage
+    sent = []
+    async def create(model, inp):
+        sent.append(dict(inp)); return "t"
+    async def wait(task, tick, timeout):
+        return {"data": [{"audio_url": "https://a/1.mp3"}]}
+    async def dl(job, name, url, max_mb=300): return storage.save_bytes(job, name, b"1")
+    monkeypatch.setattr(kie, "create", create); monkeypatch.setattr(kie, "wait", wait); monkeypatch.setattr(runner, "download", dl)
+    for v in ("female", "duet"):
+        h, jid = await _job(client, 8901, "music", "песня про двоих", {"instrumental": False, "voices": v})
+        await runner.run_job({}, jid)
+    assert sent[0]["vocal_gender"] == "f" and "[Verse 1: Female Vocal]" in sent[0]["lyrics"]
+    assert "vocal_gender" not in sent[1] and "[Verse 1: Duet]" in sent[1]["lyrics"]
+    bad = await client.post("/api/jobs", json={"kind": "music", "prompt": "x y", "params": {"voices": "choir"}}, headers=h)
+    assert bad.status_code == 422

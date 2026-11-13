@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StudioTop, OptsMulti, PromptBox, Dock, Progress, Toggle } from "../ui/Studio.jsx";
+import { StudioTop, Opts, OptsMulti, PromptBox, Dock, Progress, Toggle } from "../ui/Studio.jsx";
 import Sheet, { JobSheet } from "../ui/Sheet.jsx";
 import Icon from "../ui/Icon.jsx";
 import { api } from "../api.js";
@@ -19,6 +19,7 @@ export default function MusicStudio({ go, me, reloadMe, params }) {
   const [prompt, setPrompt] = useState(params?.prompt || "");
   const [genre, setGenre] = useState([]);
   const [mood, setMood] = useState([]);
+  const [voices, setVoices] = useState("auto");
   const [vocal, setVocal] = useState(false);
   const [sheet, setSheet] = useState(null);
   const s = useStudio("music", reloadMe);
@@ -39,7 +40,10 @@ export default function MusicStudio({ go, me, reloadMe, params }) {
         placeholder={vj ? "Пожелания к музыке — необязательно: темп, инструменты, атмосфера" : vocal ? "О чём песня и как звучит: тема, история, на кого похоже" : "Для чего трек и как звучит: фон для видео, учёба, тренировка"} />
       <OptsMulti label="Жанр" value={genre} options={GENRES} onChange={setGenre} />
       <OptsMulti label="Настроение" value={mood} options={MOODS} onChange={setMood} />
-      {!vj && <Toggle label="С вокалом" sub={vocal ? "ИИ напишет текст по описанию, поёт по-русски" : "только музыка, без голоса"} on={vocal} onChange={setVocal} />}
+      {!vj && <Toggle label="С вокалом" sub={vocal ? "ИИ напишет текст, поёт по‑русски" : "только музыка, без голоса"} on={vocal} onChange={setVocal} />}
+      {!vj && vocal && <Opts label="Голос" value={voices} onChange={setVoices}
+        hint={{ auto: "ИИ решит по смыслу песни", male: "", female: "", duet: "ИИ распределит части" }[voices]}
+        options={[{ v: "auto", t: "Авто" }, { v: "male", t: "Мужской" }, { v: "female", t: "Женский" }, { v: "duet", t: "Дуэт" }]} />}
       {s.active && (
         <section className="card render" aria-label="Идёт генерация">
           <p className="render-p">{s.active.prompt}</p>
@@ -50,12 +54,13 @@ export default function MusicStudio({ go, me, reloadMe, params }) {
         <section className="tracks" aria-label="Треки">
           {list.slice(0, 8).flatMap((j) => (j.files || []).filter((f) => f.type === "audio").slice(0, 1).map((f, i) => (
             <Player key={f.url} src={f.url} cover={coverUrl(f)} title={f.title || j.prompt.slice(0, 40)}
-              sub={[j.params?.genre, j.params?.instrumental === false ? "с вокалом" : "инструментал"].filter(Boolean).join(" · ")} onMore={() => setSheet({ j, f })} />)))}
+              sub={[j.params?.genre, j.params?.instrumental === false
+                ? ({ male: "мужской вокал", female: "женский вокал", duet: "дуэт" }[j.params?.brief?.vocals] || "с вокалом") : "инструментал"].filter(Boolean).join(" · ")} onMore={() => setSheet({ j, f })} />)))}
         </section>)}
       <Dock label={vj ? "Создать трек из озвучки" : vocal ? "Создать песню" : "Создать трек"} price={priceOf("music", vj ? { voice_chars: vj.text.length } : {})}
         balance={me?.balance} busy={s.busy} disabled={(!vj && prompt.trim().length < 2) || !!s.active}
         onClick={() => s.run(prompt.trim() || "Трек из озвучки", { genre: genre.join(", "), mood: mood.join(", "),
-          instrumental: vj ? false : !vocal, ...(vj ? { voice_job: vj.id } : {}) })} />
+          instrumental: vj ? false : !vocal, ...(vj ? { voice_job: vj.id } : vocal ? { voices } : {}) })} />
       <Sheet open={pick} onClose={() => setPick(false)} title="Голос из озвучки">
         <h3 className="sheet-title">Выберите озвучку</h3>
         {tts === null ? <div className="skeleton" /> : tts.length === 0 ? (

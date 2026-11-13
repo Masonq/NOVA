@@ -201,8 +201,14 @@ Suno rejects real artist and band names: never output them; describe the artist'
 Follow the user's description first. Genre and mood, when given, refine it; when they are empty, infer them from the description.
 Several genres or moods may be given (e.g. "Поп, Рэп" and "Энергично, Эпично"): blend ALL of them into one coherent sound
 (e.g. pop-rap with a big cinematic chorus), name the blend in the tags, never drop one of them.
+Vocals: the user may fix them (male / female / duet) or leave "auto". On auto, decide from the meaning: a dialogue or a love story
+between two people → duet; a woman's story or point of view → female; otherwise what fits the genre best.
+Mark who sings in every section tag of the lyrics: [Verse 1: Male Vocal], [Chorus: Female Vocal], [Bridge: Duet], [Outro: Male & Female].
+For a single singer still use the same tags (all male or all female). Add the vocal type to the style tags
+("male vocals", "female vocals" or "male and female duet vocals").
 Return strict JSON:
-{"title": "track title in the user's language, max 40 chars",
+{"vocals": "male | female | duet",
+ "title": "track title in the user's language, max 40 chars",
  "style": "comma-separated English tags, 8–14: genre and sub-genre, tempo/BPM, key instruments, vocal type and gender, mood, production style",
  "lyrics": "the full song text in the user's language (Russian by default) with section tags on separate lines:
 [Verse 1] [Pre-Chorus] [Chorus] [Verse 2] [Chorus] [Bridge] [Chorus] [Outro]; 2–3 minutes of singing, vivid concrete images,
@@ -235,21 +241,25 @@ async def artist_sound(prompt: str) -> str:
         return ""
 
 
-async def music_brief(prompt: str, genre: str = "", mood: str = "", vocal: bool = False) -> dict:
+async def music_brief(prompt: str, genre: str = "", mood: str = "", vocal: bool = False, voices: str = "auto") -> dict:
     """Writes the lyrics, the style tags and the title for Suno custom mode. Falls back to simple values."""
-    fallback = {"title": prompt[:40], "style": ", ".join(x for x in (genre, mood) if x) or "modern pop, catchy, polished production", "lyrics": ""}
+    fallback = {"title": prompt[:40], "style": ", ".join(x for x in (genre, mood) if x) or "modern pop, catchy, polished production", "lyrics": "",
+                "vocals": voices if voices in ("male", "female", "duet") else ""}
     sound = await artist_sound(prompt)
     try:
         raw = await complete("google/gemini-3.8-flash", [{"role": "system", "content": MUSIC_BRIEF}, {"role": "user", "content":
-                             f"Description: {prompt}\nGenre: {genre or 'auto'}\nMood: {mood or 'auto'}\nVocals: {'yes' if vocal else 'no, instrumental'}"
+                             f"Description: {prompt}\nGenre: {genre or 'auto'}\nMood: {mood or 'auto'}\nVocals: {('yes, ' + voices) if vocal else 'no, instrumental'}"
                              + (f"\nArtist reference (how the mentioned artist sounds, from the web):\n{sound}" if sound else "")}],
                              timeout=40, temperature=0.8, max_tokens=2500, response_format={"type": "json_object"})
         import re as _re
         m = _re.search(r"\{.*\}", raw or "", _re.S)
         d = json.loads(m.group(0)) if m else {}
-        out = {"title": str(d.get("title") or "")[:80], "style": str(d.get("style") or "")[:950],
+        vocals = d.get("vocals") if d.get("vocals") in ("male", "female", "duet") else ""
+        if voices in ("male", "female", "duet"):
+            vocals = voices                      # the user's choice wins over the model's
+        out = {"vocals": vocals if vocal else "", "title": str(d.get("title") or "")[:80], "style": str(d.get("style") or "")[:950],
                "lyrics": str(d.get("lyrics") or "")[:4900] if vocal else ""}
-        res = {k: (out[k] or fallback[k]) for k in out}
+        res = {k: (out[k] or fallback.get(k, "")) for k in out}
         res["reference"] = sound[:600]
         return res
     except Exception:

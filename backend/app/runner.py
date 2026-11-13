@@ -214,7 +214,7 @@ async def run_music(job: Job):
     brief = p.get("brief")
     if not brief:   # Suno rejects artist names: describe the sound instead, add a title
         await _update(job.id, status="running", progress=3, stage="Продумываю звучание")
-        brief = await ai.music_brief(job.prompt, p.get("genre", ""), p.get("mood", ""), vocal)
+        brief = await ai.music_brief(job.prompt, p.get("genre", ""), p.get("mood", ""), vocal, p.get("voices") or "auto")
         p = {**p, "brief": brief}
         await _update(job.id, params=p)
     # custom mode: Suno sings exactly these lyrics in exactly this style
@@ -224,6 +224,8 @@ async def run_music(job: Job):
         inp["lyrics"] = brief["lyrics"]
     elif vocal:
         inp["prompt"] = job.prompt[:2900]
+    if vocal and brief.get("vocals") in ("male", "female"):     # one singer: nudge Suno towards that voice
+        inp["vocal_gender"] = "m" if brief["vocals"] == "male" else "f"
     task = p.get("task")
     if not task:
         await _update(job.id, status="running", progress=5, stage="Пишу трек")
