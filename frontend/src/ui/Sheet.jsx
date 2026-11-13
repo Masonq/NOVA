@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Icon from "./Icon.jsx";
-import { tg, pushBack, popBack } from "../tg.js";
+import { tg, haptic, pushBack, popBack } from "../tg.js";
 import { toast } from "./Toast.jsx";
 import { api } from "../api.js";
 import Player from "./Player.jsx";
-import { thumbOf } from "../jobs.js";
+import { thumbOf, cardText } from "../jobs.js";
 
 export function saveFile(url, name) {
   try { if (tg?.downloadFile) { tg.downloadFile({ url, file_name: name }); return; } } catch {}
@@ -83,11 +83,48 @@ export default function Sheet({ open, onClose, children, title }) {
     let a = requestAnimationFrame(() => { a = requestAnimationFrame(() => setIn(true)); });
     return () => cancelAnimationFrame(a);
   }, [open]);
+  // swipe down to close: the sheet follows the finger, the dim fades with it; far or fast enough → it slides away
+  const box = useRef(null), wrap = useRef(null), g = useRef(null);
+  const start = (y, x, fromGrab) => {
+    const el = box.current; if (!el) return;
+    g.current = { y, x, t: Date.now(), dy: 0, on: false, ok: fromGrab || el.scrollTop <= 0, axis: null };
+  };
+  const drag = (y, x) => {
+    const s = g.current, el = box.current; if (!s || !el || !s.ok) return;
+    const dy = y - s.y, dx = x - s.x;
+    if (!s.axis && (Math.abs(dy) > 6 || Math.abs(dx) > 6)) s.axis = Math.abs(dy) > Math.abs(dx) ? "y" : "x";
+    if (s.axis !== "y") return;
+    if (!s.on && dy > 0 && el.scrollTop <= 0) { s.on = true; s.y0 = y; el.style.transition = "none"; wrap.current.style.transition = "none"; }
+    if (!s.on) return;
+    s.dy = Math.max(0, y - s.y0);
+    const now = Date.now(); s.trail = [...(s.trail || []).filter((p) => now - p[0] < 100), [now, s.dy]];   // last 100 ms
+    el.style.transform = `translateY(${s.dy}px)`;
+    wrap.current.style.backgroundColor = `rgba(0,0,0,${0.55 * Math.max(0, 1 - s.dy / el.offsetHeight)})`;
+  };
+  const end = () => {
+    const s = g.current, el = box.current, w = wrap.current; g.current = null;
+    if (!s || !s.on || !el) return;
+    const tr = s.trail || [], a = tr[0], z = tr[tr.length - 1];
+    const fast = a && z && z[0] > a[0] ? (z[1] - a[1]) / (z[0] - a[0]) > 0.5 : false;      // a flick: speed of the last moves
+    el.style.transition = w.style.transition = "";
+    if (s.dy > Math.min(140, el.offsetHeight * 0.28) || (fast && s.dy > 30)) {
+      el.style.transform = "translateY(100%)"; w.style.backgroundColor = "rgba(0,0,0,0)";
+      haptic("light"); setTimeout(onClose, 230);
+    } else { el.style.transform = ""; w.style.backgroundColor = ""; }
+  };
+  const mouseGrab = (e) => {
+    start(e.clientY, e.clientX, true);
+    const mv = (ev) => drag(ev.clientY, ev.clientX);
+    const up = () => { end(); window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); };
+    window.addEventListener("pointermove", mv); window.addEventListener("pointerup", up);
+  };
   if (!open) return null;
   return (
-    <div className={"sheet-wrap" + (inn ? " in" : "")} onClick={onClose}>
-      <div className="sheet" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
-        <span className="grab" aria-hidden="true" />
+    <div ref={wrap} className={"sheet-wrap" + (inn ? " in" : "")} onClick={onClose}>
+      <div ref={box} className="sheet" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}
+        onTouchStart={(e) => start(e.touches[0].clientY, e.touches[0].clientX, !!e.target.closest?.(".grab-zone"))}
+        onTouchMove={(e) => drag(e.touches[0].clientY, e.touches[0].clientX)} onTouchEnd={end} onTouchCancel={end}>
+        <span className="grab-zone" onPointerDown={(e) => e.pointerType === "mouse" && mouseGrab(e)} aria-hidden="true"><span className="grab" /></span>
         {children}
       </div>
     </div>);
@@ -119,7 +156,7 @@ export function JobSheet({ job, file, onClose, go, onChange }) {
     <Sheet open={!!job} onClose={onClose} title="Действия">
       <div className="sheet-head">
         <span className={"sh-thumb k-" + job.kind} style={thumbOf(job) ? { backgroundImage: `url(${thumbOf(job)})` } : undefined} />
-        <span className="sr-t"><b>{job.prompt.slice(0, 48)}</b><small>{{ image: "Картинка", video: "Видео", music: "Трек", tts: "Озвучка", clip: "Клип", reel: "Ролик", greeting: "Поздравление" }[job.kind]}</small></span>
+        <span className="sr-t"><b>{cardText(job).title}</b><small>{{ image: "Картинка", video: "Видео", music: "Трек", tts: "Озвучка", clip: "Клип", reel: "Ролик", greeting: "Поздравление" }[job.kind]}</small></span>
         <button className={"ic-btn fav" + (job.favorite ? " on" : "")} aria-label={job.favorite ? "Убрать из избранного" : "В избранное"} onClick={fav}><Icon n="heart" /></button>
       </div>
       {f && job.kind === "image" && <img className="sheet-media" src={f.url} alt={job.prompt} />}

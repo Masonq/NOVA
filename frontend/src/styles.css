@@ -281,6 +281,8 @@ html.sheet-open .app *:not(.sheet-wrap):not(.sheet-wrap *) {
 /* blocks inside a sheet keep their height; a tall sheet scrolls instead of squashing them */
 .sheet > * { flex-shrink: 0; }
 .grab { width: 38px; height: 5px; border-radius: 3px; background: #3A3A42; align-self: center; margin-bottom: 8px; }
+.grab-zone { display: flex; justify-content: center; align-items: center; height: 26px; margin: -8px -16px -4px; flex-shrink: 0; cursor: grab; touch-action: none; }
+.grab-zone .grab { margin: 0; }
 .sheet-head { display: flex; align-items: center; gap: 12px; padding: 4px 0 10px; }
 .sh-thumb { width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0; background-size: cover; background-position: center; }
 .ic-btn.fav.on { color: #FF6B8A; border-color: rgba(255,107,138,.4); }
