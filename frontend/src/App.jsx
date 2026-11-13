@@ -1,6 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, auth } from "./api.js";
-import { inTelegram, tg, haptic } from "./tg.js";
+import { inTelegram, tg, haptic, backStack } from "./tg.js";
 import Icon from "./ui/Icon.jsx";
 import { Toaster } from "./ui/Toast.jsx";
 const Login = lazy(() => import("./screens/Login.jsx"));
@@ -76,9 +76,19 @@ export default function App() {
 
   useEffect(() => {
     const b = tg?.BackButton; if (!b || !inTelegram) return;
-    const back = () => go(route === "feed" ? "archive" : "home");
-    if (route !== "home") { b.show(); b.onClick(back); } else b.hide();
-    return () => b.offClick?.(back);
+    // Telegram's own Back button replaces ours: an open sheet closes first, nested screens go to their parent,
+    // the tab sections (home, archive, profile) have none
+    const BACK = { feed: "archive", admin: "profile" };
+    const root = ["home", "archive", "profile"].includes(route);
+    const sync = () => (backStack.length || !root ? b.show() : b.hide());
+    const back = () => {
+      haptic("light");
+      if (backStack.length) { backStack[backStack.length - 1](); return; }
+      if (!root) go(BACK[route] || "home");
+    };
+    b.onClick(back); sync();
+    window.addEventListener("nova:backstack", sync);
+    return () => { b.offClick?.(back); window.removeEventListener("nova:backstack", sync); };
   }, [route]);
 
   if (!ready) return <div className="boot" aria-label="Загрузка" />;

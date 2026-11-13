@@ -5,6 +5,7 @@ export function setupTelegram() {
   if (!inTelegram) return;
   try {
     tg.ready(); tg.expand();
+    document.documentElement.classList.add("in-tg");     // our in-app Back buttons give way to Telegram's
     tg.setHeaderColor?.("#0A0A0C"); tg.setBackgroundColor?.("#0A0A0C"); tg.setBottomBarColor?.("#0E0E11");
     tg.disableVerticalSwipes?.();
   } catch {}
@@ -24,3 +25,9 @@ export function openLink(url) {
   if (inTelegram && url.startsWith("https://t.me/")) tg.openTelegramLink(url);
   else window.open(url, "_blank", "noopener");
 }
+
+
+/* Telegram's Back button closes the topmost sheet first, then goes to the parent screen. */
+export const backStack = [];
+export function pushBack(fn) { backStack.push(fn); window.dispatchEvent(new Event("nova:backstack")); }
+export function popBack(fn) { const i = backStack.lastIndexOf(fn); if (i >= 0) backStack.splice(i, 1); window.dispatchEvent(new Event("nova:backstack")); }

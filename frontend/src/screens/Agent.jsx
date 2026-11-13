@@ -100,7 +100,7 @@ export default function Agent({ go, me, reloadMe }) {
   return (
     <main className={"agent ph-" + phase}>
       <header className="ag-top">
-        <button className="ic-btn" aria-label="Назад" onClick={() => go("home")}><Icon n="back" /></button>
+        <button className="ic-btn back-btn" aria-label="Назад" onClick={() => go("home")}><Icon n="back" /></button>
         <button className="ag-voice" onClick={() => setPick(true)} aria-label="Выбрать голос"><Icon n="wave" s={15} />{vname ? vname[0].toUpperCase() + vname.slice(1) : "Голос"}</button>
         <span className="balance" role="button" tabIndex={0} onClick={() => openTopup()} aria-label={`Баланс ${me?.balance ?? 0} кредитов, пополнить`}><Icon n="spark" s={14} w={2} />{me?.balance ?? "…"}</span>
       </header>

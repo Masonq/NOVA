@@ -21,7 +21,7 @@ export default function Feed({ go }) {
   }, [items]);
   return (
     <main className="feed" ref={box}>
-      <button className="ic-btn feed-back" aria-label="Назад" onClick={() => go("archive")}><Icon n="back" /></button>
+      <button className="ic-btn back-btn feed-back" aria-label="Назад" onClick={() => go("archive")}><Icon n="back" /></button>
       {items?.length === 0 && <div className="empty-state"><p>Лента пустая</p><span className="muted small">Здесь будут ваши картинки и видео</span></div>}
       {items?.map(({ j, f }) => f && (
         <section key={f.url} className="slide">

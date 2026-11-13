@@ -505,6 +505,10 @@ img.sheet-media { object-fit: contain; background: var(--card); }
 .install .row-btn > svg:last-child { margin-left: auto; color: var(--mut2); }
 .inst-help { margin: 10px 4px 0; line-height: 1.5; }
 
+/* inside Telegram the system Back button is used instead of ours */
+.in-tg .back-btn { display: none; }
+.in-tg .studio-top .back-btn, .in-tg .ag-top .back-btn { display: inline-flex; visibility: hidden; }   /* keep the title centred */
+
 /* ---------- motion: page transitions, staggered blocks, pop-ins, press feedback ---------- */
 @keyframes pg-in { from { opacity: 0; } }
 @keyframes from-right { from { opacity: 0; transform: translateX(30px); } }

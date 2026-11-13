@@ -18,7 +18,7 @@ export default function Tasks({ go }) {
   };
   return (
     <main className="screen">
-      <header className="bar"><button className="ic-btn" aria-label="Назад" onClick={() => go("home")}><Icon n="back" /></button><h1>В работе</h1></header>
+      <header className="bar"><button className="ic-btn back-btn" aria-label="Назад" onClick={() => go("home")}><Icon n="back" /></button><h1>В работе</h1></header>
       {active.length === 0 && <div className="empty-state slim"><Icon n="check" s={22} /><p>Сейчас ничего не генерируется</p></div>}
       {active.map((j) => (
         <section key={j.id} className="card task">

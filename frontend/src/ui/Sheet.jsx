@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import Icon from "./Icon.jsx";
-import { tg } from "../tg.js";
+import { tg, pushBack, popBack } from "../tg.js";
 import { toast } from "./Toast.jsx";
 import { api } from "../api.js";
 import Player from "./Player.jsx";
@@ -24,10 +24,12 @@ export async function shareJob(job) {
 export default function Sheet({ open, onClose, children, title }) {
   useEffect(() => {
     if (!open) return;
+    const close = () => onClose();
+    pushBack(close);
     const prev = document.body.style.overflow; document.body.style.overflow = "hidden";
     const esc = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", esc);
-    return () => { document.body.style.overflow = prev; window.removeEventListener("keydown", esc); };
+    return () => { popBack(close); document.body.style.overflow = prev; window.removeEventListener("keydown", esc); };
   }, [open]);
   if (!open) return null;
   return (

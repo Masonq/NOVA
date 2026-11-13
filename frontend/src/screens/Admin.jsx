@@ -17,7 +17,7 @@ export default function Admin({ go, params }) {
   const [tab, setTab] = useState(params?.tab || new URLSearchParams(location.hash.split("?")[1] || "").get("tab") || "stats");
   return (
     <main className="screen admin">
-      <header className="bar"><button className="ic-btn" aria-label="Назад" onClick={() => go("profile")}><Icon n="back" /></button><h1>Админка</h1></header>
+      <header className="bar"><button className="ic-btn back-btn" aria-label="Назад" onClick={() => go("profile")}><Icon n="back" /></button><h1>Админка</h1></header>
       <SlideTabs label="Разделы" items={TABS} value={tab} onChange={setTab} />
       {tab === "stats" && <Stats />}
       {tab === "users" && <Users />}

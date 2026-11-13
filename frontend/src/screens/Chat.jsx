@@ -53,7 +53,7 @@ export default function Chat({ go, params }) {
   return (
     <main className="screen chat">
       <header className="bar">
-        <button className="ic-btn" aria-label="Назад" onClick={() => go("home")}><Icon n="back" /></button>
+        <button className="ic-btn back-btn" aria-label="Назад" onClick={() => go("home")}><Icon n="back" /></button>
         <h1>Чат</h1>
         {msgs?.length > 0 && <button className="link" onClick={clear}>Очистить</button>}
       </header>
