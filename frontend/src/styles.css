@@ -243,8 +243,8 @@ button.result { display: block; width: 100%; text-align: left; background-size: 
 /* ---------- sheet ---------- */
 .sheet-wrap { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.55); display: flex; align-items: flex-end; justify-content: center; animation: fade .2s ease-out; }
 @keyframes fade { from { opacity: 0; } }
-.sheet { width: 100%; max-width: 560px; max-height: 92dvh; overflow-y: auto; background: #141418; border: 1px solid var(--line); border-bottom: none; border-radius: 26px 26px 0 0; padding: 8px 16px calc(16px + var(--safe-b)); display: flex; flex-direction: column; gap: 6px; animation: up .28s cubic-bezier(.2,.8,.2,1); }
-@keyframes up { from { transform: translateY(40px); opacity: .6; } }
+.sheet { will-change: transform; width: 100%; max-width: 560px; max-height: 92dvh; overflow-y: auto; background: #141418; border: 1px solid var(--line); border-bottom: none; border-radius: 26px 26px 0 0; padding: 8px 16px calc(16px + var(--safe-b)); display: flex; flex-direction: column; gap: 6px; animation: up .34s cubic-bezier(.2,.9,.25,1); }
+@keyframes up { from { transform: translateY(100%); } }
 .grab { width: 38px; height: 5px; border-radius: 3px; background: #3A3A42; align-self: center; margin-bottom: 8px; }
 .sheet-head { display: flex; align-items: center; gap: 12px; padding: 4px 0 10px; }
 .sh-thumb { width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0; background-size: cover; background-position: center; }
@@ -555,7 +555,8 @@ img.sheet-media { object-fit: contain; background: var(--card); }
 .gcard { animation: fade-blur .7s .15s ease-out backwards; }
 
 /* sheet content cascades in after the sheet slides up */
-.sheet > *:not(.grab) { animation: rise .4s var(--ease-out) backwards; }
+.sheet > *:not(.grab) { animation: sheet-in .32s .12s var(--ease-out) backwards; }
+@keyframes sheet-in { from { opacity: 0; transform: translateY(8px); } }
 .sheet > :nth-child(3) { animation-delay: .05s; } .sheet > :nth-child(4) { animation-delay: .09s; } .sheet > :nth-child(5) { animation-delay: .13s; }
 .sheet > :nth-child(6) { animation-delay: .17s; } .sheet > :nth-child(7) { animation-delay: .21s; } .sheet > :nth-child(n+8) { animation-delay: .24s; }
 

@@ -41,6 +41,17 @@ export default function Sheet({ open, onClose, children, title }) {
     </div>);
 }
 
+/* A row of the action sheet. Declared at module level: a component created inside another one is a new type on every
+   render, so React would remount the rows (and replay their entrance animation) each time the parent refreshes. */
+function Row({ ic, t, sub, on, cls }) {
+  return (
+    <button className={"sheet-row " + (cls || "")} onClick={on}>
+      <span className="sr-ic"><Icon n={ic} /></span>
+      <span className="sr-t"><span>{t}</span>{sub && <small>{sub}</small>}</span>
+      <Icon n="chevron" s={15} />
+    </button>);
+}
+
 export function JobSheet({ job, file, onClose, go, onChange }) {
   if (!job) return null;
   const f = file || job.files?.[0];
@@ -51,12 +62,6 @@ export function JobSheet({ job, file, onClose, go, onChange }) {
     if (!window.confirm("Удалить эту работу?")) return;
     await api(`/api/jobs/${job.id}`, { method: "DELETE" }); toast("Удалено"); onChange?.(null); onClose();
   };
-  const Row = ({ ic, t, sub, on, cls }) => (
-    <button className={"sheet-row " + (cls || "")} onClick={on}>
-      <span className="sr-ic"><Icon n={ic} /></span>
-      <span className="sr-t"><span>{t}</span>{sub && <small>{sub}</small>}</span>
-      <Icon n="chevron" s={15} />
-    </button>);
   return (
     <Sheet open={!!job} onClose={onClose} title="Действия">
       <div className="sheet-head">
