@@ -1,0 +1,58 @@
+import { useState } from "react";
+import { StudioTop, Opts, PromptBox, Dock, Progress, Toggle } from "../ui/Studio.jsx";
+import { JobSheet } from "../ui/Sheet.jsx";
+import { useStudio } from "../studio.js";
+import { priceOf, thumbOf } from "../jobs.js";
+
+const STEPS = [
+  { t: "Сценарий", match: ["Сценарий"] }, { t: "Очередь", match: ["В очереди"] },
+  { t: "Кадры", match: ["Рисую кадры"] }, { t: "Сборка", match: ["Сборка", "Сохраняю", "Готово"] },
+];
+
+export default function VideoStudio({ go, me, reloadMe, params }) {
+  const [prompt, setPrompt] = useState(params?.prompt || "");
+  const [image, setImage] = useState(params?.image || null);
+  const [duration, setDuration] = useState(5);
+  const [quality, setQuality] = useState("720p");
+  const [aspect, setAspect] = useState("9:16");
+  const [sound, setSound] = useState(false);
+  const [sheet, setSheet] = useState(false);
+  const s = useStudio("video", reloadMe);
+  const p = { duration, quality, sound, aspect, ...(image ? { image_url: image } : {}) };
+  const cur = s.current;
+  const vid = cur?.files?.find((f) => f.type === "video");
+  return (
+    <main className="screen studio">
+      <StudioTop title="Видео" me={me} go={go} />
+      <PromptBox value={prompt} onChange={setPrompt} max={1500} placeholder="Что происходит в кадре: сцена, движение камеры, свет"
+        attach={image} onAttach={setImage} attachLabel="Оживить фото" />
+      {image && <p className="muted small pad">Фото станет первым кадром, формат возьмётся из него</p>}
+      <Opts label="Длительность" value={duration} options={[{ v: 5, t: "5 с" }, { v: 10, t: "10 с" }, { v: 15, t: "15 с" }]} onChange={setDuration} />
+      <Opts label="Качество" value={quality} options={[{ v: "720p", t: "720p" }, { v: "1080p", t: "1080p" }]} onChange={setQuality} />
+      {!image && <Opts label="Формат" value={aspect} options={[{ v: "9:16", t: "9:16" }, { v: "16:9", t: "16:9" }, { v: "1:1", t: "1:1" }]} onChange={setAspect} />}
+      <Toggle label="Звук" sub="речь, шумы и атмосфера" on={sound} onChange={setSound} />
+
+      {s.active ? (
+        <section className="card render" aria-label="Идёт генерация">
+          <p className="render-p">{s.active.prompt}</p>
+          <Progress job={s.active} steps={STEPS} />
+          <p className="muted small">Видео делается 2–5 минут. Можно закрыть приложение — пришлём в бот, когда будет готово.</p>
+        </section>
+      ) : vid && (
+        <section className="vid" aria-label="Результат">
+          <video src={vid.url} poster={thumbOf(cur) || undefined} controls playsInline preload="metadata" />
+          <button className="row-btn" onClick={() => setSheet(true)}>Действия с видео</button>
+        </section>)}
+
+      {s.recent.length > 1 && (
+        <section aria-labelledby="rv-h">
+          <div className="row-h"><h2 id="rv-h">Недавние</h2><button className="link" onClick={() => go("archive", { kind: "video" })}>Все</button></div>
+          <div className="recent">{s.recent.slice(0, 10).map((j) => <button key={j.id} className="thumb img" aria-label={j.prompt}
+            style={{ backgroundImage: thumbOf(j) ? `url(${thumbOf(j)})` : undefined }} onClick={() => { s.setCurrent(j); window.scrollTo({ top: 0, behavior: "smooth" }); }} />)}</div>
+        </section>)}
+      <Dock label="Создать видео" price={priceOf("video", p)} balance={me?.balance} busy={s.busy}
+        disabled={prompt.trim().length < 2 || !!s.active} onClick={() => s.run(prompt.trim(), p)} />
+      <JobSheet job={sheet && cur} file={vid} onClose={() => setSheet(false)} go={go}
+        onChange={(j) => { if (!j) { s.setCurrent(null); s.reload(); } else s.setCurrent(j); }} />
+    </main>);
+}

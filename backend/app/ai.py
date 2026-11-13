@@ -123,3 +123,39 @@ async def speech(text: str, voice: str | None = None, instructions: str = STYLE,
                 break
             await asyncio.sleep(1 + 2 * attempt)
     raise AIError(f"озвучка: {last}")
+
+
+async def image(prompt: str, aspect: str = "1:1", ref_urls: list[str] | None = None, model: str = "google/gemini-nano-banana-2.1") -> bytes:
+    """One image through OpenRouter (Nano Banana 2.1). Returns image bytes."""
+    import base64
+    content = [{"type": "text", "text": prompt}]
+    for u in (ref_urls or [])[:4]:
+        content.append({"type": "image_url", "image_url": {"url": u}})
+    body = {"model": model, "messages": [{"role": "user", "content": content}],
+            "modalities": ["image", "text"], "image_config": {"aspect_ratio": aspect}}
+    last = ""
+    async with httpx.AsyncClient(timeout=180) as cl:
+        for attempt in range(3):
+            try:
+                r = await cl.post(f"{BASE}/chat/completions", headers=_headers(), json=body)
+            except httpx.HTTPError as e:
+                last = type(e).__name__
+                await asyncio.sleep(2 + attempt)
+                continue
+            if r.status_code == 200:
+                msg = (r.json().get("choices") or [{}])[0].get("message") or {}
+                for im in msg.get("images") or []:
+                    url = (im.get("image_url") or {}).get("url", "")
+                    if url.startswith("data:") and "," in url:
+                        return base64.b64decode(url.split(",", 1)[1])
+                    if url.startswith("http"):
+                        rr = await cl.get(url)
+                        if rr.status_code == 200:
+                            return rr.content
+                last = "модель вернула ответ без картинки" + (": " + str(msg.get("content"))[:120] if msg.get("content") else "")
+                continue
+            last = f"{r.status_code} {r.text[:200]}"
+            if r.status_code not in RETRY_STATUS:
+                break
+            await asyncio.sleep(2 + 2 * attempt)
+    raise AIError(f"картинка: {last}")

@@ -14,6 +14,13 @@ const P = {
   download: <><path d="M12 3v12" /><path d="M7 10l5 5 5-5" /><path d="M5 21h14" /></>,
   spark: <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />,
   chevron: <path d="M9 6l6 6-6 6" />,
+  heart: <path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z" />,
+  share: <><path d="M12 15V3" /><path d="M7 8l5-5 5 5" /><path d="M5 13v7h14v-7" /></>,
+  play: <path d="M8 5v14l11-7z" fill="currentColor" stroke="none" />,
+  pause: <><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor" stroke="none" /><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor" stroke="none" /></>,
+  clip: <path d="M21 11l-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7" />,
+  check: <path d="M5 12l5 5 9-10" />,
+  more: <><circle cx="5" cy="12" r="1.6" fill="currentColor" /><circle cx="12" cy="12" r="1.6" fill="currentColor" /><circle cx="19" cy="12" r="1.6" fill="currentColor" /></>,
   logout: <><path d="M15 4h4v16h-4" /><path d="M10 8l-4 4 4 4" /><path d="M6 12h10" /></>,
 };
 export default function Icon({ n, s = 18, w = 1.8 }) {

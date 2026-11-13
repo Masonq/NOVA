@@ -11,6 +11,7 @@ from .config import get_settings
 from .db import Session, init_db
 from .models import Job, User, now
 from .storage import remove_job_files
+from .runner import run_job
 
 log = logging.getLogger("nova.worker")
 
@@ -64,11 +65,21 @@ async def remind_expiring(ctx=None) -> int:
 
 
 async def startup(ctx):
+    """Pick up generations that were in progress when the worker stopped."""
     await init_db()
+    from .queue import enqueue
+    async with Session() as db:
+        rows = (await db.execute(select(Job.id).where(Job.status.in_(("queued", "running"))))).scalars().all()
+    for jid in rows:
+        try:
+            await enqueue(jid)
+        except Exception as e:
+            log.warning("re-enqueue %s: %s", jid, e)
 
 
 class WorkerSettings:
-    functions: list = []
+    functions = [run_job]
+    job_timeout = 2400
     cron_jobs = [cron(cleanup_expired, minute={7, 37}), cron(remind_expiring, hour={9}, minute={0})]
     on_startup = startup
     redis_settings = RedisSettings.from_dsn(get_settings().redis_url)

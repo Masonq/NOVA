@@ -8,6 +8,12 @@ import Home from "./screens/Home.jsx";
 import Chat from "./screens/Chat.jsx";
 import Archive from "./screens/Archive.jsx";
 import Profile from "./screens/Profile.jsx";
+import ImageStudio from "./screens/ImageStudio.jsx";
+import VideoStudio from "./screens/VideoStudio.jsx";
+import MusicStudio from "./screens/MusicStudio.jsx";
+import TtsStudio from "./screens/TtsStudio.jsx";
+import Tasks from "./screens/Tasks.jsx";
+import Feed from "./screens/Feed.jsx";
 
 const parse = () => (location.hash.replace(/^#\/?/, "") || "home").split("?")[0];
 const TABS = [{ k: "home", t: "Главная", i: "home" }, { k: "archive", t: "Архив", i: "clock" }, { k: "profile", t: "Профиль", i: "user" }];
@@ -43,7 +49,7 @@ export default function App() {
 
   useEffect(() => {
     const b = tg?.BackButton; if (!b || !inTelegram) return;
-    const back = () => go("home");
+    const back = () => go(route === "feed" ? "archive" : "home");
     if (route !== "home") { b.show(); b.onClick(back); } else b.hide();
     return () => b.offClick?.(back);
   }, [route]);
@@ -52,14 +58,20 @@ export default function App() {
   if (fatal) return <main className="login"><h1>NOVA</h1><p className="err">{fatal}</p><button className="cta" onClick={() => location.reload()}>Повторить</button></main>;
   if (!authed) return <><Login onDone={() => setAuthed(true)} /><Toaster /></>;
 
-  const screen = route === "chat" ? <Chat go={go} params={params} />
-    : route === "archive" ? <Archive go={go} />
+  const sp = { go, me, reloadMe: loadMe, params };
+  const STUDIOS = { image: ImageStudio, video: VideoStudio, music: MusicStudio, tts: TtsStudio };
+  const Studio = STUDIOS[route];
+  const screen = Studio ? <Studio key={route + JSON.stringify(params || {})} {...sp} />
+    : route === "tasks" ? <Tasks go={go} />
+    : route === "feed" ? <Feed go={go} />
+    : route === "chat" ? <Chat go={go} params={params} />
+    : route === "archive" ? <Archive go={go} params={params} />
     : route === "profile" ? <Profile me={me} reload={loadMe} />
     : <Home go={go} me={me} />;
   return (
     <div className={"app r-" + route}>
       {screen}
-      {route !== "chat" && (
+      {!["chat", "image", "video", "music", "tts", "feed"].includes(route) && (
         <nav className="tabbar" aria-label="Разделы">
           {TABS.map((t) => (
             <button key={t.k} className={route === t.k ? "on" : ""} aria-current={route === t.k ? "page" : undefined}

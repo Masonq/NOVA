@@ -54,3 +54,14 @@ export async function stream(path, body, onEvent, signal) {
     }
   }
 }
+
+export async function upload(file) {
+  const fd = new FormData(); fd.append("file", file);
+  const t = auth.get();
+  let r;
+  try { r = await fetch("/api/uploads", { method: "POST", headers: t ? { Authorization: "Bearer " + t } : {}, body: fd }); }
+  catch { throw new ApiError(0, "Нет связи с сервером"); }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new ApiError(r.status, d.detail || "Не удалось загрузить фото");
+  return d.url;
+}

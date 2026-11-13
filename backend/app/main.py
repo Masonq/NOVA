@@ -7,11 +7,11 @@ from sqlalchemy import text
 
 from .config import get_settings
 from .db import engine, init_db
-from .routes import auth, chat, jobs, me, tg
+from .routes import auth, chat, jobs, me, tg, voices
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 app = FastAPI(title="NOVA", docs_url=None, redoc_url=None, openapi_url=None)
-for r in (auth.router, me.router, chat.router, jobs.router, tg.router):
+for r in (auth.router, me.router, chat.router, jobs.router, jobs.upload_router, voices.router, tg.router):
     app.include_router(r)
 
 
@@ -42,6 +42,12 @@ async def cache_headers(request: Request, call_next):
 async def spa(path: str):
     if path.startswith("api/"):
         return JSONResponse({"detail": "Не найдено"}, status_code=404)
+    if path.startswith("files/"):  # nginx serves these in production; fallback for direct access
+        sroot = os.path.realpath(get_settings().storage_dir)
+        f = os.path.realpath(os.path.join(sroot, path[6:]))
+        if f.startswith(sroot + os.sep) and os.path.isfile(f):
+            return FileResponse(f, headers={"Cache-Control": "public, max-age=604800"})
+        return JSONResponse({"detail": "Файл удалён или не найден"}, status_code=404)
     root = os.path.realpath(get_settings().static_dir)
     f = os.path.realpath(os.path.join(root, path))
     if path and f.startswith(root + os.sep) and os.path.isfile(f):

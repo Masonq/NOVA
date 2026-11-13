@@ -35,6 +35,7 @@ command -v redis-server >/dev/null || need="$need redis-server"
 command -v nginx >/dev/null || need="$need nginx"
 command -v certbot >/dev/null || need="$need certbot python3-certbot-nginx"
 python3 -c "import venv, ensurepip" 2>/dev/null || need="$need python3-venv"
+command -v ffmpeg >/dev/null || need="$need ffmpeg"
 if [ -n "$need" ]; then DEBIAN_FRONTEND=noninteractive apt-get update -q && DEBIAN_FRONTEND=noninteractive apt-get install -y -q $need >/dev/null; log "Поставлены пакеты:$need"; fi
 systemctl enable --now postgresql redis-server >/dev/null 2>&1 || true
 
@@ -143,6 +144,10 @@ if [ "${RUCHECK:-0}" = "1" ] || [ ! -f "$APP/.rucheck-done" ]; then
   timeout 600 "$APP/venv/bin/python" tools/russian_check.py /tmp/russian.md >/dev/null 2>&1 && log "Проверка русского: готова, см. russian.md" || log "Проверка русского: не завершилась"
 fi
 
+# --- live check of paid services (one test picture on the first run of stage 2) ---
+IMG=""; [ -f "$APP/.imgcheck-done" ] || { IMG="--image"; touch "$APP/.imgcheck-done"; }
+timeout 300 "$APP/venv/bin/python" tools/services_check.py /tmp/services.md $IMG >/dev/null 2>&1 && log "Сервисы: проверены, см. services.md" || log "Сервисы: проверка не завершилась"
+
 echo >> "$REPORT"; log "Статус: $STATUS"
 
 # --- report to git (branch reports) ---
@@ -153,7 +158,7 @@ if [ ! -d "$R/.git" ]; then
   else mkdir -p "$R" && git -C "$R" init -q -b reports && git -C "$R" remote add origin "$URL"; fi
 fi
 git -C "$R" fetch -q origin reports 2>/dev/null && git -C "$R" reset -q --hard origin/reports 2>/dev/null || true
-cp "$REPORT" "$R/install.md"; [ -f /tmp/russian.md ] && cp /tmp/russian.md "$R/russian.md"
+cp "$REPORT" "$R/install.md"; [ -f /tmp/russian.md ] && cp /tmp/russian.md "$R/russian.md"; [ -f /tmp/services.md ] && cp /tmp/services.md "$R/services.md"
 journalctl -u nova-api -n 60 --no-pager > "$R/api.log" 2>/dev/null || true
 journalctl -u nova-worker -n 40 --no-pager > "$R/worker.log" 2>/dev/null || true
 git -C "$R" add -A && git -C "$R" -c user.email=server@nova -c user.name=NOVA-server commit -qm "install $(date -u +%F_%H%M) $STATUS" >/dev/null 2>&1 || true
