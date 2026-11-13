@@ -234,7 +234,7 @@ async def test_track_from_voice_over(client, monkeypatch):
     monkeypatch.setattr(kie, "create", create); monkeypatch.setattr(kie, "wait", wait); monkeypatch.setattr(runner, "download", dl)
     q = (await client.post("/api/jobs/price", json={"kind": "music", "prompt": "Трек из озвучки", "params": {"voice_job": tid}}, headers=h)).json()
     assert q["cost"] == 30 + 2
-    r = await client.post("/api/jobs", json={"kind": "music", "prompt": "Трек из озвучки", "params": {"voice_job": tid, "genre": "Рэп"}}, headers=h)
+    r = await client.post("/api/jobs", json={"kind": "music", "prompt": "Трек из озвучки", "params": {"voice_job": tid, "genre": "Поп, Рэп", "mood": "Энергично, Эпично"}}, headers=h)
     assert r.status_code == 200, r.text
     jid = r.json()["id"]
     await runner.run_job({}, jid)

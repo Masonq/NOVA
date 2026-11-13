@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StudioTop, Opts, PromptBox, Dock, Progress, Toggle } from "../ui/Studio.jsx";
+import { StudioTop, OptsMulti, PromptBox, Dock, Progress, Toggle } from "../ui/Studio.jsx";
 import Sheet, { JobSheet } from "../ui/Sheet.jsx";
 import Icon from "../ui/Icon.jsx";
 import { api } from "../api.js";
@@ -17,8 +17,8 @@ export default function MusicStudio({ go, me, reloadMe, params }) {
   const [tts, setTts] = useState(null);
   const openPick = () => { setPick(true); api("/api/jobs?limit=40").then((r) => setTts(r.filter((j) => j.kind === "tts" && j.status === "done"))).catch(() => setTts([])); };
   const [prompt, setPrompt] = useState(params?.prompt || "");
-  const [genre, setGenre] = useState("Авто");
-  const [mood, setMood] = useState("Авто");
+  const [genre, setGenre] = useState([]);
+  const [mood, setMood] = useState([]);
   const [vocal, setVocal] = useState(false);
   const [sheet, setSheet] = useState(null);
   const s = useStudio("music", reloadMe);
@@ -37,8 +37,8 @@ export default function MusicStudio({ go, me, reloadMe, params }) {
       )}
       <PromptBox value={prompt} onChange={setPrompt} max={2900}
         placeholder={vj ? "Пожелания к музыке — необязательно: темп, инструменты, атмосфера" : vocal ? "О чём песня и как звучит: тема, история, на кого похоже" : "Для чего трек и как звучит: фон для видео, учёба, тренировка"} />
-      <Opts label="Жанр" value={genre} options={GENRES} onChange={setGenre} hint={genre === "Авто" ? "по описанию" : ""} />
-      <Opts label="Настроение" value={mood} options={MOODS} onChange={setMood} hint={mood === "Авто" ? "по описанию" : ""} />
+      <OptsMulti label="Жанр" value={genre} options={GENRES} onChange={setGenre} />
+      <OptsMulti label="Настроение" value={mood} options={MOODS} onChange={setMood} />
       {!vj && <Toggle label="С вокалом" sub={vocal ? "ИИ напишет текст по описанию, поёт по-русски" : "только музыка, без голоса"} on={vocal} onChange={setVocal} />}
       {s.active && (
         <section className="card render" aria-label="Идёт генерация">
@@ -54,7 +54,7 @@ export default function MusicStudio({ go, me, reloadMe, params }) {
         </section>)}
       <Dock label={vj ? "Создать трек из озвучки" : vocal ? "Создать песню" : "Создать трек"} price={priceOf("music", vj ? { voice_chars: vj.text.length } : {})}
         balance={me?.balance} busy={s.busy} disabled={(!vj && prompt.trim().length < 2) || !!s.active}
-        onClick={() => s.run(prompt.trim() || "Трек из озвучки", { genre: genre === "Авто" ? "" : genre, mood: mood === "Авто" ? "" : mood,
+        onClick={() => s.run(prompt.trim() || "Трек из озвучки", { genre: genre.join(", "), mood: mood.join(", "),
           instrumental: vj ? false : !vocal, ...(vj ? { voice_job: vj.id } : {}) })} />
       <Sheet open={pick} onClose={() => setPick(false)} title="Голос из озвучки">
         <h3 className="sheet-title">Выберите озвучку</h3>

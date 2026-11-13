@@ -154,7 +154,8 @@ async def run_music_from_voice(job: Job, p: dict):
     vocal_rel = p.get("vocal")
     if not vocal_rel:
         await _update(job.id, status="running", progress=4, stage="Начитываю в ритм")
-        wav = await ai.speech(text[:4900], voice, RHYTHM.get(p.get("genre", ""), RHYTHM_DEFAULT))
+        rap = any(g.strip() in RHYTHM for g in (p.get("genre") or "").split(","))
+        wav = await ai.speech(text[:4900], voice, RHYTHM["Рэп"] if rap else RHYTHM_DEFAULT)
         vocal_rel = save_bytes(job, "vocal.wav", wav)
         mp3 = vocal_rel[:-4] + ".mp3"
         if await ffmpeg("-i", str(abs_path(vocal_rel)), "-b:a", "192k", str(abs_path(mp3))):

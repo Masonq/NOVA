@@ -199,6 +199,8 @@ Answer with the prompt only, 60–120 words, no preamble."""
 MUSIC_BRIEF = """You are a music producer preparing a request for the Suno model (custom mode).
 Suno rejects real artist and band names: never output them; describe the artist's typical sound instead.
 Follow the user's description first. Genre and mood, when given, refine it; when they are empty, infer them from the description.
+Several genres or moods may be given (e.g. "Поп, Рэп" and "Энергично, Эпично"): blend ALL of them into one coherent sound
+(e.g. pop-rap with a big cinematic chorus), name the blend in the tags, never drop one of them.
 Return strict JSON:
 {"title": "track title in the user's language, max 40 chars",
  "style": "comma-separated English tags, 8–14: genre and sub-genre, tempo/BPM, key instruments, vocal type and gender, mood, production style",

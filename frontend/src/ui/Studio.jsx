@@ -28,6 +28,29 @@ export function Opts({ label, value, options, onChange, hint }) {
     </div>);
 }
 
+/** Several chips at once (up to `max`). The first option is «Авто»: it is on when nothing else is, and turns off by itself. */
+export function OptsMulti({ label, value, options, onChange, max = 3, auto = "Авто" }) {
+  const sel = value.length ? value : [auto];
+  const toggle = (v) => {
+    haptic("select");
+    if (v === auto) return onChange([]);
+    if (value.includes(v)) return onChange(value.filter((x) => x !== v));
+    if (value.length >= max) { haptic("warning"); return; }
+    onChange([...value, v]);
+  };
+  return (
+    <div className="opts" role="group" aria-label={label}>
+      <div className="opts-h"><span>{label}</span><small>{value.length ? value.join(" + ") : "по описанию"}{value.length >= max ? " · максимум" : ""}</small></div>
+      <div className="opts-row">
+        {options.map((v) => {
+          const on = sel.includes(v);
+          return <button key={v} className={"opt" + (on ? " on" : "") + (!on && value.length >= max && v !== auto ? " dim" : "")} aria-pressed={on}
+            onClick={() => toggle(v)}>{v}</button>;
+        })}
+      </div>
+    </div>);
+}
+
 export function Toggle({ label, sub, on, onChange }) {
   return (
     <button className="toggle-row" role="switch" aria-checked={on} onClick={() => { haptic("select"); onChange(!on); }}>
