@@ -65,6 +65,15 @@ def main(path, image):
             out.append(f"- Поиск в интернете: {r.status_code}, {time.time() - t0:.1f} с: {(r.json()['choices'][0]['message'].get('content') or '')[:160] if r.status_code == 200 else r.text[:160]}")
         except Exception as e:
             out.append(f"- Агент: ошибка {type(e).__name__} {e}")
+        # music: what the web knows about the sound of a referenced artist (used for Suno style tags)
+        try:
+            import sys as _s, asyncio as _a
+            _s.path.insert(0, "/opt/nova/backend"); os.environ.setdefault("BOT_TOKEN", env("BOT_TOKEN")); os.environ.setdefault("OPENROUTER_KEY", o)
+            from app.ai import artist_sound
+            snd = _a.run(artist_sound("трек на подобии треков исполнителя icegergert"))
+            out.append("- Звучание icegergert из интернета: " + (snd.replace(chr(10), " / ")[:500] if snd else "не нашлось"))
+        except Exception as e:
+            out.append(f"- Звучание артиста: ошибка {type(e).__name__} {e}")
         if image:   # one real picture per photo mode through the images API (~$0.17 once)
             tests = [({"model": "bytedance-seed/seedream-5-5", "resolution": "2K"}, "Photorealistic portrait of a barista in a cosy coffee shop, morning window light, 85mm lens"),
                      ({"model": "openai/gpt-image-2.6-flare", "quality": "medium"}, "Minimalist vector logo of a coffee shop with the word \"Зерно\": a cup and a coffee bean, warm colours, plain background"),

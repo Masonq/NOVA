@@ -5,7 +5,7 @@ import Player from "../ui/Player.jsx";
 import { useStudio } from "../studio.js";
 import { priceOf } from "../jobs.js";
 
-const GENRES = ["Авто", "Поп", "Lo-fi", "Хип-хоп", "Электроника", "Рок", "Эмбиент", "Джаз", "Кино"];
+const GENRES = ["Авто", "Рэп", "Поп", "Lo-fi", "Хип-хоп", "Электроника", "Рок", "Эмбиент", "Джаз", "Кино"];
 const MOODS = ["Авто", "Спокойно", "Энергично", "Грустно", "Романтично", "Эпично"];
 const coverUrl = (f) => f.cover_url || null;
 

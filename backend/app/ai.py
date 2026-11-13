@@ -3,6 +3,7 @@ One key, pay-as-you-go, no Google billing needed."""
 import asyncio
 import io
 import json
+import re
 import logging
 import wave
 from typing import AsyncIterator
@@ -188,22 +189,51 @@ Return strict JSON:
  "style": "comma-separated English tags, 8–14: genre and sub-genre, tempo/BPM, key instruments, vocal type and gender, mood, production style",
  "lyrics": "the full song text in the user's language (Russian by default) with section tags on separate lines:
 [Verse 1] [Pre-Chorus] [Chorus] [Verse 2] [Chorus] [Bridge] [Chorus] [Outro]; 2–3 minutes of singing, vivid concrete images,
-natural rhymes, a catchy repeatable chorus, about the user's topic; empty string when the track is instrumental"}"""
+natural rhymes, a catchy repeatable chorus, about the user's topic; empty string when the track is instrumental"}
+For rap / hip-hop / trap: write real rap — verses of 12–16 bars with internal rhymes, multisyllabic rhymes and a steady flow,
+a short catchy hook (2–4 lines, repeated), ad-libs in parentheses; tags must say "rap vocals" and the flow
+(e.g. melodic rap, autotuned sung-rap, aggressive rap). When an artist reference is given below, match that sound closely."""
+
+ARTIST_HINT = re.compile(r"(в стиле|как у|наподобие|на подобии|по типу|типа|похож|в духе|like|style of|as)\s+\S+", re.I)
+
+
+async def artist_sound(prompt: str) -> str:
+    """When the request references an artist, look up how that artist sounds (web search), without inventing."""
+    if not ARTIST_HINT.search(prompt):
+        return ""
+    body = {"model": "google/gemini-3.8-flash", "plugins": [{"id": "web", "max_results": 4}], "temperature": 0.2, "max_tokens": 350,
+            "messages": [{"role": "user", "content": "The request below mentions a musician. Find how this musician sounds and describe it for a "
+                          "music producer in English, 5–8 short lines: genres, typical BPM range, beat and instruments, vocal delivery "
+                          "(rap/singing, autotune, timbre), mood, typical lyric themes. No song titles. If you can't find the artist, say UNKNOWN.\n\n"
+                          f"Request: {prompt}"}]}
+    try:
+        async with httpx.AsyncClient(timeout=40) as cl:
+            r = await cl.post(f"{BASE}/chat/completions", headers=_headers(), json=body)
+        if r.status_code != 200:
+            return ""
+        txt = (r.json()["choices"][0]["message"].get("content") or "").strip()
+        return "" if "UNKNOWN" in txt[:40] else txt[:1200]
+    except Exception:
+        return ""
 
 
 async def music_brief(prompt: str, genre: str = "", mood: str = "", vocal: bool = False) -> dict:
     """Writes the lyrics, the style tags and the title for Suno custom mode. Falls back to simple values."""
     fallback = {"title": prompt[:40], "style": ", ".join(x for x in (genre, mood) if x) or "modern pop, catchy, polished production", "lyrics": ""}
+    sound = await artist_sound(prompt)
     try:
         raw = await complete("google/gemini-3.8-flash", [{"role": "system", "content": MUSIC_BRIEF}, {"role": "user", "content":
-                             f"Description: {prompt}\nGenre: {genre or 'auto'}\nMood: {mood or 'auto'}\nVocals: {'yes, sung lyrics' if vocal else 'no, instrumental'}"}],
+                             f"Description: {prompt}\nGenre: {genre or 'auto'}\nMood: {mood or 'auto'}\nVocals: {'yes' if vocal else 'no, instrumental'}"
+                             + (f"\nArtist reference (how the mentioned artist sounds, from the web):\n{sound}" if sound else "")}],
                              timeout=40, temperature=0.8, max_tokens=2500, response_format={"type": "json_object"})
         import re as _re
         m = _re.search(r"\{.*\}", raw or "", _re.S)
         d = json.loads(m.group(0)) if m else {}
         out = {"title": str(d.get("title") or "")[:80], "style": str(d.get("style") or "")[:950],
                "lyrics": str(d.get("lyrics") or "")[:4900] if vocal else ""}
-        return {k: (out[k] or fallback[k]) for k in out}
+        res = {k: (out[k] or fallback[k]) for k in out}
+        res["reference"] = sound[:600]
+        return res
     except Exception:
         return fallback
 

@@ -205,3 +205,11 @@ async def test_music_brief_replaces_artist_name(client, monkeypatch):
     assert "icegergert" not in json.dumps(sent, ensure_ascii=False).lower() and sent["style"].startswith("melodic") and sent["instrumental"] is False
     assert sent["custom_mode"] is True and sent["title"] == "Ночной город" and "[Chorus]" in sent["lyrics"]
     assert j["params"]["brief"]["lyrics"].startswith("[Verse 1]")
+
+
+def test_artist_reference_is_detected():
+    from app.ai import ARTIST_HINT
+    for t in ("Крутой трек на подобии треков исполнителя icegergert", "рэп в стиле Скриптонита", "бит как у Travis Scott", "что-то в духе Земфиры"):
+        assert ARTIST_HINT.search(t), t
+    for t in ("спокойный фон для видео о путешествиях", "песня про ночной город"):
+        assert not ARTIST_HINT.search(t), t
