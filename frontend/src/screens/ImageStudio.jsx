@@ -4,6 +4,7 @@ import { JobSheet } from "../ui/Sheet.jsx";
 import { useStudio } from "../studio.js";
 import { priceOf } from "../jobs.js";
 import Carousel from "../ui/Carousel.jsx";
+import Icon from "../ui/Icon.jsx";
 
 const STYLES = ["Фото", "Арт", "Логотип", "3D", "Аниме"];
 const ASPECTS = [{ v: "1:1", t: "1:1" }, { v: "3:4", t: "3:4" }, { v: "9:16", t: "9:16" }, { v: "16:9", t: "16:9" }];
@@ -13,6 +14,8 @@ export default function ImageStudio({ go, me, reloadMe, params }) {
   const [prompt, setPrompt] = useState(params?.prompt || "");
   const [style, setStyle] = useState(params?.style || "Фото");
   const [aspect, setAspect] = useState("1:1");
+  const [quality, setQuality] = useState(() => localStorage.getItem("nova_img_q") || "fast");
+  const pickQ = (q) => { setQuality(q); localStorage.setItem("nova_img_q", q); };
   const [ref, setRef] = useState(null);
   const [sel, setSel] = useState(0);
   const [sheet, setSheet] = useState(null);
@@ -26,6 +29,13 @@ export default function ImageStudio({ go, me, reloadMe, params }) {
       <PromptBox value={prompt} onChange={setPrompt} max={1200} placeholder="Опишите картинку: что, где, какое настроение"
         attach={ref} onAttach={setRef} attachLabel="Своё фото" />
       {ref && <p className="muted small pad">Нейросеть изменит ваше фото по описанию</p>}
+      <div className="modes" role="radiogroup" aria-label="Качество">
+        {[["fast", "Быстро", "1K · около 10 с"], ["max", "Максимум", "Pro · 2K · около 40 с"]].map(([k, t, sub]) => (
+          <button key={k} role="radio" aria-checked={quality === k} className={"mode" + (quality === k ? " on" : "")} onClick={() => pickQ(k)}>
+            <span className="md-t"><b>{t}</b><span className="md-p"><Icon n="spark" s={12} w={2.2} />{priceOf("image", { quality: k })}</span></span>
+            <small>{sub}</small>
+          </button>))}
+      </div>
       <Opts label="Стиль" value={style} options={STYLES} onChange={setStyle} />
       <Opts label="Формат" value={aspect} options={ASPECTS} onChange={setAspect} />
 
@@ -38,7 +48,7 @@ export default function ImageStudio({ go, me, reloadMe, params }) {
         <section aria-label="Результат">
           <Carousel key={cur.id} label="Варианты" height={imgs.length > 1 ? 400 : 380}
             onChange={setSel} items={imgs.map((f, i) => ({
-              key: f.url, img: f.url, title: `Вариант ${i + 1}`, sub: `${cur.params?.style || "Фото"} · ${pa} · ${cur.prompt}`,
+              key: f.url, img: f.url, title: `Вариант ${i + 1}`, sub: `${cur.params?.quality === "max" ? "Максимум · 2K" : "Быстро"} · ${cur.params?.style || "Фото"} · ${cur.prompt}`,
               onOpen: () => setSheet(f), onMore: () => setSheet(f),
             }))} />
         </section>)}
@@ -52,9 +62,9 @@ export default function ImageStudio({ go, me, reloadMe, params }) {
               onClick={() => { s.setCurrent(j); setSel(0); window.scrollTo({ top: 0, behavior: "smooth" }); }} />;
           })}</div>
         </section>)}
-      <Dock label="Создать 4 варианта" price={priceOf("image")} balance={me?.balance} busy={s.busy}
+      <Dock label="Создать 4 варианта" price={priceOf("image", { quality })} balance={me?.balance} busy={s.busy}
         disabled={prompt.trim().length < 2 || !!s.active}
-        onClick={() => s.run(prompt.trim(), { style, aspect, refs: ref ? [ref] : [] })} />
+        onClick={() => s.run(prompt.trim(), { style, aspect, quality, refs: ref ? [ref] : [] })} />
       <JobSheet job={sheet && cur} file={sheet} onClose={() => setSheet(null)} go={go}
         onChange={(j) => { if (!j) { s.setCurrent(null); s.reload(); } else s.setCurrent(j); }} />
     </main>);

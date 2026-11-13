@@ -25,8 +25,10 @@ async def client():
 
 @pytest.fixture(autouse=True)
 def no_network(monkeypatch):
-    """The bot never goes to the internet in tests; a test may override it."""
-    from app import bot
+    """The bot and the prompt enhancer never go to the internet in tests; a test may override them."""
+    from app import bot, ai
+    async def same(prompt, style="", has_ref=False): return prompt
+    monkeypatch.setattr(ai, "enhance_prompt", same)
     sent = []
     async def send(chat_id, text, markup=None):
         sent.append((chat_id, text)); return {"ok": True}

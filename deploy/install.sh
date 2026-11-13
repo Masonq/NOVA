@@ -159,7 +159,7 @@ if [ "${RUCHECK:-0}" = "1" ] || [ ! -f "$APP/.rucheck-done" ]; then
 fi
 
 # --- live check of paid services (one test picture on the first run of stage 2) ---
-IMG=""; [ -f "$APP/.imgcheck-done" ] || { IMG="--image"; touch "$APP/.imgcheck-done"; }
+IMG=""; [ -f "$APP/.imgcheck2-done" ] || { IMG="--image"; touch "$APP/.imgcheck2-done"; }
 timeout 300 "$APP/venv/bin/python" tools/services_check.py /tmp/services.md $IMG >/dev/null 2>&1 && log "Сервисы: проверены, см. services.md" || log "Сервисы: проверка не завершилась"
 
 echo >> "$REPORT"; log "Статус: $STATUS"

@@ -207,6 +207,15 @@ h2 { font-size: 12.5px; font-weight: 600; color: var(--mut); margin: 0; }
 .pl-play { width: 42px; height: 42px; border-radius: 50%; background: var(--txt); color: var(--bg); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .ic-btn.plain { border: none; background: none; width: 34px; }
 
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mode { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px 14px; border-radius: 16px; background: var(--card); border: 1.5px solid var(--line); text-align: left; }
+.mode.on { border-color: var(--accent); background: var(--accent-soft); }
+.md-t { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 8px; }
+.md-t b { font-size: 14.5px; font-weight: 650; }
+.md-p { display: inline-flex; align-items: center; gap: 3px; font-size: 12.5px; font-weight: 700; color: var(--soft); font-variant-numeric: tabular-nums; }
+.mode small { font-size: 11.5px; color: var(--mut); }
+.mode.on small { color: #8FB9F0; }
+
 /* ---------- island, tasks ---------- */
 .island { position: relative; display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 16px; border-radius: 22px; background: #16161A; border: 1px solid var(--line2); overflow: hidden; text-align: left; }
 .isl-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px rgba(10,132,255,.2); animation: pulse 1.4s ease-in-out infinite; flex-shrink: 0; }

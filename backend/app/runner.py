@@ -74,21 +74,26 @@ async def _notify(j: Job, u: User, what: str):
 async def run_image(job: Job):
     p = job.params or {}
     hint = STYLE_HINT.get(p.get("style", "Фото"), "")
-    prompt = f"{job.prompt}. Style: {hint}. Do not add any text unless asked." if hint else job.prompt
     refs = p.get("refs") or []
+    quality = "max" if p.get("quality") == "max" else "fast"
+    await _update(job.id, status="running", progress=4, stage="Продумываю детали")
+    prompt = await ai.enhance_prompt(job.prompt, hint, bool(refs))
+    if prompt == job.prompt and hint:
+        prompt = f"{job.prompt}. Style: {hint}. Do not add any text unless asked."
+    await _update(job.id, params={**p, "enhanced": prompt[:2000]})
     n = int(p.get("variants", 4))
     done = 0
 
     async def one(i):
         nonlocal done
-        data = await ai.image(prompt, p.get("aspect", "1:1"), refs)
+        data = await ai.image(prompt, p.get("aspect", "1:1"), refs, quality)
         rel = save_bytes(job, f"v{i + 1}.png", data)
         th = await asyncio.to_thread(make_thumb, rel)
         done += 1
         await _update(job.id, progress=int(10 + 85 * done / n), stage=f"Готово {done} из {n}")
         return {"path": rel, "type": "image", "w": 0, "h": 0, **({"thumb": th} if th else {})}
 
-    await _update(job.id, status="running", progress=8, stage="Рисую варианты")
+    await _update(job.id, progress=10, stage="Рисую в максимальном качестве" if quality == "max" else "Рисую варианты")
     res = await asyncio.gather(*[one(i) for i in range(n)], return_exceptions=True)
     files = [r for r in res if isinstance(r, dict)]
     errs = [r for r in res if not isinstance(r, dict)]

@@ -53,6 +53,7 @@ TOOLS = [
             "prompt": {"type": "string", "description": "Подробное описание на русском (для tts — точный текст для озвучки)"},
             "style": {"type": "string", "enum": ["Фото", "Арт", "Логотип", "3D", "Аниме"]},
             "aspect": {"type": "string", "enum": ["1:1", "3:4", "9:16", "16:9"]},
+            "quality": {"type": "string", "enum": ["fast", "max"], "description": "для картинок: max — Nano Banana Pro 2K, дороже; по умолчанию fast"},
             "duration": {"type": "integer", "enum": [5, 10, 15]},
             "sound": {"type": "boolean"},
             "genre": {"type": "string"}, "instrumental": {"type": "boolean"}}}}},
@@ -168,7 +169,7 @@ async def run_tool(name: str, args: dict, u: User, emit) -> str:
             kind = args.get("kind")
             if kind not in KINDS or len((args.get("prompt") or "").strip()) < 2:
                 return "Не хватает описания — уточни у пользователя, что создать."
-            params = {k: args[k] for k in ("style", "aspect", "duration", "sound", "genre", "instrumental") if k in args}
+            params = {k: args[k] for k in ("style", "aspect", "duration", "sound", "genre", "instrumental", "quality") if k in args}
             if kind == "tts":
                 params["voice"] = user.agent_voice
             price = price_of(kind, params, args["prompt"])

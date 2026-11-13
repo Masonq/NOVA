@@ -51,7 +51,7 @@ class JobIn(BaseModel):
 
 
 ALLOWED = {
-    "image": {"style": {"Фото", "Арт", "Логотип", "3D", "Аниме"}, "aspect": {"1:1", "16:9", "9:16", "3:4", "4:3"}},
+    "image": {"style": {"Фото", "Арт", "Логотип", "3D", "Аниме"}, "aspect": {"1:1", "16:9", "9:16", "3:4", "4:3"}, "quality": {"fast", "max"}},
     "video": {"duration": {5, 10, 15}, "quality": {"720p", "1080p"}, "aspect": {"16:9", "9:16", "1:1"}},
     "music": {"genre": None, "instrumental": {True, False}},
     "tts": {"tone": {"Спокойно", "Бодро", "Шёпот", "Диктор"}},

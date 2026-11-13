@@ -17,7 +17,7 @@ from .jobs import job_out
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 RUB_PER_USD = 90   # for the revenue estimate only
-COST_USD = {"image": 0.136, "video_s": 0.08, "music": 0.08, "tts_1k": 0.017, "agent_turn": 0.003}   # rough model cost
+COST_USD = {"image_max": 0.54, "image": 0.136, "video_s": 0.08, "music": 0.08, "tts_1k": 0.017, "agent_turn": 0.003}   # rough model cost
 
 
 async def log(db, a: User, action: str, target: str = "", detail: str = ""):

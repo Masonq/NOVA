@@ -64,7 +64,7 @@ async def _job(client, uid, kind, prompt, params=None):
 async def test_image_partial_refund(client, monkeypatch):
     from app import runner, ai
     calls = {"n": 0}
-    async def fake_image(prompt, aspect, refs):
+    async def fake_image(prompt, aspect, refs, quality="fast"):
         calls["n"] += 1
         assert "logo" in prompt
         if calls["n"] == 2:
@@ -139,3 +139,26 @@ async def test_upload_only_images(client):
     assert r.status_code == 200 and r.json()["url"].endswith(".png")
     r = await client.post("/api/uploads", files={"file": ("a.txt", b"hello", "text/plain")}, headers=h)
     assert r.status_code == 415
+
+
+
+@A
+async def test_image_max_mode_enhanced_prompt(client, monkeypatch):
+    from app import runner, ai
+    seen = {}
+    async def enhance(prompt, style="", has_ref=False):
+        return "A detailed cinematic prompt about a fox in neon light, rich textures"
+    async def fake_image(prompt, aspect, refs, quality="fast"):
+        seen.update(prompt=prompt, quality=quality, aspect=aspect); return PNG
+    monkeypatch.setattr(ai, "enhance_prompt", enhance)
+    monkeypatch.setattr(ai, "image", fake_image)
+    h, jid = await _job(client, 8601, "image", "лиса в неоне", {"quality": "max", "aspect": "3:4"})
+    j0 = (await client.get(f"/api/jobs/{jid}", headers=h)).json()
+    assert j0["cost"] == 140
+    await runner.run_job({}, jid)
+    j = (await client.get(f"/api/jobs/{jid}", headers=h)).json()
+    assert j["status"] == "done" and seen["quality"] == "max" and seen["aspect"] == "3:4" and seen["prompt"].startswith("A detailed")
+    assert j["params"]["enhanced"].startswith("A detailed")
+    r = await client.post("/api/jobs/price", json={"kind": "image", "prompt": "x y", "params": {"quality": "fast"}}, headers=h)
+    assert r.json()["cost"] == 40
+    assert (await client.post("/api/jobs", json={"kind": "image", "prompt": "x y", "params": {"quality": "ultra"}}, headers=h)).status_code == 422

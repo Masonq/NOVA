@@ -16,7 +16,7 @@ async def test_share_page_and_random_folder(client, monkeypatch):
     from PIL import Image
     import io
     buf = io.BytesIO(); Image.new("RGB", (900, 900), (120, 40, 200)).save(buf, "PNG")
-    async def img(prompt, aspect, refs): return buf.getvalue()
+    async def img(prompt, aspect, refs, quality="fast"): return buf.getvalue()
     monkeypatch.setattr(ai, "image", img)
     h = await login(client, 5101)
     jid = (await client.post("/api/jobs", json={"kind": "image", "prompt": "Лиса в неоне", "params": {}}, headers=h)).json()["id"]

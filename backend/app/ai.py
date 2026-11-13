@@ -125,40 +125,60 @@ async def speech(text: str, voice: str | None = None, instructions: str = STYLE,
     raise AIError(f"озвучка: {last}")
 
 
-async def image(prompt: str, aspect: str = "1:1", ref_urls: list[str] | None = None, model: str = "google/gemini-nano-banana-2.1") -> bytes:
-    """One image through OpenRouter (Nano Banana 2.1). Returns image bytes."""
+IMAGE_MODELS = {"fast": ("google/gemini-nano-banana-2.1", "1K"), "max": ("google/gemini-3-pro-image", "2K")}
+
+
+async def image(prompt: str, aspect: str = "1:1", ref_urls: list[str] | None = None, quality: str = "fast") -> bytes:
+    """One image through the OpenRouter images API. fast: Nano Banana 2.1 (1K), max: Nano Banana Pro (2K)."""
     import base64
-    content = [{"type": "text", "text": prompt}]
-    for u in (ref_urls or [])[:4]:
-        content.append({"type": "image_url", "image_url": {"url": u}})
-    body = {"model": model, "messages": [{"role": "user", "content": content}],
-            "modalities": ["image", "text"], "image_config": {"aspect_ratio": aspect}}
+    model, res = IMAGE_MODELS.get(quality, IMAGE_MODELS["fast"])
+    body = {"model": model, "prompt": prompt, "aspect_ratio": aspect, "resolution": res, "n": 1}
+    if ref_urls:
+        body["input_references"] = [{"type": "image_url", "image_url": {"url": u}} for u in ref_urls[:4]]
     last = ""
-    async with httpx.AsyncClient(timeout=180) as cl:
+    async with httpx.AsyncClient(timeout=240) as cl:
         for attempt in range(3):
             try:
-                r = await cl.post(f"{BASE}/chat/completions", headers=_headers(), json=body)
+                r = await cl.post(f"{BASE}/images", headers=_headers(), json=body)
             except httpx.HTTPError as e:
                 last = type(e).__name__
                 await asyncio.sleep(2 + attempt)
                 continue
             if r.status_code == 200:
-                msg = (r.json().get("choices") or [{}])[0].get("message") or {}
-                for im in msg.get("images") or []:
-                    url = (im.get("image_url") or {}).get("url", "")
-                    if url.startswith("data:") and "," in url:
-                        return base64.b64decode(url.split(",", 1)[1])
-                    if url.startswith("http"):
-                        rr = await cl.get(url)
+                for it in r.json().get("data") or []:
+                    if it.get("b64_json"):
+                        return base64.b64decode(it["b64_json"])
+                    if (it.get("url") or "").startswith("http"):
+                        rr = await cl.get(it["url"])
                         if rr.status_code == 200:
                             return rr.content
-                last = "модель вернула ответ без картинки" + (": " + str(msg.get("content"))[:120] if msg.get("content") else "")
-                continue
+                last = "модель не вернула картинку (возможно, запрос отклонён её фильтрами)"
+                break
             last = f"{r.status_code} {r.text[:200]}"
             if r.status_code not in RETRY_STATUS:
                 break
             await asyncio.sleep(2 + 2 * attempt)
     raise AIError(f"картинка: {last}")
+
+
+ENHANCE = """You write prompts for an image generation model. Turn the user's request (usually Russian) into one rich English prompt.
+Describe: subject and key details, composition and framing, lighting, colour palette, materials and textures, mood, and the style given.
+Rules: keep the user's intent exactly, do not add new subjects; any text that must appear in the image stays EXACTLY as the user wrote it
+(same language and letters) in double quotes; for logos: clean vector-style mark, centred, plain background, no mockup;
+for photos: realistic camera and lens details; when a reference photo is attached, describe the change to make, keep the person/object recognisable.
+Answer with the prompt only, 60–120 words, no preamble."""
+
+
+async def enhance_prompt(prompt: str, style: str = "", has_ref: bool = False) -> str:
+    """Rewrites a short request into a detailed prompt. Falls back to the original text on any problem."""
+    try:
+        user = f"Style: {style or 'any'}\nReference photo attached: {'yes' if has_ref else 'no'}\nRequest: {prompt}"
+        out = await complete("google/gemini-3.8-flash", [{"role": "system", "content": ENHANCE}, {"role": "user", "content": user}],
+                             timeout=20, temperature=0.6, max_tokens=400)
+        out = (out or "").strip().strip('"')
+        return out if 30 <= len(out) <= 2000 else prompt
+    except Exception:
+        return prompt
 
 
 async def stream_events(model: str, messages: list[dict], tools: list | None = None, timeout: float = 90):
