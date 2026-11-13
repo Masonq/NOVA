@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-13 22:35 UTC
+# Установка NOVA 2026-11-13 23:09 UTC
 
-- Версия: 55d1fcd Home composer: attach a photo, dictate (1 credit), send to the agent as a typed turn
+- Версия: 435d721 Music: own artist (Suno persona), length, «Без чего», Эксперимент (V6 Wild)
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
