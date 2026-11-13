@@ -144,7 +144,7 @@ async def speech(text: str, voice: str | None = None, instructions: str = STYLE,
 # Nano Banana 2.1 for edits of the user's own photo (keeps faces and objects recognisable).
 IMAGE_ROUTES = {
     "picture": {"model": "bytedance-seed/seedream-5-5", "resolution": "2K"},
-    "logo": {"model": "openai/gpt-image-2.6-flare", "quality": "medium"},
+    "logo": {"model": "openai/gpt-image-2.6-flare", "quality": "medium", "background": "opaque"},
     "edit": {"model": "google/gemini-nano-banana-2.1", "resolution": "2K"},
 }
 GPT_ASPECTS = {"1:1", "3:2", "2:3", "4:3", "3:4", "16:9", "9:16", "21:9"}
@@ -190,8 +190,10 @@ async def image(prompt: str, aspect: str = "1:1", ref_urls: list[str] | None = N
 
 ENHANCE = """You write prompts for an image generation model. Turn the user's request (usually Russian) into one rich English prompt.
 Describe: subject and key details, composition and framing, lighting, colour palette, materials and textures, mood, and the style given.
-Rules: keep the user's intent exactly, do not add new subjects; any text that must appear in the image stays EXACTLY as the user wrote it
-(same language and letters) in double quotes; for logos: clean vector-style mark, centred, plain background, no mockup;
+Rules: keep the user's intent exactly, do not add new subjects; any text that must appear in the image stays EXACTLY as the user wrote it:
+same language and alphabet (Cyrillic stays Cyrillic, never translate or transliterate), same words, same punctuation, in double quotes;
+never add words of your own to the image (no "TV", "news", slogans, taglines) unless the user asked for them;
+for logos: clean flat vector-style mark with crisp shapes, strong contrast, centred on a plain white background, no mockup, no 3D render;
 for photos: realistic camera and lens details; when a reference photo is attached, describe the change to make, keep the person/object recognisable.
 Answer with the prompt only, 60–120 words, no preamble."""
 
@@ -312,6 +314,17 @@ def join_wavs(wavs: list[bytes], gap: float = 0.25) -> bytes:
     return out.getvalue()
 
 
+QUOTED = re.compile(r"[«\"“„]([^«»\"“”„]{2,120})[»\"”“]")
+
+
+def exact_text(prompt: str) -> str:
+    """Text the user wants written on the image (in quotes) — added verbatim so the model can't translate or change it."""
+    parts = [m.strip() for m in QUOTED.findall(prompt or "") if m.strip()]
+    if not parts:
+        return ""
+    return " The only text on the image, spelled exactly like this, same alphabet: " + "; ".join(f'"{t}"' for t in parts) + ". No other words."
+
+
 async def enhance_prompt(prompt: str, style: str = "", has_ref: bool = False) -> str:
     """Rewrites a short request into a detailed prompt. Falls back to the original text on any problem."""
     try:
@@ -319,9 +332,10 @@ async def enhance_prompt(prompt: str, style: str = "", has_ref: bool = False) ->
         out = await complete("google/gemini-3.8-flash", [{"role": "system", "content": ENHANCE}, {"role": "user", "content": user}],
                              timeout=20, temperature=0.6, max_tokens=400)
         out = (out or "").strip().strip('"')
-        return out if 30 <= len(out) <= 2000 else prompt
+        base = out if 30 <= len(out) <= 2000 else (f"{prompt}. Style: {style}." if style else prompt)
+        return base + exact_text(prompt)
     except Exception:
-        return prompt
+        return (f"{prompt}. Style: {style}." if style else prompt) + exact_text(prompt)
 
 
 async def stream_events(model: str, messages: list[dict], tools: list | None = None, timeout: float = 90):

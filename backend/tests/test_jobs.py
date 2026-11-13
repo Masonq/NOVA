@@ -295,3 +295,18 @@ async def test_track_from_voice_over_as_duet(client, monkeypatch):
     import wave, io
     with wave.open(io.BytesIO(w)) as f:
         assert f.getnframes() == 200 + int(f.getframerate() * 0.1)
+
+
+
+def test_exact_text_and_white_thumbs(tmp_path, monkeypatch):
+    from app.ai import exact_text
+    t = exact_text("Логотип для тг канала «Новости Сербия | Белград»")
+    assert '"Новости Сербия | Белград"' in t and "No other words" in t
+    assert exact_text("логотип кофейни") == ""
+    from PIL import Image
+    from app import storage
+    monkeypatch.setattr(storage, "abs_path", lambda rel: tmp_path / rel)
+    Image.new("RGBA", (64, 64), (0, 0, 0, 0)).save(tmp_path / "logo.png")
+    th = storage.make_thumb("logo.png", 32)
+    with Image.open(tmp_path / th) as im:
+        assert im.convert("RGB").getpixel((5, 5)) == (255, 255, 255)        # transparent -> white, not black

@@ -103,6 +103,11 @@ def make_thumb(rel: str, size: int = 640) -> str | None:
         src = abs_path(rel)
         out = rel.rsplit(".", 1)[0] + ".thumb.webp"
         with Image.open(src) as im:
+            if im.mode in ("RGBA", "LA", "P"):        # transparent logos: on white, not on black
+                im = im.convert("RGBA")
+                bg = Image.new("RGB", im.size, (255, 255, 255))
+                bg.paste(im, mask=im.split()[-1])
+                im = bg
             im = im.convert("RGB")
             im.thumbnail((size, size))
             im.save(abs_path(out), "WEBP", quality=78, method=4)
