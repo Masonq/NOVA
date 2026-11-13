@@ -25,10 +25,8 @@ async def client():
 
 @pytest.fixture(autouse=True)
 def no_network(monkeypatch):
-    """Moderation and the bot never go to the internet in tests; a test may override them."""
-    from app import moderation, bot
-    async def ok(kind, prompt): return "ok", ""
-    monkeypatch.setattr(moderation, "check", ok)
+    """The bot never goes to the internet in tests; a test may override it."""
+    from app import bot
     sent = []
     async def send(chat_id, text, markup=None):
         sent.append((chat_id, text)); return {"ok": True}

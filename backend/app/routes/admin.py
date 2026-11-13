@@ -7,10 +7,10 @@ from sqlalchemy import Date, cast, delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import bot, pricing
-from ..credits import grant, refund
+from ..credits import grant
 from ..db import get_db
 from ..models import AdminLog, Broadcast, Job, Ledger, Payment, PromoCode, PromoUse, Setting, User, now
-from ..queue import enqueue, pool
+from ..queue import pool
 from ..security import admin_user
 from ..storage import remove_job_files
 from .jobs import job_out
@@ -69,8 +69,7 @@ async def stats(days: int = 30, a: User = Depends(admin_user), db: AsyncSession 
             + by_kind.get("music", {}).get("done", 0) * COST_USD["music"] + agent_turns * COST_USD["agent_turn"])
     return {"days": days, "users": {"total": total, "dau": dau, "wau": wau}, "series": series, "by_kind": by_kind,
             "money": {"stars": stars, "usd": round(usd, 2), "revenue_usd": revenue, "cost_usd": round(cost, 2),
-                      "margin_usd": round(revenue - cost, 2), "credits_spent": int(spent), "agent_turns": agent_turns},
-            "review": (await db.execute(select(func.count()).select_from(Job).where(Job.status == "review"))).scalar_one()}
+                      "margin_usd": round(revenue - cost, 2), "credits_spent": int(spent), "agent_turns": agent_turns}}
 
 
 def pricing_float():
@@ -144,7 +143,7 @@ async def block(uid: int, body: BlockIn, a: User = Depends(admin_user), db: Asyn
     return uout(u)
 
 
-# ---------------- jobs & moderation ----------------
+# ---------------- jobs ----------------
 @router.get("/jobs")
 async def jobs(kind: str = "", status: str = "", offset: int = 0, a: User = Depends(admin_user), db: AsyncSession = Depends(get_db)):
     s = select(Job, User).join(User, User.id == Job.user_id)
@@ -155,33 +154,6 @@ async def jobs(kind: str = "", status: str = "", offset: int = 0, a: User = Depe
     rows = (await db.execute(s.order_by(Job.id.desc()).offset(max(0, offset)).limit(40))).all()
     return [{**job_out(j), "user": {"id": u.id, "name": u.first_name, "username": u.username}, "moderation": j.moderation, "error": j.error}
             for j, u in rows]
-
-
-@router.post("/jobs/{jid}/approve")
-async def approve(jid: int, a: User = Depends(admin_user), db: AsyncSession = Depends(get_db)):
-    j = await db.get(Job, jid)
-    if not j or j.status != "review":
-        raise HTTPException(409, "Работа не ждёт проверки")
-    j.status, j.stage = "queued", "В очереди"
-    await log(db, a, "approve", f"job {jid}", j.prompt[:200])
-    await db.commit()
-    await enqueue(j.id)
-    return job_out(j)
-
-
-@router.post("/jobs/{jid}/reject")
-async def reject(jid: int, a: User = Depends(admin_user), db: AsyncSession = Depends(get_db)):
-    j = await db.get(Job, jid)
-    if not j or j.status != "review":
-        raise HTTPException(409, "Работа не ждёт проверки")
-    j.status, j.stage = "rejected", "Отклонено"
-    u = await db.get(User, j.user_id)
-    await refund(db, u, j.cost, "Возврат: запрос не прошёл проверку", j.id)
-    await log(db, a, "reject", f"job {jid}", j.prompt[:200])
-    await db.commit()
-    if u.can_message:
-        await bot.send(u.tg_id, "Запрос не прошёл проверку и не будет выполнен. Кредиты вернулись на баланс.")
-    return job_out(j)
 
 
 @router.delete("/jobs/{jid}")

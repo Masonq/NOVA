@@ -19,7 +19,7 @@ export default function Admin({ go, params }) {
     <main className="screen admin">
       <header className="bar"><button className="ic-btn" aria-label="Назад" onClick={() => go("profile")}><Icon n="back" /></button><h1>Админка</h1></header>
       <SlideTabs label="Разделы" items={TABS} value={tab} onChange={setTab} />
-      {tab === "stats" && <Stats goJobs={() => setTab("jobs")} />}
+      {tab === "stats" && <Stats />}
       {tab === "users" && <Users />}
       {tab === "jobs" && <Jobs />}
       {tab === "prices" && <Prices />}
@@ -29,7 +29,7 @@ export default function Admin({ go, params }) {
     </main>);
 }
 
-function Stats({ goJobs }) {
+function Stats() {
   const [s, setS] = useState(null);
   const [m, setM] = useState("revenue");
   useEffect(() => { api("/api/admin/stats?days=30").then(setS).catch((e) => toast(e.message, "error")); }, []);
@@ -38,7 +38,6 @@ function Stats({ goJobs }) {
   const max = Math.max(1, ...s.series.map(val));
   return (
     <>
-      {s.review > 0 && <button className="adm-alert" onClick={goJobs}><Icon n="spark" s={16} />На проверке: {s.review}<Icon n="chevron" s={15} /></button>}
       <div className="kpis">
         <div className="kpi"><span>Пользователи</span><b>{fmt(s.users.total)}</b><small>{s.users.dau} за день · {s.users.wau} за неделю</small></div>
         <div className="kpi"><span>Выручка 30 дн.</span><b>${fmt(s.money.revenue_usd)}</b><small>{fmt(s.money.stars)} ⭐ · ${s.money.usd} крипта</small></div>
@@ -127,16 +126,12 @@ function UserSheet({ id, onClose, onChange }) {
 }
 
 function Jobs() {
-  const [status, setStatus] = useState("review");
+  const [status, setStatus] = useState("");
   const [kind, setKind] = useState("");
   const [rows, setRows] = useState(null);
   const [open, setOpen] = useState(null);
   const load = () => api(`/api/admin/jobs?status=${status}&kind=${kind}`).then(setRows).catch((e) => toast(e.message, "error"));
   useEffect(() => { setRows(null); load(); }, [status, kind]);
-  const act = async (j, a) => {
-    try { await api(`/api/admin/jobs/${j.id}/${a}`, { method: "POST" }); haptic("success"); toast(a === "approve" ? "Запущено" : "Отклонено, кредиты вернулись"); load(); }
-    catch (e) { toast(e.message, "error"); }
-  };
   const del = async (j) => {
     if (!window.confirm("Удалить работу без возврата кредитов?")) return;
     await api(`/api/admin/jobs/${j.id}`, { method: "DELETE" }); setOpen(null); load(); toast("Удалено");
@@ -144,18 +139,17 @@ function Jobs() {
   return (
     <>
       <SlideTabs label="Статус" value={status} onChange={setStatus}
-        items={[{ k: "review", t: "На проверке" }, { k: "", t: "Все" }, { k: "failed", t: "Ошибки" }, { k: "done", t: "Готово" }]} />
+        items={[{ k: "", t: "Все" }, { k: "done", t: "Готово" }, { k: "failed", t: "Ошибки" }]} />
       <div className="chips">{[["", "Все типы"], ["image", "Фото"], ["video", "Видео"], ["music", "Музыка"], ["tts", "Озвучка"]].map(([k, t]) =>
         <button key={k} className={"chip" + (kind === k ? " on" : "")} onClick={() => setKind(k)}>{t}</button>)}</div>
-      {!rows ? <div className="skeleton" /> : rows.length === 0 ? <div className="empty-state slim"><Icon n="check" s={22} /><p>{status === "review" ? "Нечего проверять" : "Пусто"}</p></div> : (
+      {!rows ? <div className="skeleton" /> : rows.length === 0 ? <div className="empty-state slim"><Icon n="check" s={22} /><p>Пусто</p></div> : (
         <div className="adm-jobs">{rows.map((j) => { const th = thumbOf(j); return (
           <div key={j.id} className="card adm-job">
             <button className={"mini k-" + j.kind} style={th ? { backgroundImage: `url(${th})` } : undefined} onClick={() => setOpen(j)} aria-label="Открыть" />
             <div className="aj-b">
               <div className="aj-h"><span className={"tag k-" + j.kind}>{KIND[j.kind]}</span><span className={"st st-" + j.status}>{STATUS[j.status] || j.status}</span><span className="muted small">{when(j.created || j.at)}</span></div>
               <p className="aj-p">{j.prompt}</p>
-              <span className="muted small">{j.user.name || j.user.username || j.user.id} · {j.cost} кр.{j.moderation ? ` · ${j.moderation}` : ""}{j.error ? ` · ${j.error.slice(0, 80)}` : ""}</span>
-              {j.status === "review" && <div className="agc-b"><button className="row-btn" onClick={() => act(j, "reject")}>Отклонить</button><button className="cta" onClick={() => act(j, "approve")}>Запустить</button></div>}
+              <span className="muted small">{j.user.name || j.user.username || j.user.id} · {j.cost} кр.{j.error ? ` · ${j.error.slice(0, 80)}` : ""}</span>
             </div>
           </div>); })}</div>)}
       <Sheet open={!!open} onClose={() => setOpen(null)} title="Работа">
@@ -280,7 +274,7 @@ function Send() {
 function Log() {
   const [rows, setRows] = useState(null);
   useEffect(() => { api("/api/admin/log").then(setRows); }, []);
-  const ACT = { credits: "Кредиты", block: "Блокировка", unblock: "Разблокировка", approve: "Модерация: запущено", reject: "Модерация: отклонено",
+  const ACT = { credits: "Кредиты", block: "Блокировка", unblock: "Разблокировка",
     delete_job: "Удалена работа", prices: "Цены", promo_add: "Новый промокод", promo_on: "Промокод вкл.", promo_off: "Промокод выкл.", broadcast: "Рассылка", broadcast_cancel: "Рассылка остановлена" };
   if (!rows) return <div className="skeleton" />;
   if (!rows.length) return <p className="muted center small">Пока пусто</p>;

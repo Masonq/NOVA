@@ -24,28 +24,6 @@ async def test_admin_only(client, admin):
 
 
 @A
-async def test_moderation_block_review_approve_reject(client, admin, monkeypatch, no_network):
-    from app import moderation
-    async def check(kind, prompt):
-        return ("block", "x") if "запрет" in prompt else ("review", "известный человек") if "звезда" in prompt else ("ok", "")
-    monkeypatch.setattr(moderation, "check", check)
-    h = await login(client, 6003); ha = await login(client, 6001)
-    r = await client.post("/api/jobs", json={"kind": "image", "prompt": "запрет что-то"}, headers=h)
-    assert r.status_code == 422
-    bal = (await client.get("/api/me", headers=h)).json()["balance"]
-    j1 = (await client.post("/api/jobs", json={"kind": "image", "prompt": "звезда кино на пляже"}, headers=h)).json()
-    j2 = (await client.post("/api/jobs", json={"kind": "image", "prompt": "звезда эстрады в городе"}, headers=h)).json()
-    assert j1["status"] == "review" and (await client.get("/api/me", headers=h)).json()["balance"] == bal - 80
-    assert any("На проверке" in t for _, t in no_network if isinstance(t, str))
-    q = (await client.get("/api/admin/jobs?status=review", headers=ha)).json()
-    assert {x["id"] for x in q} >= {j1["id"], j2["id"]} and q[0]["moderation"] == "известный человек"
-    assert (await client.post(f"/api/admin/jobs/{j1['id']}/approve", headers=ha)).json()["status"] == "queued"
-    assert (await client.post(f"/api/admin/jobs/{j2['id']}/reject", headers=ha)).json()["status"] == "rejected"
-    assert (await client.get("/api/me", headers=h)).json()["balance"] == bal - 40
-    assert (await client.post(f"/api/admin/jobs/{j2['id']}/reject", headers=ha)).status_code == 409
-
-
-@A
 async def test_credits_block_prices_promo_log(client, admin):
     h = await login(client, 6004); ha = await login(client, 6001)
     me = (await client.get("/api/me", headers=h)).json()

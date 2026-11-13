@@ -98,25 +98,12 @@ async def start_job(db: AsyncSession, u: User, kind: str, prompt: str, raw_param
     price = price_of(kind, params, prompt)
     if u.balance < price:
         raise HTTPException(402, f"Не хватает кредитов: нужно {price}, на балансе {u.balance}")
-    from ..moderation import check
-    verdict, reason = await check(kind, prompt)
-    if verdict == "block":
-        raise HTTPException(422, "Такой запрос нельзя выполнить: он нарушает правила сервиса")
-    review = verdict == "review"
-    j = Job(user_id=u.id, kind=kind, prompt=prompt, params=params, cost=price, moderation=reason,
-            status="review" if review else "queued", stage="На проверке" if review else "В очереди", progress=2)
+    j = Job(user_id=u.id, kind=kind, prompt=prompt, params=params, cost=price, stage="В очереди", progress=2)
     db.add(j)
     await db.flush()
     await charge(db, u, price, {"image": "Фото", "video": "Видео", "music": "Музыка", "tts": "Озвучка"}[kind] + ": " + prompt[:60], j.id)
     await db.commit()
-    if review:
-        from .. import bot
-        from ..config import get_settings
-        for tid in [x.strip() for x in get_settings().admin_tg_ids.split(",") if x.strip()]:
-            await bot.send(int(tid), f"🔍 На проверке: {KIND_RU[kind]} от {u.first_name or u.username or u.id}\n«{prompt[:300]}»\nПричина: {reason or '—'}",
-                           bot.open_app_markup("Открыть модерацию", "#/admin?tab=jobs"))
-    else:
-        await enqueue(j.id)
+    await enqueue(j.id)
     return j
 
 

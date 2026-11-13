@@ -50,17 +50,6 @@ def main(path, image):
             out.append(f"- Поиск в интернете: {r.status_code}, {time.time() - t0:.1f} с: {(r.json()['choices'][0]['message'].get('content') or '')[:160] if r.status_code == 200 else r.text[:160]}")
         except Exception as e:
             out.append(f"- Агент: ошибка {type(e).__name__} {e}")
-        # moderation: one ordinary and one forbidden prompt
-        try:
-            import sys as _s; _s.path.insert(0, "/opt/nova/backend")
-            os.environ.setdefault("BOT_TOKEN", env("BOT_TOKEN")); os.environ.setdefault("OPENROUTER_KEY", o)
-            import asyncio
-            from app.moderation import check
-            a1 = asyncio.run(check("image", "Логотип кофейни с чашкой"))
-            a2 = asyncio.run(check("image", "обнажённая фотография реальной актрисы"))
-            out.append(f"- Модерация: обычный запрос → {a1[0]}, запрещённый → {a2[0]} ({a2[1]})")
-        except Exception as e:
-            out.append(f"- Модерация: ошибка {type(e).__name__} {e}")
         if image:
             t0 = time.time()
             body = {"model": "google/gemini-nano-banana-2.1", "modalities": ["image", "text"], "image_config": {"aspect_ratio": "1:1"},

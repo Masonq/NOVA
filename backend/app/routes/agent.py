@@ -171,10 +171,6 @@ async def run_tool(name: str, args: dict, u: User, emit) -> str:
             params = {k: args[k] for k in ("style", "aspect", "duration", "sound", "genre", "instrumental") if k in args}
             if kind == "tts":
                 params["voice"] = user.agent_voice
-            from ..moderation import check
-            verdict, _ = await check(kind, args["prompt"])
-            if verdict == "block":
-                return "Этот запрос нарушает правила сервиса — вежливо откажи и предложи другую идею."
             price = price_of(kind, params, args["prompt"])
             await pending.set(u.id, {"kind": kind, "prompt": args["prompt"].strip(), "params": params, "cost": price})
             await emit({"type": "confirm", "kind": kind, "prompt": args["prompt"].strip(), "cost": price, "balance": user.balance})
