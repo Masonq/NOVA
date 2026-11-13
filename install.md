@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-13 23:43 UTC
+# Установка NOVA 2026-11-13 23:46 UTC
 
-- Версия: e9bfd3f Choice tiles redesign: dark card with a vivid icon chip, colour border and tint when selected
+- Версия: c69bba7 Composer grows while typing (full-width field, controls below), tab bar hides above the phone keyboard
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
