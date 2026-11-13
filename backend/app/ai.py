@@ -99,6 +99,8 @@ async def complete(models, messages: list[dict], timeout: float = 120, **extra) 
                     c = r.json()["choices"][0]["message"].get("content")
                     return c if isinstance(c, str) else "".join(p.get("text", "") for p in (c or []))
                 last = f"{m}: {r.status_code} {r.text[:200]}"
+                if r.status_code == 402:
+                    costs.out_of_funds("openrouter", r.text[:120])
                 if r.status_code not in RETRY_STATUS:
                     break
                 await asyncio.sleep(1 + 2 * attempt)
@@ -139,6 +141,8 @@ async def speech(text: str, voice: str | None = None, instructions: str = STYLE,
                     costs.record("openrouter", len(r.content) / 48000 * 25 * 9e-6, body["model"] + " (по длине звука)")
                 return pcm_to_wav(r.content)
             last = f"{r.status_code} {r.text[:200]}"
+            if r.status_code == 402:
+                costs.out_of_funds("openrouter", r.text[:120])
             if r.status_code not in RETRY_STATUS:
                 break
     raise AIError(f"озвучка: {last}")
@@ -187,6 +191,8 @@ async def image(prompt: str, aspect: str = "1:1", ref_urls: list[str] | None = N
                 last = "модель не вернула картинку (возможно, запрос отклонён её фильтрами)"
                 break
             last = f"{r.status_code} {r.text[:200]}"
+            if r.status_code == 402:
+                costs.out_of_funds("openrouter", r.text[:120])
             if r.status_code not in RETRY_STATUS:
                 break
             await asyncio.sleep(2 + 2 * attempt)

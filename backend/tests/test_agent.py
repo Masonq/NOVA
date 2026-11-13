@@ -141,3 +141,26 @@ async def test_speech_survives_rate_limits(monkeypatch):
     monkeypatch.setattr(ai.asyncio, "sleep", nosleep)
     wav = await ai.speech("Привет", "Sulafat")
     assert wav[:4] == b"RIFF" and len(tries) == 3 and len(sleeps) == 2 and sleeps[1] > sleeps[0]
+
+
+@A
+async def test_no_funds_notice_and_one_alert(client, env, monkeypatch):
+    from app import costs, bot
+    from app.config import get_settings
+    sent = []
+    async def send(chat, text, markup=None): sent.append((chat, text))
+    monkeypatch.setattr(bot, "send", send)
+    monkeypatch.setattr(get_settings(), "admin_tg_ids", "777")
+    from app.queue import pool
+    await (await pool()).delete("nova:alert:funds:openrouter")
+    async def speech(text, voice=None, instructions=""):
+        costs.out_of_funds("openrouter", "maximum cost exceeds your available credits")
+        raise ai.AIError("озвучка: 402")
+    monkeypatch.setattr(ai, "speech", speech)
+    h = await login(client, 9561)
+    env["script"] += [[("text", "[[Привет]] Привет! Как дела? Чем помочь?")]]
+    ev = events((await client.post("/api/agent/turn", json={"audio": wav_b64()}, headers=h)).text)
+    import asyncio; await asyncio.sleep(0.3)
+    assert any(e["type"] == "notice" and "Голос временно недоступен" in e["text"] for e in ev)
+    assert any(e["type"] == "text" for e in ev) and not any(e["type"] == "audio" for e in ev)
+    assert len(sent) == 1 and sent[0][0] == 777 and "OpenRouter" in sent[0][1]

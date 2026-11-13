@@ -367,6 +367,10 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
             if buf.strip():
                 tts_tasks.append(asyncio.create_task(speak(seq, buf.strip())))
             await emit({"type": "_textdone"})
+            if tts_tasks:                            # no sentence could be voiced: say so instead of silence
+                await asyncio.gather(*tts_tasks, return_exceptions=True)
+                if all(t.done() and not t.result() for t in tts_tasks):
+                    await emit({"type": "notice", "text": "Голос временно недоступен — ответ текстом"})
 
         async def voices_in_order():
             sent, out_seq = 0, 0

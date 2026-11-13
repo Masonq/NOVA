@@ -41,6 +41,9 @@ async def create(model: str, inp: dict) -> str:
             if code in (429, 500, 502, 503) and attempt < 2:
                 await asyncio.sleep(3 + 3 * attempt)
                 continue
+            if code == 402:
+                from . import costs
+                costs.out_of_funds("kie", str(d.get("msg") or ""))
             raise KieError(f"{code}: {d.get('msg') or d}"[:300])
     raise KieError("не удалось создать задачу")
 

@@ -105,3 +105,25 @@ async def balances() -> dict:
         except Exception as e:
             out["kie"] = {"error": type(e).__name__}
     return out
+
+
+
+async def _alert(provider: str, text: str):
+    """Tells the admins in Telegram that a provider is out of money — at most once an hour per provider."""
+    try:
+        from .queue import pool
+        from . import bot
+        r = await pool()
+        if not await r.set(f"nova:alert:funds:{provider}", "1", ex=3600, nx=True):
+            return
+        for tid in [x for x in get_settings().admin_tg_ids.replace(" ", "").split(",") if x.isdigit()]:
+            await bot.send(int(tid), text)
+    except Exception as e:
+        log.warning("funds alert: %s", e)
+
+
+def out_of_funds(provider: str, detail: str = ""):
+    names = {"openrouter": "OpenRouter (фото, голос, чат, агент)", "kie": "Kie (видео, музыка)"}
+    where = {"openrouter": "openrouter.ai → Credits, и проверьте лимит ключа в Settings → Keys", "kie": "kie.ai → Billing"}
+    _spawn(_alert(provider, f"⚠️ На {names.get(provider, provider)} закончились деньги — генерации не проходят.\n"
+                            f"Пополните: {where.get(provider, '')}.\n{detail[:120]}"))

@@ -64,6 +64,7 @@ export default function Agent({ go, me, reloadMe }) {
         else if (e.type === "cards") setCards(e.jobs);
         else if (e.type === "memory") toast(`Запомнила: ${e.text}`);
         else if (e.type === "error") toast(e.text, "error");
+        else if (e.type === "notice") toast(e.text);
         else if (e.type === "done") { reloadMe?.(); }
       }, ac.signal);
     } catch (er) {
