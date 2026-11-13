@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-13 23:46 UTC
+# Установка NOVA 2026-11-13 23:53 UTC
 
-- Версия: c69bba7 Composer grows while typing (full-width field, controls below), tab bar hides above the phone keyboard
+- Версия: 54953c9 Agent: retry busy model before answering, log why a turn failed, alert admin when OpenRouter credits or the key limit run out
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
