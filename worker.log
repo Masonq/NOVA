@@ -8,3 +8,11 @@ Nov 13 04:43:02 impressed-jade.ptr.network systemd[1]: Stopped nova-worker.servi
 Nov 13 04:43:02 impressed-jade.ptr.network systemd[1]: Started nova-worker.service - NOVA worker.
 Nov 13 04:43:03 impressed-jade.ptr.network arq[383451]: 04:43:03: Starting worker for 2 functions: cron:cleanup_expired, cron:remind_expiring
 Nov 13 04:43:03 impressed-jade.ptr.network arq[383451]: 04:43:03: redis_version=7.0.15 mem_usage=1.06M clients_connected=1 db_keys=0
+Nov 13 04:55:57 impressed-jade.ptr.network systemd[1]: Stopping nova-worker.service - NOVA worker...
+Nov 13 04:55:57 impressed-jade.ptr.network arq[383451]: 04:55:57: shutdown on SIGTERM ◆ 0 jobs complete ◆ 0 failed ◆ 0 retries ◆ 0 ongoing to cancel
+Nov 13 04:55:57 impressed-jade.ptr.network systemd[1]: nova-worker.service: Deactivated successfully.
+Nov 13 04:55:57 impressed-jade.ptr.network systemd[1]: Stopped nova-worker.service - NOVA worker.
+Nov 13 04:55:57 impressed-jade.ptr.network systemd[1]: nova-worker.service: Consumed 1.315s CPU time, 49.3M memory peak, 0B memory swap peak.
+Nov 13 04:55:57 impressed-jade.ptr.network systemd[1]: Started nova-worker.service - NOVA worker.
+Nov 13 04:55:58 impressed-jade.ptr.network arq[390048]: 04:55:58: Starting worker for 3 functions: run_job, cron:cleanup_expired, cron:remind_expiring
+Nov 13 04:55:58 impressed-jade.ptr.network arq[390048]: 04:55:58: redis_version=7.0.15 mem_usage=1.06M clients_connected=1 db_keys=0
