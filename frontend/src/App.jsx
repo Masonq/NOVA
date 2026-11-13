@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, auth } from "./api.js";
 import { inTelegram, tg, haptic } from "./tg.js";
 import Icon from "./ui/Icon.jsx";
@@ -26,6 +26,14 @@ export default function App() {
   const [ready, setReady] = useState(false);
   const [authed, setAuthed] = useState(!!auth.get());
   const [route, setRoute] = useState(parse());
+  const prevRoute = useRef(route);
+  const DEPTH = { home: 0, archive: 0, profile: 0, image: 1, video: 1, music: 1, tts: 1, tasks: 1, chat: 1, agent: 1, feed: 2 };
+  const dir = useMemo(() => {
+    const a = DEPTH[prevRoute.current] ?? 0, b = DEPTH[route] ?? 0;
+    const d = prevRoute.current === route ? "tab" : b > a ? "fwd" : b < a ? "back" : "tab";
+    prevRoute.current = route;
+    return d;
+  }, [route]);
   const [params, setParams] = useState(null);
   const [me, setMe] = useState(null);
   const [fatal, setFatal] = useState("");
@@ -75,7 +83,7 @@ export default function App() {
     : <Home go={go} me={me} />;
   return (
     <div className={"app r-" + route}>
-      {screen}
+      <div key={route} className={"page " + dir}>{screen}</div>
       {!["chat", "image", "video", "music", "tts", "feed", "agent"].includes(route) && (
         <TabBar tabs={TABS} active={TABS.find((t) => t.k === route) ? route : "home"} onSelect={(k) => go(k)}
           side={{ orb: true, label: "Голосовой агент", accent: true, onClick: () => go("agent") }} />)}

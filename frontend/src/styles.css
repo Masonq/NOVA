@@ -392,6 +392,63 @@ img.sheet-media { object-fit: contain; background: var(--card); }
   .screen { padding-top: 28px; }
   .result { height: 240px; }
 }
+
+/* ---------- motion: page transitions, staggered blocks, pop-ins, press feedback ---------- */
+@keyframes pg-in { from { opacity: 0; } }
+@keyframes from-right { from { opacity: 0; transform: translateX(30px); } }
+@keyframes from-left { from { opacity: 0; transform: translateX(-24px); } }
+@keyframes rise { from { opacity: 0; transform: translateY(14px) scale(.985); } }
+@keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.93); } }
+@keyframes dock-up { from { opacity: 0; transform: translateY(26px); } }
+@keyframes orb-in { from { opacity: 0; transform: scale(.72); filter: blur(14px); } 70% { filter: blur(0); } }
+@keyframes fade-blur { from { opacity: 0; filter: blur(10px); } }
+@keyframes drop { from { opacity: 0; transform: translateY(-12px) scale(.96); } }
+:root { --ease-out: cubic-bezier(.2,.8,.2,1); --spring: cubic-bezier(.3,1.35,.5,1); }
+
+.page { animation: pg-in .28s ease-out backwards; }
+/* blocks of a screen come in one after another; fixed docks and sheets are excluded (no transformed ancestors) */
+.page .screen > :not(.dock):not(.studio-dock):not(.sheet-wrap):not(.island),
+.page .agent > .ag-top, .page .agent > .ag-talk { animation: rise .46s var(--ease-out) backwards; }
+.page.fwd .screen > :not(.dock):not(.studio-dock):not(.sheet-wrap):not(.island) { animation-name: from-right; }
+.page.back .screen > :not(.dock):not(.studio-dock):not(.sheet-wrap):not(.island) { animation-name: from-left; }
+.page .screen > :nth-child(2) { animation-delay: .04s; } .page .screen > :nth-child(3) { animation-delay: .08s; }
+.page .screen > :nth-child(4) { animation-delay: .12s; } .page .screen > :nth-child(5) { animation-delay: .16s; }
+.page .screen > :nth-child(6) { animation-delay: .2s; }  .page .screen > :nth-child(7) { animation-delay: .23s; }
+.page .screen > :nth-child(8) { animation-delay: .26s; } .page .screen > :nth-child(n+9) { animation-delay: .29s; }
+.page .studio-dock, .page .ag-dock { animation: dock-up .5s .18s var(--ease-out) backwards; }
+.page .ag-stage { animation: orb-in .8s .05s var(--spring) backwards; }
+.island { animation: drop .45s var(--spring) backwards; }
+
+/* groups pop in as a wave */
+.tools > .tool, .grid > .cell, .recent > *, .packs > .pack, .voices > .voice, .tracks > .player, .list > li, .ag-cards > *, .variants > * {
+  animation: pop .44s var(--spring) backwards; }
+.tools > :nth-child(1), .grid > :nth-child(1), .recent > :nth-child(1), .packs > :nth-child(1), .voices > :nth-child(1), .tracks > :nth-child(1), .list > :nth-child(1) { animation-delay: .12s; }
+.tools > :nth-child(2), .grid > :nth-child(2), .recent > :nth-child(2), .packs > :nth-child(2), .voices > :nth-child(2), .tracks > :nth-child(2), .list > :nth-child(2) { animation-delay: .16s; }
+.tools > :nth-child(3), .grid > :nth-child(3), .recent > :nth-child(3), .packs > :nth-child(3), .voices > :nth-child(3), .tracks > :nth-child(3), .list > :nth-child(3) { animation-delay: .2s; }
+.tools > :nth-child(4), .grid > :nth-child(4), .recent > :nth-child(4), .voices > :nth-child(4), .tracks > :nth-child(4), .list > :nth-child(4) { animation-delay: .24s; }
+.tools > :nth-child(5), .grid > :nth-child(5), .recent > :nth-child(5), .voices > :nth-child(5), .tracks > :nth-child(5), .list > :nth-child(5) { animation-delay: .28s; }
+.grid > :nth-child(6), .recent > :nth-child(6), .voices > :nth-child(6), .tracks > :nth-child(6), .list > :nth-child(6) { animation-delay: .32s; }
+.grid > :nth-child(7), .recent > :nth-child(7), .voices > :nth-child(7), .list > :nth-child(7) { animation-delay: .36s; }
+.grid > :nth-child(n+8), .recent > :nth-child(n+8), .voices > :nth-child(n+8), .list > :nth-child(n+8) { animation-delay: .4s; }
+.gcard { animation: fade-blur .7s .15s ease-out backwards; }
+
+/* sheet content cascades in after the sheet slides up */
+.sheet > *:not(.grab) { animation: rise .4s var(--ease-out) backwards; }
+.sheet > :nth-child(3) { animation-delay: .05s; } .sheet > :nth-child(4) { animation-delay: .09s; } .sheet > :nth-child(5) { animation-delay: .13s; }
+.sheet > :nth-child(6) { animation-delay: .17s; } .sheet > :nth-child(7) { animation-delay: .21s; } .sheet > :nth-child(n+8) { animation-delay: .24s; }
+
+/* new content in a conversation */
+.appear { animation: rise .42s var(--ease-out) backwards; }
+
+/* press feedback */
+.cta, .tool, .chip, .opt, .pack, .cell, .sheet-row, .row-btn, .stab, .gnav-side, .ag-btn, .thumb, .var, .voice, .island, .att-add, .toggle-row {
+  transition: transform .16s var(--ease-out), background-color .2s, border-color .2s, color .2s, opacity .2s; }
+.cta:active:not(:disabled), .chip:active, .opt:active, .pack:active, .cell:active, .sheet-row:active, .row-btn:active, .stab:active,
+.gnav-side:active, .ag-btn:active:not(:disabled), .thumb:active, .var:active, .island:active, .att-add:active, .toggle-row:active { transform: scale(.965); }
+.tool:active .tool-ic { transform: scale(.92); }
+.tool-ic { transition: transform .18s var(--spring); }
+.toast { animation: drop .4s var(--spring) backwards; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }

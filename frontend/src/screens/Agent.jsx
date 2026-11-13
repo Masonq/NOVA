@@ -114,12 +114,12 @@ export default function Agent({ go, me, reloadMe }) {
       </section>
 
       <section className="ag-talk" aria-live="polite">
-        {heard && <p className="ag-heard">{heard}</p>}
-        {answer && <p className="ag-answer">{answer}</p>}
+        {heard && <p className="ag-heard appear" key={heard}>{heard}</p>}
+        {answer && <p className="ag-answer appear">{answer}</p>}
         {steps.length > 0 && <ul className="ag-steps">{steps.map((s, i) => <li key={i} className={s.done ? "done" : ""}><i>{s.done ? <Icon n="check" s={11} w={3} /> : null}</i>{s.text}</li>)}</ul>}
 
         {confirm && (
-          <div className="card ag-confirm">
+          <div className="card ag-confirm appear">
             <div className="agc-h"><span className={"tag k-" + confirm.kind}>{WHAT[confirm.kind]}</span><b>{confirm.cost} кр.</b></div>
             <p>{confirm.prompt}</p>
             {confirm.cost > confirm.balance
@@ -129,7 +129,7 @@ export default function Agent({ go, me, reloadMe }) {
           </div>)}
 
         {liveJobs.map((j) => (
-          <div key={j.id} className="card ag-job">
+          <div key={j.id} className="card ag-job appear">
             <div className="agc-h"><span className={"tag k-" + j.kind}>{WHAT[j.kind]}</span><span className="agj-p">{j.prompt}</span></div>
             {j.status === "done" ? <button className="link" onClick={() => go(j.kind)}>Открыть результат</button>
               : j.status === "failed" ? <p className="muted small">Не получилось — кредиты вернулись на баланс</p>
@@ -137,7 +137,7 @@ export default function Agent({ go, me, reloadMe }) {
           </div>))}
 
         {cards.length > 0 && (
-          <div className="ag-cards">{cards.map((j) => {
+          <div className="ag-cards appear">{cards.map((j) => {
             const th = thumbOf(j);
             return <button key={j.id} className={"ag-card k-" + j.kind} style={th ? { backgroundImage: `url(${th})` } : undefined} onClick={() => setSheet(j)}>
               {!th && <Icon n={j.kind === "music" ? "music" : "wave"} s={22} />}<span>{KIND[j.kind]}</span></button>;
