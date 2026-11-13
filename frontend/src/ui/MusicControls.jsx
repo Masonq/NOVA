@@ -1,7 +1,7 @@
 import { useMemo, useRef } from "react";
 import Icon from "./Icon.jsx";
 import { haptic } from "../tg.js";
-import { Motif, FeatureToggle } from "./Creative.jsx";
+import { Motif, FeatureToggle, MusicNotes, MicrophoneStage } from "./Creative.jsx";
 
 /* ---------- genres: cover tiles ---------- */
 export const GENRE_ART = {
@@ -33,7 +33,7 @@ export function GenreTiles({ value, onChange, max = 3 }) {
           return (
             <button key={g} className={"g-tile" + (on ? " on" : "") + (dim ? " dim" : "")} aria-pressed={on} onClick={() => toggle(g)}
               style={{ "--ga": art.a, "--gb": art.b }}>
-              <svg viewBox="0 0 64 60" aria-hidden="true"><Motif m={art.m} /></svg>
+              <span className="g-ic" aria-hidden="true"><Motif m={art.m} /></span>
               <span>{g}</span>
               {on && <i className="g-check"><Icon n="check" s={11} w={3} /></i>}
             </button>);
@@ -134,9 +134,9 @@ export function VocalCards({ vocal, onChange }) {
   return (
     <div className="v-cards" role="radiogroup" aria-label="Вокал">
       <button role="radio" aria-checked={!vocal} className={"v-card" + (!vocal ? " on" : "")} onClick={() => { haptic("select"); onChange(false); }}>
-        <span className="v-ic"><Icon n="music" s={20} /></span><b>Только музыка</b><small>без голоса</small></button>
+        <span className="v-ic"><MusicNotes size={21} weight="duotone" /></span><b>Только музыка</b><small>без голоса</small></button>
       <button role="radio" aria-checked={vocal} className={"v-card" + (vocal ? " on" : "")} onClick={() => { haptic("select"); onChange(true); }}>
-        <span className="v-ic"><Icon n="mic" s={20} /></span><b>С голосом</b><small>ИИ напишет текст</small></button>
+        <span className="v-ic"><MicrophoneStage size={21} weight="duotone" /></span><b>С голосом</b><small>ИИ напишет текст</small></button>
     </div>);
 }
 

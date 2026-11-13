@@ -12,7 +12,7 @@ import { toast } from "../ui/Toast.jsx";
 let sampleAudio = null;
 const TONES = [
   { v: "Спокойно", t: "Спокойно", a: "#4FD1C5", b: "#0B3330", m: "calm" },
-  { v: "Бодро", t: "Бодро", a: "#FF8A3D", b: "#3D1A05", m: "bolt" },
+  { v: "Бодро", t: "Бодро", a: "#FF8A3D", b: "#3D1A05", m: "energy" },
   { v: "Диктор", t: "Диктор", a: "#4FA3FF", b: "#0B2342", m: "mic" },
   { v: "Шёпот", t: "Шёпот", a: "#B18CFF", b: "#211340", m: "whisper" },
 ];
