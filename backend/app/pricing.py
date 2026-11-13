@@ -12,6 +12,7 @@ DEFAULT_PRICE = {
     "video_pro_s": 36,      # Kling 3.0 pro (1080p), per second
     "video_sound_k": 1.5,   # sound on
     "music": 30,            # Suno V6, 2 tracks + cover
+    "artist": 10,           # «Свой исполнитель»: Suno persona from a finished song
     "tts_1k": 5,            # Gemini TTS, per 1000 characters
     "tts_min": 2,
     "agent_min": 5,         # voice agent, per minute of speech

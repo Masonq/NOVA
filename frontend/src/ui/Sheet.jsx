@@ -4,7 +4,7 @@ import { tg, haptic, pushBack, popBack } from "../tg.js";
 import { toast } from "./Toast.jsx";
 import { api } from "../api.js";
 import Player from "./Player.jsx";
-import { thumbOf, cardText } from "../jobs.js";
+import { thumbOf, cardText, PRICE } from "../jobs.js";
 
 export function saveFile(url, name) {
   try { if (tg?.downloadFile) { tg.downloadFile({ url, file_name: name }); return; } } catch {}
@@ -141,8 +141,26 @@ function Row({ ic, t, sub, on, cls }) {
     </button>);
 }
 
-export function JobSheet({ job, file, onClose, go, onChange }) {
+export function JobSheet({ job, file, onClose, go, onChange, onArtist }) {
   if (!job) return null;
+  return <JobSheetIn key={job.id} {...{ job, file, onClose, go, onChange, onArtist }} />;
+}
+
+function JobSheetIn({ job, file, onClose, go, onChange, onArtist }) {
+  const [naming, setNaming] = useState(false);
+  const [aname, setAname] = useState("");
+  const [saving, setSaving] = useState(false);
+  const canArtist = job.kind === "music" && job.status === "done" && job.params?.instrumental === false && !job.params?.voice_job;
+  const saveArtist = async () => {
+    const n = aname.trim(); if (!n || saving) return;
+    setSaving(true);
+    try {
+      const a = await api("/api/artists", { method: "POST", body: { job_id: job.id, name: n } });
+      haptic("success"); toast(`Исполнитель «${a.name}» сохранён`);
+      onClose();
+      if (onArtist) onArtist(a); else go("music", { artist: a.id });
+    } catch (er) { toast(er.message, "error"); setSaving(false); }
+  };
   const combo = ["clip", "reel", "greeting"].includes(job.kind);      // older works of removed kinds still open
   const f = combo ? (job.files || []).find((x) => x.type === "video") || job.files?.[0] : file || job.files?.[0];
   const ext = (f?.url || "").split(".").pop();
@@ -169,6 +187,19 @@ export function JobSheet({ job, file, onClose, go, onChange }) {
       {job.kind === "image" && f && <Row ic="video" t="Оживить в видео" sub="картинка станет первым кадром" cls="accent" on={() => { onClose(); go("video", { image: f.url }); }} />}
       {job.kind === "tts" && f && <Row ic="music" t="Сделать трек из этой озвучки" sub="тем же голосом и с этим текстом" cls="accent"
         on={() => { onClose(); go("music", { voice_job: job.id, voice_text: job.prompt, voice: job.params?.voice }); }} />}
+      {canArtist && !naming && <Row ic="user" t="Сохранить исполнителя" sub={`этот голос будет петь ваши новые песни · ${PRICE.artist ?? 10} кр.`}
+        on={() => { haptic("select"); setNaming(true); }} />}
+      {canArtist && naming && (
+        <div className="art-form">
+          <label className="opts-h" htmlFor="art-name"><span>Имя исполнителя</span><small>{PRICE.artist ?? 10} кр.</small></label>
+          <div className="art-row">
+            <input id="art-name" autoFocus value={aname} maxLength={40} placeholder="Например: Ночной Макс" onChange={(e) => setAname(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && saveArtist()} />
+            <button className="cta" disabled={!aname.trim() || saving} onClick={saveArtist}>{saving ? "…" : "Сохранить"}</button>
+          </div>
+        </div>)}
+      {job.kind === "music" && job.params?.artist && <Row ic="music" t={`Ещё песня: ${job.params.artist_name || "этот исполнитель"}`} sub="тот же голос, новая песня"
+        on={() => { onClose(); go("music", { artist: job.params.artist }); }} />}
       {!["tts", "clip", "reel", "greeting"].includes(job.kind) && <Row ic="spark" t="Сделать похожее" on={() => { onClose(); go(job.kind, { prompt: job.prompt }); }} />}
       <Row ic="trash" t="Удалить" cls="danger" on={del} />
     </Sheet>);

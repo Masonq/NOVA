@@ -53,7 +53,8 @@ class JobIn(BaseModel):
 ALLOWED = {
     "image": {"style": {"Фото", "Арт", "Логотип", "3D", "Аниме"}, "aspect": {"1:1", "16:9", "9:16", "3:4", "4:3"}, "hq": {True, False}},
     "video": {"duration": {5, 10, 15}, "quality": {"720p", "1080p"}, "aspect": {"16:9", "9:16", "1:1"}},
-    "music": {"genre": None, "mood": None, "instrumental": {True, False}, "voice_job": None, "voices": {"auto", "same", "male", "female", "duet"}},
+    "music": {"genre": None, "mood": None, "instrumental": {True, False}, "voice_job": None, "voices": {"auto", "same", "male", "female", "duet"},
+              "length": {0, 30, 60, 120, 180}, "avoid": None, "wild": {True, False}, "artist": None},
     "tts": {"tone": {"Спокойно", "Бодро", "Шёпот", "Диктор"}},
 }
 LIMITS = {"image": 1200, "video": 1500, "music": 2900, "tts": 5000}
@@ -68,7 +69,7 @@ def _clean(kind: str, params: dict) -> dict:
             v = params[k]
             if allowed is not None and v not in allowed:
                 raise HTTPException(422, f"Недопустимое значение «{k}»")
-            out[k] = v if allowed is not None else (v if k == "voice_job" else str(v)[:60])
+            out[k] = v if allowed is not None else (v if k in ("voice_job", "artist") else str(v)[:200 if k == "avoid" else 60])
     s = get_settings()
     pub = s.public_url + "/files/"
     if kind == "image" and params.get("refs"):
@@ -85,6 +86,21 @@ def _clean(kind: str, params: dict) -> dict:
             if v in VOICES and g in VOICES[v]:
                 out[k] = v
     return out
+
+
+async def _artist(db: AsyncSession, u: User, kind: str, params: dict) -> None:
+    """«Свой исполнитель»: the user's own saved persona; the song is sung by it."""
+    if kind != "music" or params.get("artist") in (None, "", 0):
+        params.pop("artist", None)
+        return
+    from ..models import Artist
+    try:
+        a = await db.get(Artist, int(params["artist"]))
+    except (TypeError, ValueError):
+        a = None
+    if not a or a.user_id != u.id:
+        raise HTTPException(404, "Исполнитель не найден")
+    params.update(artist=a.id, artist_name=a.name, persona=a.persona_id, instrumental=False)
 
 
 async def _voice_source(db: AsyncSession, u: User, kind: str, params: dict) -> None:
@@ -111,6 +127,7 @@ async def start_job(db: AsyncSession, u: User, kind: str, prompt: str, raw_param
     if len(active) >= ACTIVE_LIMIT:
         raise HTTPException(429, "Уже идут 3 генерации — дождитесь, пока одна закончится")
     await _voice_source(db, u, kind, params)
+    await _artist(db, u, kind, params)
     price = price_of(kind, params, prompt)
     if u.balance < price:
         raise HTTPException(402, f"Не хватает кредитов: нужно {price}, на балансе {u.balance}")

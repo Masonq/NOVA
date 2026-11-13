@@ -254,7 +254,7 @@ async def artist_sound(prompt: str) -> str:
         return ""
 
 
-async def music_brief(prompt: str, genre: str = "", mood: str = "", vocal: bool = False, voices: str = "auto") -> dict:
+async def music_brief(prompt: str, genre: str = "", mood: str = "", vocal: bool = False, voices: str = "auto", seconds: int = 0) -> dict:
     """Writes the lyrics, the style tags and the title for Suno custom mode. Falls back to simple values."""
     fallback = {"title": prompt[:40], "style": ", ".join(x for x in (genre, mood) if x) or "modern pop, catchy, polished production", "lyrics": "",
                 "vocals": voices if voices in ("male", "female", "duet") else ""}
@@ -262,6 +262,7 @@ async def music_brief(prompt: str, genre: str = "", mood: str = "", vocal: bool 
     try:
         raw = await complete("google/gemini-3.8-flash", [{"role": "system", "content": MUSIC_BRIEF}, {"role": "user", "content":
                              f"Description: {prompt}\nGenre: {genre or 'auto'}\nMood: {mood or 'auto'}\nVocals: {('yes, ' + voices) if vocal else 'no, instrumental'}"
+                             + (f"\nTrack length: about {seconds} seconds — write lyrics that fit it" + (" (one short verse and a chorus at most)" if seconds <= 60 else "") if seconds and vocal else "")
                              + (f"\nArtist reference (how the mentioned artist sounds, from the web):\n{sound}" if sound else "")}],
                              timeout=40, temperature=0.8, max_tokens=2500, response_format={"type": "json_object"})
         import re as _re

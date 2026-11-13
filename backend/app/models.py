@@ -76,6 +76,18 @@ class ChatMessage(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
 
+class Artist(Base):
+    """«Свой исполнитель»: a Suno persona made from one of the user's songs; new songs can be sung by it."""
+    __tablename__ = "artists"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(40))
+    job_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    persona_id: Mapped[str] = mapped_column(String(120))
+    style: Mapped[str] = mapped_column(String(300), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
 class Memory(Base):
     """Facts the agent remembers about the user. Kept until the user deletes them."""
     __tablename__ = "memories"

@@ -187,7 +187,7 @@ def test_kie_requests_go_over_ipv4():
 async def test_music_brief_replaces_artist_name(client, monkeypatch):
     from app import runner, kie, storage, ai
     sent = {}
-    async def brief(prompt, genre="", mood="", vocal=False, voices="auto"):
+    async def brief(prompt, genre="", mood="", vocal=False, voices="auto", seconds=0):
         assert "icegergert" in prompt and vocal is True
         return {"style": "melodic russian hip-hop, trap beats, autotune vocals, 140 bpm", "title": "Ночной город",
                 "lyrics": "[Verse 1]\nНочной город не спит\n[Chorus]\nМы горим"}

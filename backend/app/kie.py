@@ -48,6 +48,49 @@ async def create(model: str, inp: dict) -> str:
     raise KieError("не удалось создать задачу")
 
 
+async def create_persona(inp: dict) -> str:
+    """Generate Persona: returns the persona id at once, or creates a task whose result carries it."""
+    async with _client(60) as cl:
+        try:
+            r = await cl.post(f"{BASE}/jobs/createTask", headers=_h(), json={"model": "ai-music-api/generate-persona", "input": inp})
+            d = r.json()
+        except (httpx.HTTPError, ValueError) as e:
+            raise KieError(f"сеть: {type(e).__name__}")
+    code = int(d.get("code") or r.status_code)
+    if code != 200:
+        if code == 402:
+            from . import costs
+            costs.out_of_funds("kie", str(d.get("msg") or ""))
+        raise KieError(f"{code}: {d.get('msg') or d}"[:300])
+    data = d.get("data") or {}
+    pid = _persona_of(data)
+    if pid:
+        return pid
+    if not data.get("taskId"):
+        raise KieError("нет ответа о персоне")
+    res = await wait(data["taskId"], timeout=180, every=3)
+    pid = _persona_of(res)
+    if not pid:
+        raise KieError("персона не вернулась")
+    return pid
+
+
+def _persona_of(d) -> str:
+    if not isinstance(d, dict):
+        return ""
+    for k in ("persona_id", "personaId"):
+        if d.get(k):
+            return str(d[k])
+    for v in d.values():
+        if isinstance(v, dict) and (pid := _persona_of(v)):
+            return pid
+        if isinstance(v, list):
+            for x in v:
+                if (pid := _persona_of(x)):
+                    return pid
+    return ""
+
+
 async def status(task_id: str) -> dict:
     """Returns {'state': waiting|queuing|generating|success|fail, 'result': dict, 'error': str}."""
     async with _client(30) as cl:

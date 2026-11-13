@@ -197,7 +197,8 @@ async def run_music_from_voice(job: Job, p: dict):
         task = await kie.create("ai-music-api/add-instrumental", {
             "upload_url": f"{get_settings().public_url}/files/{vocal_rel}", "model": "V6",
             "title": (brief.get("title") or "Трек из озвучки")[:80], "tags": (brief.get("style") or "modern pop")[:200],
-            "negative_tags": "off-key, distorted vocals, harsh noise, muddy mix", "lyrics": brief.get("lyrics") or text[:4900],
+            "negative_tags": ", ".join(x for x in ("off-key, distorted vocals, harsh noise, muddy mix", p.get("avoid", "")) if x)[:300],
+            "lyrics": brief.get("lyrics") or text[:4900],
             "audio_weight": 0.85, "style_weight": 0.65,
         })
         p = {**p, "task": task}
@@ -214,6 +215,7 @@ async def run_music_from_voice(job: Job, p: dict):
         raise RuntimeError("трек не вернулся")
     rel = await download(job, "track1.mp3", url, max_mb=60)
     f = {"path": rel, "type": "audio", "title": t.get("title") or brief.get("title") or "", "duration": t.get("duration") or 0}
+    f["task"], f["sid"] = task, t.get("id") or ""
     img = t.get("image_url") or t.get("imageUrl")
     if img:
         try:
@@ -234,7 +236,8 @@ async def run_music(job: Job):
     brief = p.get("brief")
     if not brief:   # Suno rejects artist names: describe the sound instead, add a title
         await _update(job.id, status="running", progress=3, stage="Продумываю звучание")
-        brief = await ai.music_brief(job.prompt, p.get("genre", ""), p.get("mood", ""), vocal, p.get("voices") or "auto")
+        extra = {"seconds": int(p["length"])} if p.get("length") else {}
+        brief = await ai.music_brief(job.prompt, p.get("genre", ""), p.get("mood", ""), vocal, p.get("voices") or "auto", **extra)
         p = {**p, "brief": brief}
         await _update(job.id, params=p)
     # custom mode: Suno sings exactly these lyrics in exactly this style
@@ -244,14 +247,20 @@ async def run_music(job: Job):
                  "vocals": "duet" if len({x["who"] for x in own if x["who"]}) > 1 else (own[0]["who"] if own[0]["who"] in ("male", "female") else brief.get("vocals", ""))}
         p = {**p, "brief": brief}
         await _update(job.id, params=p)
-    inp = {"custom_mode": True, "instrumental": not vocal, "model": "V6",
+    inp = {"custom_mode": True, "instrumental": not vocal, "model": "V6_WILD" if p.get("wild") else "V6",
            "title": (brief.get("title") or job.prompt)[:80], "style": brief.get("style") or "modern pop"}
     if vocal and brief.get("lyrics"):
         inp["lyrics"] = brief["lyrics"]
     elif vocal:
         inp["prompt"] = job.prompt[:2900]
-    if vocal and brief.get("vocals") in ("male", "female"):     # one singer: nudge Suno towards that voice
+    if vocal and brief.get("vocals") in ("male", "female") and not p.get("persona"):     # one singer: nudge Suno towards that voice
         inp["vocal_gender"] = "m" if brief["vocals"] == "male" else "f"
+    if p.get("length"):
+        inp["duration"] = int(p["length"])
+    if p.get("avoid"):
+        inp["negative_tags"] = p["avoid"][:200]
+    if vocal and p.get("persona"):                              # «Свой исполнитель»: sung by the saved persona
+        inp["persona_id"], inp["persona_model"] = p["persona"], "style_persona"
     task = p.get("task")
     if not task:
         await _update(job.id, status="running", progress=5, stage="Пишу трек")

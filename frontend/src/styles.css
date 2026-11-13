@@ -676,3 +676,16 @@ img.sheet-media { object-fit: contain; background: var(--card); }
 .ag-heard-w { align-self: flex-end; max-width: 86%; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .ag-heard-w .ag-heard { max-width: 100%; }
 .ag-heard-img { width: 120px; height: 120px; border-radius: 16px; background: #202027 center/cover no-repeat; border: 1px solid var(--line); }
+
+/* ---------- music: «Без чего», исполнители ---------- */
+.field { display: flex; flex-direction: column; gap: 8px; }
+.field input, .art-row input { font: inherit; height: 46px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--card); color: var(--txt); font-size: 15px; outline: none; min-width: 0; }
+.field input:focus, .art-row input:focus { border-color: rgba(10,132,255,.5); }
+.field input::placeholder, .art-row input::placeholder { color: var(--mut2); }
+.art-form { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 15px; background: var(--card); }
+.art-row { display: flex; gap: 8px; }
+.art-row input { flex: 1; background: var(--card2); }
+.art-row .cta { height: 46px; padding: 0 16px; flex-shrink: 0; }
+.art-row .cta:disabled { opacity: .45; }
+.sheet-row .art-del { width: 36px; height: 36px; margin-left: auto; border: none; background: none; color: var(--mut2); }
+.art-tip { margin: 4px 4px 0; line-height: 1.45; }
