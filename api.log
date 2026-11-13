@@ -1,200 +1,200 @@
-Nov 13 18:27:50 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:27:50 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:27:52 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:27:53 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:27:55 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:27:56 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:27:58 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:27:59 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:01 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:02 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:04 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:05 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:07 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:08 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:10 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:11 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:13 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:14 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:16 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET / HTTP/1.1" 200 OK
-Nov 13 18:28:16 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /manifest.webmanifest HTTP/1.1" 200 OK
-Nov 13 18:28:16 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
-Nov 13 18:28:16 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/me/config HTTP/1.1" 200 OK
-Nov 13 18:28:16 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /assets/Admin-DPF7O6Jh.js HTTP/1.1" 200 OK
-Nov 13 18:28:16 impressed-jade.ptr.network uvicorn[802232]: 2026-11-13 18:28:16,587 httpx INFO HTTP Request: GET https://openrouter.ai/api/v1/credits "HTTP/1.1 200 OK"
-Nov 13 18:28:16 impressed-jade.ptr.network uvicorn[802232]: 2026-11-13 18:28:16,627 httpx INFO HTTP Request: GET https://openrouter.ai/api/v1/key "HTTP/1.1 200 OK"
-Nov 13 18:28:16 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:16 impressed-jade.ptr.network uvicorn[802232]: 2026-11-13 18:28:16,872 httpx INFO HTTP Request: GET https://api.kie.ai/api/v1/chat/credit "HTTP/1.1 200 OK"
-Nov 13 18:28:16 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/admin/stats?days=30 HTTP/1.1" 200 OK
-Nov 13 18:28:17 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /assets/Profile-NRzrFGM1.js HTTP/1.1" 200 OK
-Nov 13 18:28:17 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
-Nov 13 18:28:17 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/me/referral HTTP/1.1" 200 OK
-Nov 13 18:28:17 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/me/ledger HTTP/1.1" 200 OK
-Nov 13 18:28:17 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/me/memory HTTP/1.1" 200 OK
-Nov 13 18:28:17 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /sw.js HTTP/1.1" 200 OK
-Nov 13 18:28:18 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=12 HTTP/1.1" 200 OK
-Nov 13 18:28:18 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:18 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
-Nov 13 18:28:19 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:19 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
-Nov 13 18:28:19 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=40 HTTP/1.1" 200 OK
-Nov 13 18:28:21 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:22 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:23 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:25 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=12 HTTP/1.1" 200 OK
-Nov 13 18:28:25 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
-Nov 13 18:28:25 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:26 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:27 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:29 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:30 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:32 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:33 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:35 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:35 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:38 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:38 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:40 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:41 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:43 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:44 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:45 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:47 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:48 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:50 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:50 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:53 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:53 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:56 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:56 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:58 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:28:59 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:01 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:02 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:04 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:05 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:07 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:08 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:10 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:11 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:13 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:14 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:16 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:17 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:19 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:20 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:22 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:23 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:25 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:26 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:28 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:29 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:30 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:32 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:32 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/28 HTTP/1.1" 200 OK
-Nov 13 18:29:32 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=12 HTTP/1.1" 200 OK
-Nov 13 18:29:33 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:33 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/28 HTTP/1.1" 200 OK
-Nov 13 18:29:33 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
-Nov 13 18:29:33 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=40 HTTP/1.1" 200 OK
-Nov 13 18:29:41 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:42 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:50 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:51 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:29:59 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:30:00 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:30:08 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:30:08 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:30:16 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:30:17 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:30:24 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:30:26 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:30:32 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:30:35 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:30:40 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:30:44 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:30:48 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:30:53 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:30:57 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:31:02 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:31:05 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:31:11 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:31:13 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:31:20 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:31:21 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:31:29 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:31:29 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:31:37 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:31:38 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:31:45 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:31:47 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:31:53 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:31:56 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:32:01 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:32:05 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:32:09 impressed-jade.ptr.network uvicorn[802232]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:32:12 impressed-jade.ptr.network uvicorn[802232]: INFO:     152.163.120.161:0 - "GET / HTTP/1.1" 200 OK
-Nov 13 18:32:14 impressed-jade.ptr.network uvicorn[802231]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:32:15 impressed-jade.ptr.network systemd[1]: Stopping nova-api.service - NOVA API...
-Nov 13 18:32:15 impressed-jade.ptr.network uvicorn[802231]: INFO:     Shutting down
-Nov 13 18:32:15 impressed-jade.ptr.network uvicorn[802232]: INFO:     Shutting down
-Nov 13 18:32:15 impressed-jade.ptr.network uvicorn[802231]: INFO:     Waiting for application shutdown.
-Nov 13 18:32:15 impressed-jade.ptr.network uvicorn[802231]: INFO:     Application shutdown complete.
-Nov 13 18:32:15 impressed-jade.ptr.network uvicorn[802231]: INFO:     Finished server process [802231]
-Nov 13 18:32:15 impressed-jade.ptr.network uvicorn[802232]: INFO:     Waiting for application shutdown.
-Nov 13 18:32:15 impressed-jade.ptr.network uvicorn[802232]: INFO:     Application shutdown complete.
-Nov 13 18:32:15 impressed-jade.ptr.network uvicorn[802232]: INFO:     Finished server process [802232]
-Nov 13 18:32:15 impressed-jade.ptr.network uvicorn[802226]: INFO:     Received SIGTERM, exiting.
-Nov 13 18:32:15 impressed-jade.ptr.network uvicorn[802226]: INFO:     Waiting for child process [802231]
-Nov 13 18:32:15 impressed-jade.ptr.network uvicorn[802226]: INFO:     Waiting for child process [802232]
-Nov 13 18:32:15 impressed-jade.ptr.network uvicorn[802226]: INFO:     Stopping parent process [802226]
-Nov 13 18:32:15 impressed-jade.ptr.network systemd[1]: nova-api.service: Deactivated successfully.
-Nov 13 18:32:15 impressed-jade.ptr.network systemd[1]: Stopped nova-api.service - NOVA API.
-Nov 13 18:32:15 impressed-jade.ptr.network systemd[1]: nova-api.service: Consumed 4.550s CPU time, 158.6M memory peak, 0B memory swap peak.
-Nov 13 18:32:15 impressed-jade.ptr.network systemd[1]: Started nova-api.service - NOVA API.
-Nov 13 18:32:15 impressed-jade.ptr.network uvicorn[806418]: INFO:     Uvicorn running on http://127.0.0.1:8795 (Press CTRL+C to quit)
-Nov 13 18:32:15 impressed-jade.ptr.network uvicorn[806418]: INFO:     Started parent process [806418]
-Nov 13 18:32:17 impressed-jade.ptr.network uvicorn[806425]: INFO:     Started server process [806425]
-Nov 13 18:32:17 impressed-jade.ptr.network uvicorn[806425]: INFO:     Waiting for application startup.
-Nov 13 18:32:17 impressed-jade.ptr.network uvicorn[806425]: INFO:     Application startup complete.
-Nov 13 18:32:17 impressed-jade.ptr.network uvicorn[806426]: INFO:     Started server process [806426]
-Nov 13 18:32:17 impressed-jade.ptr.network uvicorn[806426]: INFO:     Waiting for application startup.
-Nov 13 18:32:17 impressed-jade.ptr.network uvicorn[806426]: INFO:     Application startup complete.
-Nov 13 18:32:17 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:32:19 impressed-jade.ptr.network uvicorn[806426]: INFO:     89.208.113.147:0 - "GET /api/health HTTP/1.1" 200 OK
-Nov 13 18:32:19 impressed-jade.ptr.network uvicorn[806426]: INFO:     89.208.113.147:0 - "GET / HTTP/1.1" 200 OK
-Nov 13 18:32:23 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:32:25 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:32:32 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:32:33 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:32:38 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=12 HTTP/1.1" 200 OK
-Nov 13 18:32:38 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
-Nov 13 18:32:40 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /assets/VideoStudio-CLL3yZxF.js HTTP/1.1" 200 OK
-Nov 13 18:32:40 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
-Nov 13 18:32:41 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:32:41 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:32:42 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET / HTTP/1.1" 200 OK
-Nov 13 18:32:42 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /assets/index-CsoEaN4t.js HTTP/1.1" 200 OK
-Nov 13 18:32:42 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /manifest.webmanifest HTTP/1.1" 200 OK
-Nov 13 18:32:42 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
-Nov 13 18:32:42 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/me/config HTTP/1.1" 200 OK
-Nov 13 18:32:42 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /assets/VideoStudio-JRhbkldA.js HTTP/1.1" 200 OK
-Nov 13 18:32:42 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /assets/studio-DsBn-8hK.js HTTP/1.1" 200 OK
-Nov 13 18:32:42 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /assets/Studio-iBGAUKbF.js HTTP/1.1" 200 OK
-Nov 13 18:32:42 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:32:42 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=40 HTTP/1.1" 200 OK
-Nov 13 18:32:43 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET / HTTP/1.1" 200 OK
-Nov 13 18:32:43 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /manifest.webmanifest HTTP/1.1" 200 OK
-Nov 13 18:32:43 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
-Nov 13 18:32:43 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/me/config HTTP/1.1" 200 OK
-Nov 13 18:32:43 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 18:32:43 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=40 HTTP/1.1" 200 OK
-Nov 13 18:32:43 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=12 HTTP/1.1" 200 OK
-Nov 13 18:32:43 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
-Nov 13 18:32:45 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /sw.js HTTP/1.1" 200 OK
-Nov 13 18:32:47 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /assets/TtsStudio--Miq7K-T.js HTTP/1.1" 200 OK
-Nov 13 18:32:47 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
-Nov 13 18:32:47 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/voices HTTP/1.1" 200 OK
-Nov 13 18:32:47 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=40 HTTP/1.1" 200 OK
-Nov 13 18:32:49 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=12 HTTP/1.1" 200 OK
-Nov 13 18:32:49 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 13 18:32:59 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:33:04 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET / HTTP/1.1" 200 OK
+Nov 13 18:33:04 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 13 18:33:04 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /manifest.webmanifest HTTP/1.1" 200 OK
+Nov 13 18:33:04 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=12 HTTP/1.1" 200 OK
+Nov 13 18:33:04 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/me/config HTTP/1.1" 200 OK
+Nov 13 18:33:04 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:33:05 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /assets/MusicStudio-hWSNYDvW.js HTTP/1.1" 200 OK
+Nov 13 18:33:05 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 13 18:33:06 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=40 HTTP/1.1" 200 OK
+Nov 13 18:33:06 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /sw.js HTTP/1.1" 200 OK
+Nov 13 18:33:08 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:33:11 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=40 HTTP/1.1" 200 OK
+Nov 13 18:33:12 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:33:17 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:33:20 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:33:26 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:33:28 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:33:35 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:33:36 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:33:44 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:33:44 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:33:52 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:33:53 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:01 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:02 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:09 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:11 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:17 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:20 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:25 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:29 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:33 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:35 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "POST /api/jobs HTTP/1.1" 200 OK
+Nov 13 18:34:35 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:35 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 13 18:34:37 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:38 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET / HTTP/1.1" 200 OK
+Nov 13 18:34:38 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/me/config HTTP/1.1" 200 OK
+Nov 13 18:34:38 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 13 18:34:38 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /manifest.webmanifest HTTP/1.1" 200 OK
+Nov 13 18:34:38 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=12 HTTP/1.1" 200 OK
+Nov 13 18:34:38 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:38 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:39 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /assets/Profile-Bp41d2Y1.js HTTP/1.1" 200 OK
+Nov 13 18:34:39 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 13 18:34:39 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/me/ledger HTTP/1.1" 200 OK
+Nov 13 18:34:39 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/me/referral HTTP/1.1" 200 OK
+Nov 13 18:34:39 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/me/memory HTTP/1.1" 200 OK
+Nov 13 18:34:39 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /sw.js HTTP/1.1" 200 OK
+Nov 13 18:34:40 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:41 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:41 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /assets/Admin-CfrtfNzz.js HTTP/1.1" 200 OK
+Nov 13 18:34:41 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 13 18:34:41 impressed-jade.ptr.network uvicorn[806425]: 2026-11-13 18:34:41,961 httpx INFO HTTP Request: GET https://openrouter.ai/api/v1/credits "HTTP/1.1 200 OK"
+Nov 13 18:34:42 impressed-jade.ptr.network uvicorn[806425]: 2026-11-13 18:34:42,003 httpx INFO HTTP Request: GET https://openrouter.ai/api/v1/key "HTTP/1.1 200 OK"
+Nov 13 18:34:42 impressed-jade.ptr.network uvicorn[806425]: 2026-11-13 18:34:42,273 httpx INFO HTTP Request: GET https://api.kie.ai/api/v1/chat/credit "HTTP/1.1 200 OK"
+Nov 13 18:34:42 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/admin/stats?days=30 HTTP/1.1" 200 OK
+Nov 13 18:34:43 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:44 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:45 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:47 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:48 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:50 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:51 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:52 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/admin/users?q= HTTP/1.1" 200 OK
+Nov 13 18:34:53 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:53 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:54 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/admin/users/1 HTTP/1.1" 200 OK
+Nov 13 18:34:56 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:56 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:58 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:34:59 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:01 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:02 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:03 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:05 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:06 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:08 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "POST /api/admin/users/1/credits HTTP/1.1" 200 OK
+Nov 13 18:35:08 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/admin/users?q= HTTP/1.1" 200 OK
+Nov 13 18:35:08 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/admin/users/1 HTTP/1.1" 200 OK
+Nov 13 18:35:08 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:08 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:10 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/admin/broadcasts HTTP/1.1" 200 OK
+Nov 13 18:35:11 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/admin/log HTTP/1.1" 200 OK
+Nov 13 18:35:11 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:11 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:13 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:14 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:14 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/me/memory HTTP/1.1" 200 OK
+Nov 13 18:35:14 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/me/ledger HTTP/1.1" 200 OK
+Nov 13 18:35:14 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/me/referral HTTP/1.1" 200 OK
+Nov 13 18:35:14 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 13 18:35:16 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:17 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 13 18:35:17 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=12 HTTP/1.1" 200 OK
+Nov 13 18:35:17 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:18 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET / HTTP/1.1" 200 OK
+Nov 13 18:35:18 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 13 18:35:18 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /manifest.webmanifest HTTP/1.1" 200 OK
+Nov 13 18:35:18 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/me/config HTTP/1.1" 200 OK
+Nov 13 18:35:18 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=12 HTTP/1.1" 200 OK
+Nov 13 18:35:18 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:19 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /sw.js HTTP/1.1" 200 OK
+Nov 13 18:35:19 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET / HTTP/1.1" 200 OK
+Nov 13 18:35:20 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 13 18:35:20 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /manifest.webmanifest HTTP/1.1" 200 OK
+Nov 13 18:35:20 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/me/config HTTP/1.1" 200 OK
+Nov 13 18:35:20 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=40 HTTP/1.1" 200 OK
+Nov 13 18:35:20 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:20 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=12 HTTP/1.1" 200 OK
+Nov 13 18:35:20 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 13 18:35:21 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /sw.js HTTP/1.1" 200 OK
+Nov 13 18:35:21 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:22 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:25 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:27 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:29 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /assets/Tasks-DQ1LSl0p.js HTTP/1.1" 200 OK
+Nov 13 18:35:29 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 13 18:35:29 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=12 HTTP/1.1" 200 OK
+Nov 13 18:35:30 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:32 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:35 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:37 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:39 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /assets/Archive-BLIsphSt.js HTTP/1.1" 200 OK
+Nov 13 18:35:39 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 13 18:35:39 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=100 HTTP/1.1" 200 OK
+Nov 13 18:35:40 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:42 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:45 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:48 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:50 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:53 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:55 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:35:58 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:36:01 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:36:04 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:36:07 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:36:10 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:36:13 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:36:16 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:36:19 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:36:22 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:36:25 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:36:28 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:36:30 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 13 18:36:30 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=12 HTTP/1.1" 200 OK
+Nov 13 18:36:30 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:36:33 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:36:36 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:36:39 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:36:42 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:36:45 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:36:48 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:36:51 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:36:54 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:36:57 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:37:00 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:37:00 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/29 HTTP/1.1" 200 OK
+Nov 13 18:37:00 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=12 HTTP/1.1" 200 OK
+Nov 13 18:37:09 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:37:17 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:37:23 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 13 18:37:23 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=40 HTTP/1.1" 200 OK
+Nov 13 18:37:26 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:37:26 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=12 HTTP/1.1" 200 OK
+Nov 13 18:37:26 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 13 18:37:27 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 13 18:37:27 impressed-jade.ptr.network uvicorn[806425]: INFO:     109.92.227.130:0 - "GET /api/jobs?limit=40 HTTP/1.1" 200 OK
+Nov 13 18:37:34 impressed-jade.ptr.network uvicorn[806426]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:37:40 impressed-jade.ptr.network systemd[1]: Stopping nova-api.service - NOVA API...
+Nov 13 18:37:40 impressed-jade.ptr.network uvicorn[806425]: INFO:     Shutting down
+Nov 13 18:37:40 impressed-jade.ptr.network uvicorn[806426]: INFO:     Shutting down
+Nov 13 18:37:40 impressed-jade.ptr.network uvicorn[806425]: INFO:     Waiting for application shutdown.
+Nov 13 18:37:40 impressed-jade.ptr.network uvicorn[806425]: INFO:     Application shutdown complete.
+Nov 13 18:37:40 impressed-jade.ptr.network uvicorn[806425]: INFO:     Finished server process [806425]
+Nov 13 18:37:40 impressed-jade.ptr.network uvicorn[806426]: INFO:     Waiting for application shutdown.
+Nov 13 18:37:40 impressed-jade.ptr.network uvicorn[806426]: INFO:     Application shutdown complete.
+Nov 13 18:37:40 impressed-jade.ptr.network uvicorn[806426]: INFO:     Finished server process [806426]
+Nov 13 18:37:40 impressed-jade.ptr.network uvicorn[806418]: INFO:     Received SIGTERM, exiting.
+Nov 13 18:37:40 impressed-jade.ptr.network uvicorn[806418]: INFO:     Waiting for child process [806425]
+Nov 13 18:37:40 impressed-jade.ptr.network uvicorn[806418]: INFO:     Waiting for child process [806426]
+Nov 13 18:37:40 impressed-jade.ptr.network uvicorn[806418]: INFO:     Stopping parent process [806418]
+Nov 13 18:37:40 impressed-jade.ptr.network systemd[1]: nova-api.service: Deactivated successfully.
+Nov 13 18:37:40 impressed-jade.ptr.network systemd[1]: Stopped nova-api.service - NOVA API.
+Nov 13 18:37:40 impressed-jade.ptr.network systemd[1]: nova-api.service: Consumed 4.175s CPU time, 160.3M memory peak, 0B memory swap peak.
+Nov 13 18:37:40 impressed-jade.ptr.network systemd[1]: Started nova-api.service - NOVA API.
+Nov 13 18:37:40 impressed-jade.ptr.network uvicorn[809972]: INFO:     Uvicorn running on http://127.0.0.1:8795 (Press CTRL+C to quit)
+Nov 13 18:37:40 impressed-jade.ptr.network uvicorn[809972]: INFO:     Started parent process [809972]
+Nov 13 18:37:42 impressed-jade.ptr.network uvicorn[809978]: INFO:     Started server process [809978]
+Nov 13 18:37:42 impressed-jade.ptr.network uvicorn[809978]: INFO:     Waiting for application startup.
+Nov 13 18:37:42 impressed-jade.ptr.network uvicorn[809979]: INFO:     Started server process [809979]
+Nov 13 18:37:42 impressed-jade.ptr.network uvicorn[809979]: INFO:     Waiting for application startup.
+Nov 13 18:37:42 impressed-jade.ptr.network uvicorn[809978]: INFO:     Application startup complete.
+Nov 13 18:37:42 impressed-jade.ptr.network uvicorn[809979]: INFO:     Application startup complete.
+Nov 13 18:37:44 impressed-jade.ptr.network uvicorn[809979]: INFO:     89.208.113.147:0 - "GET /api/health HTTP/1.1" 200 OK
+Nov 13 18:37:45 impressed-jade.ptr.network uvicorn[809978]: INFO:     89.208.113.147:0 - "GET / HTTP/1.1" 200 OK
+Nov 13 18:37:50 impressed-jade.ptr.network uvicorn[809979]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:37:58 impressed-jade.ptr.network uvicorn[809979]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 13 18:38:06 impressed-jade.ptr.network uvicorn[809979]: INFO:     109.92.227.130:0 - "GET /api/jobs/active HTTP/1.1" 200 OK

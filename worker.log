@@ -1,25 +1,3 @@
-Nov 13 17:28:42 impressed-jade.ptr.network systemd[1]: nova-worker.service: Deactivated successfully.
-Nov 13 17:28:42 impressed-jade.ptr.network systemd[1]: Stopped nova-worker.service - NOVA worker.
-Nov 13 17:28:42 impressed-jade.ptr.network systemd[1]: nova-worker.service: Consumed 1.284s CPU time, 58.5M memory peak, 0B memory swap peak.
-Nov 13 17:28:42 impressed-jade.ptr.network systemd[1]: Started nova-worker.service - NOVA worker.
-Nov 13 17:28:44 impressed-jade.ptr.network arq[771199]: 17:28:44: Starting worker for 5 functions: run_job, send_broadcast, cron:cleanup_expired, cron:remind_expiring, cron:sync_crypto
-Nov 13 17:28:44 impressed-jade.ptr.network arq[771199]: 17:28:44: redis_version=7.0.15 mem_usage=1.37M clients_connected=1 db_keys=8
-Nov 13 17:29:20 impressed-jade.ptr.network arq[771199]: 17:29:20:   1.00s → cron:sync_crypto()
-Nov 13 17:29:20 impressed-jade.ptr.network arq[771199]: 17:29:20:   0.02s ← cron:sync_crypto ●
-Nov 13 17:30:20 impressed-jade.ptr.network arq[771199]: 17:30:20:   1.00s → cron:sync_crypto()
-Nov 13 17:30:20 impressed-jade.ptr.network arq[771199]: 17:30:20:   0.00s ← cron:sync_crypto ●
-Nov 13 17:31:03 impressed-jade.ptr.network arq[771199]: 17:31:03:   0.34s → job-9:run_job(9)
-Nov 13 17:31:20 impressed-jade.ptr.network arq[771199]: 17:31:20:   1.00s → cron:sync_crypto()
-Nov 13 17:31:20 impressed-jade.ptr.network arq[771199]: 17:31:20:   0.01s ← cron:sync_crypto ●
-Nov 13 17:31:24 impressed-jade.ptr.network arq[771199]: 17:31:24:  21.23s ← job-9:run_job ●
-Nov 13 17:32:20 impressed-jade.ptr.network arq[771199]: 17:32:20:   1.00s → cron:sync_crypto()
-Nov 13 17:32:20 impressed-jade.ptr.network arq[771199]: 17:32:20:   0.00s ← cron:sync_crypto ●
-Nov 13 17:32:23 impressed-jade.ptr.network arq[771199]: 17:32:23:   0.16s → job-10:run_job(10)
-Nov 13 17:33:20 impressed-jade.ptr.network arq[771199]: 17:33:20:   1.00s → cron:sync_crypto()
-Nov 13 17:33:20 impressed-jade.ptr.network arq[771199]: 17:33:20:   0.00s ← cron:sync_crypto ●
-Nov 13 17:34:07 impressed-jade.ptr.network arq[771199]: 17:34:07: 103.63s ← job-10:run_job ●
-Nov 13 17:34:20 impressed-jade.ptr.network arq[771199]: 17:34:20:   1.00s → cron:sync_crypto()
-Nov 13 17:34:20 impressed-jade.ptr.network arq[771199]: 17:34:20:   0.00s ← cron:sync_crypto ●
 Nov 13 17:35:20 impressed-jade.ptr.network arq[771199]: 17:35:20:   1.00s → cron:sync_crypto()
 Nov 13 17:35:20 impressed-jade.ptr.network arq[771199]: 17:35:20:   0.01s ← cron:sync_crypto ●
 Nov 13 17:36:20 impressed-jade.ptr.network arq[771199]: 17:36:20:   1.00s → cron:sync_crypto()
@@ -198,3 +176,25 @@ Nov 13 18:32:16 impressed-jade.ptr.network arq[806397]: 18:32:16: Starting worke
 Nov 13 18:32:16 impressed-jade.ptr.network arq[806397]: 18:32:16: redis_version=7.0.15 mem_usage=1.37M clients_connected=1 db_keys=20
 Nov 13 18:32:20 impressed-jade.ptr.network arq[806397]: 18:32:20:   1.00s → cron:sync_crypto()
 Nov 13 18:32:20 impressed-jade.ptr.network arq[806397]: 18:32:20:   0.01s ← cron:sync_crypto ●
+Nov 13 18:33:20 impressed-jade.ptr.network arq[806397]: 18:33:20:   1.00s → cron:sync_crypto()
+Nov 13 18:33:20 impressed-jade.ptr.network arq[806397]: 18:33:20:   0.00s ← cron:sync_crypto ●
+Nov 13 18:34:20 impressed-jade.ptr.network arq[806397]: 18:34:20:   1.00s → cron:sync_crypto()
+Nov 13 18:34:20 impressed-jade.ptr.network arq[806397]: 18:34:20:   0.01s ← cron:sync_crypto ●
+Nov 13 18:34:36 impressed-jade.ptr.network arq[806397]: 18:34:36:   0.28s → job-29:run_job(29)
+Nov 13 18:35:20 impressed-jade.ptr.network arq[806397]: 18:35:20:   1.00s → cron:sync_crypto()
+Nov 13 18:35:20 impressed-jade.ptr.network arq[806397]: 18:35:20:   0.00s ← cron:sync_crypto ●
+Nov 13 18:36:20 impressed-jade.ptr.network arq[806397]: 18:36:20:   1.00s → cron:sync_crypto()
+Nov 13 18:36:20 impressed-jade.ptr.network arq[806397]: 18:36:20:   0.01s ← cron:sync_crypto ●
+Nov 13 18:37:00 impressed-jade.ptr.network arq[806397]: 18:37:00:   1.00s → cron:cleanup_expired()
+Nov 13 18:37:00 impressed-jade.ptr.network arq[806397]: 18:37:00:   0.01s ← cron:cleanup_expired ● 0
+Nov 13 18:37:00 impressed-jade.ptr.network arq[806397]: 18:37:00: 144.40s ← job-29:run_job ●
+Nov 13 18:37:20 impressed-jade.ptr.network arq[806397]: 18:37:20:   1.00s → cron:sync_crypto()
+Nov 13 18:37:20 impressed-jade.ptr.network arq[806397]: 18:37:20:   0.01s ← cron:sync_crypto ●
+Nov 13 18:37:40 impressed-jade.ptr.network systemd[1]: Stopping nova-worker.service - NOVA worker...
+Nov 13 18:37:40 impressed-jade.ptr.network arq[806397]: 18:37:40: shutdown on SIGTERM ◆ 8 jobs complete ◆ 0 failed ◆ 0 retries ◆ 0 ongoing to cancel
+Nov 13 18:37:40 impressed-jade.ptr.network systemd[1]: nova-worker.service: Deactivated successfully.
+Nov 13 18:37:40 impressed-jade.ptr.network systemd[1]: Stopped nova-worker.service - NOVA worker.
+Nov 13 18:37:40 impressed-jade.ptr.network systemd[1]: nova-worker.service: Consumed 3.303s CPU time, 105.8M memory peak, 0B memory swap peak.
+Nov 13 18:37:40 impressed-jade.ptr.network systemd[1]: Started nova-worker.service - NOVA worker.
+Nov 13 18:37:41 impressed-jade.ptr.network arq[809970]: 18:37:41: Starting worker for 5 functions: run_job, send_broadcast, cron:cleanup_expired, cron:remind_expiring, cron:sync_crypto
+Nov 13 18:37:41 impressed-jade.ptr.network arq[809970]: 18:37:41: redis_version=7.0.15 mem_usage=1.37M clients_connected=1 db_keys=21
