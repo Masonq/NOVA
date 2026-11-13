@@ -37,3 +37,13 @@ def no_network(monkeypatch):
     monkeypatch.setattr(bot, "send", send)
     monkeypatch.setattr(bot, "call", call)
     return sent
+
+
+
+@pytest.fixture(autouse=True)
+def round_test_prices(monkeypatch):
+    """Older tests were written with 300 welcome credits and +100 for a friend; the real defaults are checked in test_prices."""
+    from app import pricing
+    monkeypatch.setitem(pricing.DEFAULT_PRICE, "welcome", 300)
+    monkeypatch.setitem(pricing.DEFAULT_PRICE, "ref_friend", 100)
+    pricing._loaded = 0

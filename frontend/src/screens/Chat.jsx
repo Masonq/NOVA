@@ -1,3 +1,5 @@
+import { openTopup } from "../ui/Topup.jsx";
+import { PRICE } from "../jobs.js";
 import { useEffect, useRef, useState } from "react";
 import Icon from "../ui/Icon.jsx";
 import Composer from "../ui/Composer.jsx";
@@ -24,7 +26,10 @@ export default function Chat({ go, params }) {
       }, ctrl.current.signal);
       haptic("success");
     } catch (e) {
-      if (e.name !== "AbortError") { toast(e.message, "error"); setMsgs((m) => m.slice(0, -1)); }
+      if (e.name !== "AbortError") {
+        setMsgs((m) => m.slice(0, -2)); setText(t);
+        if (e.status === 402) openTopup(PRICE.chat_msg); else toast(e.message, "error");
+      }
     } finally {
       setBusy(false);
       setMsgs((m) => m && m.map((x) => (x.live ? { ...x, live: false } : x)));
@@ -61,6 +66,6 @@ export default function Chat({ go, params }) {
               <p>{m.text}{m.live && <span className="cursor" aria-hidden="true" />}</p></div>)}
         <div ref={end} />
       </div>
-      <div className="dock"><Composer value={text} onChange={setText} onSend={send} busy={busy} placeholder="Сообщение" /></div>
+      <div className="dock"><Composer value={text} onChange={setText} onSend={send} busy={busy} placeholder={`Сообщение · ${PRICE.chat_msg} кр.`} /></div>
     </main>);
 }

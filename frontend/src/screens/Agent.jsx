@@ -8,7 +8,7 @@ import { Voice } from "../agent/voice.js";
 import { api, stream } from "../api.js";
 import { toast } from "../ui/Toast.jsx";
 import { haptic } from "../tg.js";
-import { kickJobs, useActiveJobs, KIND, thumbOf } from "../jobs.js";
+import { kickJobs, useActiveJobs, KIND, thumbOf, PRICE } from "../jobs.js";
 
 const STATUS = {
   off: "Коснитесь сферы, чтобы начать разговор",
@@ -110,7 +110,7 @@ export default function Agent({ go, me, reloadMe }) {
           <Orb size={orbSize} dense level={levelFn} energy={phase === "thinking" ? 0.35 : 0} pulseOnTap={false} />
         </button>
         <p className="ag-status" aria-live="polite">{STATUS[phase]}</p>
-        {phase === "off" && <p className="ag-hint">Разговор — около {settings?.per_min ?? 5} кредитов в минуту. Генерации запускаю только после вашего «да».</p>}
+        {phase === "off" && <p className="ag-hint">Разговор — {settings?.per_min ?? 5} кредитов в минуту, поиск в интернете +{PRICE.agent_search}. Генерации запускаю только после вашего «да».</p>}
       </section>
 
       <section className="ag-talk" aria-live="polite">

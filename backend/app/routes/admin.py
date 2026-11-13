@@ -46,7 +46,7 @@ async def stats(days: int = 30, a: User = Depends(admin_user), db: AsyncSession 
     jobs = (await db.execute(select(jday, Job.kind, Job.status, func.count(), func.sum(Job.cost))
                              .where(Job.created_at > since).group_by(jday, Job.kind, Job.status))).all()
     spent = (await db.execute(select(func.coalesce(func.sum(-Ledger.delta), 0)).where(Ledger.kind == "charge", Ledger.created_at > since))).scalar_one()
-    agent_turns = (await db.execute(select(func.count()).select_from(Ledger).where(Ledger.title == "Агент: разговор", Ledger.created_at > since))).scalar_one()
+    agent_turns = (await db.execute(select(func.count()).select_from(Ledger).where(Ledger.title.like("Агент: разговор%"), Ledger.created_at > since))).scalar_one()
     series = []
     for i in range(days - 1, -1, -1):
         d = str((datetime.now(timezone.utc) - timedelta(days=i)).date())

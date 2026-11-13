@@ -318,6 +318,8 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
                               "tool_calls": [{"id": c["id"] or f"c{i}", "type": "function", "function": {"name": c["name"], "arguments": c["arguments"] or "{}"}}
                                              for i, c in enumerate(calls)]})
                 for i, c in enumerate(calls):
+                    if c["name"] == "web_search":
+                        searches.append(1)
                     try:
                         args = json.loads(c["arguments"] or "{}")
                     except json.JSONDecodeError:
@@ -342,6 +344,7 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
                 await asyncio.sleep(0.05)
 
         nonlocal_out: list[float] = []
+        searches: list[int] = []
         done_flag = asyncio.Event()
 
         async def run():
@@ -369,6 +372,7 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
         out_sec = sum(nonlocal_out)
         reply = "".join(answer).strip()
         price = max(1, math.ceil((in_sec + out_sec) / 60 * PRICE["agent_min"])) if (reply or heard) else 0
+        price += len(searches) * int(PRICE.get("agent_search", 0))
         bal = None
         async with Session() as db2:
             user = await db2.get(User, uid)
@@ -377,7 +381,7 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
             if reply:
                 db2.add(ChatMessage(user_id=uid, role="model", text=reply, channel="agent"))
             if price:
-                await charge(db2, user, min(price, user.balance), "Агент: разговор", None)
+                await charge(db2, user, min(price, user.balance), "Агент: разговор" + (" и поиск" if searches else ""), None)
             await db2.commit()
             bal = user.balance
         yield _sse({"type": "done", "balance": bal, "cost": price, "heard": heard or ""})

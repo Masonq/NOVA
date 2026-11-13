@@ -52,6 +52,11 @@ async def send(body: ChatIn, u: User = Depends(current_user), db: AsyncSession =
     if today >= s.chat_daily_limit:
         raise HTTPException(429, "Лимит сообщений на сегодня исчерпан, продолжим завтра")
     text = body.text.strip()
+    from ..credits import charge_daily
+    from ..pricing import PRICE, refresh
+    await refresh(db)
+    price = int(PRICE.get("chat_msg", 1))
+    await charge_daily(db, u, price, "Текстовый чат")     # 402 when the balance is empty
     db.add(ChatMessage(user_id=u.id, role="user", text=text))
     await db.commit()
     rows = (await db.execute(select(ChatMessage).where(ChatMessage.user_id == u.id, ChatMessage.channel == "chat")
@@ -71,7 +76,12 @@ async def send(body: ChatIn, u: User = Depends(current_user), db: AsyncSession =
                 yield _sse({"t": chunk})
         except AIError:
             if not out:
-                yield _sse({"error": "Модель сейчас перегружена, попробуйте ещё раз через минуту"})
+                async with Session() as s3:                  # no answer: give the credit back
+                    from ..credits import refund
+                    usr = await s3.get(User, uid)
+                    await refund(s3, usr, price, "Возврат: чат не ответил")
+                    await s3.commit()
+                yield _sse({"error": "Модель сейчас перегружена, попробуйте ещё раз через минуту — кредит вернулся"})
                 return
         reply = "".join(out).strip()
         if reply:

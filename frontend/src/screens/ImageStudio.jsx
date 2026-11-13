@@ -44,7 +44,7 @@ export default function ImageStudio({ go, me, reloadMe, params }) {
           }))} />
         </section>)}
 
-      <Dock label="Создать" price={priceOf("image")} balance={me?.balance} busy={s.busy}
+      <Dock label="Создать" price={priceOf("image", { refs: ref ? [ref] : [] })} balance={me?.balance} busy={s.busy}
         disabled={prompt.trim().length < 2 || !!s.active}
         onClick={() => s.run(prompt.trim(), { style, aspect, refs: ref ? [ref] : [] })} />
       <JobSheet job={sheet?.j} file={sheet?.f} onClose={() => setSheet(null)} go={go}
