@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-13 23:34 UTC
+# Установка NOVA 2026-11-13 23:39 UTC
 
-- Версия: f85bc12 Icons: drop hand-made icon animations (keep the «Звук» equalizer)
+- Версия: 7267dd8 Studios polish: voice choice as icon cards, Phosphor row icons, genre grid on desktop, tap-to-insert part tags in TTS, clean track titles, layout fixes
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
