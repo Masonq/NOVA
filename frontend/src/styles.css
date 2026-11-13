@@ -299,9 +299,9 @@ button.result { display: block; width: 100%; text-align: left; background-size: 
 /* Enter by a class added a frame after mount (transitions), not by CSS animations: iOS WebKit may start an animation of a
    freshly inserted element a few frames late, showing its final state first and then jumping back to the start — a flash. */
 .sheet-wrap { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,0); display: flex; align-items: flex-end; justify-content: center;
-  transition: background-color .22s ease-out; overscroll-behavior: contain; touch-action: none; }
+  transition: background-color .22s ease-out; overscroll-behavior: contain; }
 .sheet-wrap.in { background: rgba(0,0,0,.55); }
-.sheet-wrap .sheet { touch-action: pan-y; overscroll-behavior: contain; }
+.sheet-wrap .sheet { overscroll-behavior: contain; }
 /* While a sheet is open nothing underneath keeps a live blur: dimmed anyway, and WebKit has nothing to re-layer. */
 html.sheet-open .app *:not(.sheet-wrap):not(.sheet-wrap *) {
   -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }

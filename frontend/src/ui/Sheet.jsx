@@ -23,6 +23,42 @@ export async function shareJob(job) {
 
 const open_sheets = { n: 0 };
 
+/* Scroll lock while a sheet is open, without touching the page's styles (style changes made iOS repaint and flash):
+   only the sheet scrolls; at its top/bottom the gesture is stopped instead of passing to the page behind;
+   horizontal strips inside the sheet keep scrolling sideways. */
+let touch = null;
+function scroller(el, axis) {
+  for (; el && el !== document.body; el = el.parentElement) {
+    const st = getComputedStyle(el);
+    if (axis === "x" && /(auto|scroll)/.test(st.overflowX) && el.scrollWidth > el.clientWidth + 1) return el;
+    if (axis === "y" && /(auto|scroll)/.test(st.overflowY) && el.scrollHeight > el.clientHeight + 1) return el;
+    if (el.classList?.contains("sheet")) return null;            // never look past the sheet
+  }
+  return null;
+}
+function blocked(target, dx, dy) {
+  const sheet = target.closest?.(".sheet");
+  if (!sheet) return true;                                   // the dim layer or anything behind it
+  if (Math.abs(dx) > Math.abs(dy)) return !scroller(target, "x");
+  const el = scroller(target, "y") || (sheet.scrollHeight > sheet.clientHeight + 1 ? sheet : null);
+  if (!el) return true;                                      // a short sheet has nothing to scroll
+  const top = el.scrollTop <= 0, bottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+  return (dy > 0 && top) || (dy < 0 && bottom);              // at the edge: don't chain the scroll to the page
+}
+const onStart = (e) => { const t = e.touches[0]; touch = { x: t.clientX, y: t.clientY }; };
+const onMove = (e) => {
+  if (!touch || e.touches.length > 1) return;
+  const t = e.touches[0];
+  if (blocked(e.target, t.clientX - touch.x, t.clientY - touch.y) && e.cancelable) e.preventDefault();
+};
+const onWheel = (e) => { if (blocked(e.target, -e.deltaX, -e.deltaY) && e.cancelable) e.preventDefault(); };
+function lock(on) {
+  const f = on ? "addEventListener" : "removeEventListener";
+  document[f]("touchstart", onStart, { passive: true });
+  document[f]("touchmove", onMove, { passive: false });
+  document[f]("wheel", onWheel, { passive: false });
+}
+
 export default function Sheet({ open, onClose, children, title }) {
   useEffect(() => {
     if (!open) return;
@@ -31,12 +67,13 @@ export default function Sheet({ open, onClose, children, title }) {
     // no body.style changes here: they make the iOS web view repaint the whole document; a class + CSS is enough
     const root = document.documentElement;
     open_sheets.n += 1; root.classList.add("sheet-open");
+    if (open_sheets.n === 1) lock(true);
     const esc = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", esc);
     return () => {
       popBack(close); window.removeEventListener("keydown", esc);
       open_sheets.n = Math.max(0, open_sheets.n - 1);
-      if (!open_sheets.n) root.classList.remove("sheet-open");
+      if (!open_sheets.n) { root.classList.remove("sheet-open"); lock(false); }
     };
   }, [open]);
   // mount in the start state, switch to «in» on the next frames: no late-starting animation can flash the final state first
