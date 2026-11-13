@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-13 22:30 UTC
+# Установка NOVA 2026-11-13 22:35 UTC
 
-- Версия: b601895 Rebuild frontend bundle
+- Версия: 55d1fcd Home composer: attach a photo, dictate (1 credit), send to the agent as a typed turn
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
