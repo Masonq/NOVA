@@ -84,23 +84,28 @@ def _clean(kind: str, params: dict) -> dict:
     return out
 
 
-@router.post("")
-async def create_job(body: JobIn, u: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
-    prompt = body.prompt.strip()
-    if len(prompt) > LIMITS[body.kind]:
-        raise HTTPException(422, f"Слишком длинный текст: до {LIMITS[body.kind]} символов")
-    params = _clean(body.kind, body.params or {})
+async def start_job(db: AsyncSession, u: User, kind: str, prompt: str, raw_params: dict) -> Job:
+    """Validates, charges and queues a generation. Used by the API and by the voice agent."""
+    prompt = prompt.strip()
+    if len(prompt) > LIMITS[kind]:
+        raise HTTPException(422, f"Слишком длинный текст: до {LIMITS[kind]} символов")
+    params = _clean(kind, raw_params or {})
     active = (await db.execute(select(Job.id).where(Job.user_id == u.id, Job.status.in_(("queued", "running"))))).all()
     if len(active) >= ACTIVE_LIMIT:
         raise HTTPException(429, "Уже идут 3 генерации — дождитесь, пока одна закончится")
-    price = price_of(body.kind, params, prompt)
-    j = Job(user_id=u.id, kind=body.kind, prompt=prompt, params=params, cost=price, stage="В очереди", progress=2)
+    price = price_of(kind, params, prompt)
+    j = Job(user_id=u.id, kind=kind, prompt=prompt, params=params, cost=price, stage="В очереди", progress=2)
     db.add(j)
     await db.flush()
-    await charge(db, u, price, {"image": "Фото", "video": "Видео", "music": "Музыка", "tts": "Озвучка"}[body.kind] + ": " + prompt[:60], j.id)
+    await charge(db, u, price, {"image": "Фото", "video": "Видео", "music": "Музыка", "tts": "Озвучка"}[kind] + ": " + prompt[:60], j.id)
     await db.commit()
     await enqueue(j.id)
-    return job_out(j)
+    return j
+
+
+@router.post("")
+async def create_job(body: JobIn, u: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    return job_out(await start_job(db, u, body.kind, body.prompt, body.params or {}))
 
 
 @router.get("/active")

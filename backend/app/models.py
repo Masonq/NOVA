@@ -20,6 +20,7 @@ class User(Base):
     welcome_given: Mapped[bool] = mapped_column(Boolean, default=False)
     blocked: Mapped[bool] = mapped_column(Boolean, default=False)
     can_message: Mapped[bool] = mapped_column(Boolean, default=True)
+    agent_voice: Mapped[str] = mapped_column(String(32), default="Sulafat", server_default="Sulafat")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     last_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
@@ -64,6 +65,7 @@ class ChatMessage(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     role: Mapped[str] = mapped_column(String(12))  # user | model
+    channel: Mapped[str] = mapped_column(String(8), default="chat", server_default="chat", index=True)  # chat | agent
     text: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 

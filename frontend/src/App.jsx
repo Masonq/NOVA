@@ -14,6 +14,7 @@ import MusicStudio from "./screens/MusicStudio.jsx";
 import TtsStudio from "./screens/TtsStudio.jsx";
 import Tasks from "./screens/Tasks.jsx";
 import Feed from "./screens/Feed.jsx";
+import Agent from "./screens/Agent.jsx";
 import TabBar from "./ui/TabBar.jsx";
 import { toast } from "./ui/Toast.jsx";
 
@@ -64,6 +65,7 @@ export default function App() {
   const STUDIOS = { image: ImageStudio, video: VideoStudio, music: MusicStudio, tts: TtsStudio };
   const Studio = STUDIOS[route];
   const screen = Studio ? <Studio key={route + JSON.stringify(params || {})} {...sp} />
+    : route === "agent" ? <Agent go={go} me={me} reloadMe={loadMe} />
     : route === "tasks" ? <Tasks go={go} />
     : route === "feed" ? <Feed go={go} />
     : route === "chat" ? <Chat go={go} params={params} />
@@ -73,9 +75,9 @@ export default function App() {
   return (
     <div className={"app r-" + route}>
       {screen}
-      {!["chat", "image", "video", "music", "tts", "feed"].includes(route) && (
+      {!["chat", "image", "video", "music", "tts", "feed", "agent"].includes(route) && (
         <TabBar tabs={TABS} active={TABS.find((t) => t.k === route) ? route : "home"} onSelect={(k) => go(k)}
-          side={{ orb: true, label: "Голосовой агент", accent: true, onClick: () => toast("Голосовой агент появится в следующем обновлении") }} />)}
+          side={{ orb: true, label: "Голосовой агент", accent: true, onClick: () => go("agent") }} />)}
       <Toaster />
     </div>);
 }

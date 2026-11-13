@@ -27,13 +27,18 @@ function makeOrb(canvas, size, dense) {
   }));
   const o = { visible: true, energy: 0, burst: 0 };
   const lw = Math.max(0.55, (size * dpr) / 260);
+  o.levelRef = null;
 
   o.draw = (t) => {
     const W = canvas.width, c = W / 2, R = W * 0.38;
     o.burst *= 0.95;
-    const e = Math.min(1.4, o.energy + o.burst);
+    const live = o.levelRef ? o.levelRef() : 0;
+    o.smooth = (o.smooth || 0) * 0.8 + live * 0.2;
+    const e = Math.min(1.6, o.energy + o.burst + o.smooth * 1.4);
     const amp = 0.09 + 0.12 * e;
-    const rotY = t * 0.32, tilt = 0.38 + Math.sin(t * 0.4) * 0.12;
+    const dt = o.lastT ? Math.min(0.1, t - o.lastT) : 0; o.lastT = t;
+    o.ang = (o.ang ?? t * 0.32) + dt * (0.32 + 0.6 * o.smooth);
+    const rotY = o.ang, tilt = 0.38 + Math.sin(t * 0.4) * 0.12;
     const cy = Math.cos(rotY), sy = Math.sin(rotY), ct = Math.cos(tilt), st = Math.sin(tilt);
     const shift = Math.sin(t * 0.25) * 0.35;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -93,7 +98,7 @@ function makeOrb(canvas, size, dense) {
   return o;
 }
 
-export default function Orb({ size = 54, dense = false, energy = 0, className = "", pulseOnTap = true }) {
+export default function Orb({ size = 54, dense = false, energy = 0, className = "", pulseOnTap = true, level = null }) {
   const ref = useRef(null);
   const orb = useRef(null);
   useEffect(() => {
@@ -107,6 +112,7 @@ export default function Orb({ size = 54, dense = false, energy = 0, className = 
     return () => { io.disconnect(); orbs.delete(o); };
   }, [size, dense]);
   useEffect(() => { if (orb.current) orb.current.energy = energy; }, [energy]);
+  useEffect(() => { if (orb.current) orb.current.levelRef = level; }, [level, size]);
   const pulse = () => { if (pulseOnTap && orb.current) { orb.current.burst = 1; kick(); } };
   return <canvas ref={ref} className={"orb " + className} style={{ width: size, height: size }} aria-hidden="true" onPointerDown={pulse} />;
 }

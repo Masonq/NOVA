@@ -159,3 +159,51 @@ async def image(prompt: str, aspect: str = "1:1", ref_urls: list[str] | None = N
                 break
             await asyncio.sleep(2 + 2 * attempt)
     raise AIError(f"картинка: {last}")
+
+
+async def stream_events(model: str, messages: list[dict], tools: list | None = None, timeout: float = 90):
+    """Streams ('text', str), then ('tools', [{id,name,arguments}]) if the model called tools."""
+    body = {"model": model, "messages": messages, "stream": True, "temperature": 0.7}
+    if tools:
+        body["tools"] = tools
+    calls: dict[int, dict] = {}
+    async with httpx.AsyncClient(timeout=timeout) as cl:
+        async with cl.stream("POST", f"{BASE}/chat/completions", headers=_headers(), json=body) as r:
+            if r.status_code != 200:
+                raise AIError(f"{r.status_code} {(await r.aread())[:200]!r}")
+            async for line in r.aiter_lines():
+                if not line.startswith("data:"):
+                    continue
+                data = line[5:].strip()
+                if data == "[DONE]":
+                    break
+                try:
+                    d = json.loads(data)
+                except json.JSONDecodeError:
+                    continue
+                if d.get("error"):
+                    raise AIError(str(d["error"])[:200])
+                for ch in d.get("choices", []):
+                    delta = ch.get("delta") or {}
+                    if delta.get("content"):
+                        yield ("text", delta["content"])
+                    for tc in delta.get("tool_calls") or []:
+                        c = calls.setdefault(tc.get("index", 0), {"id": "", "name": "", "arguments": ""})
+                        c["id"] = tc.get("id") or c["id"]
+                        fn = tc.get("function") or {}
+                        c["name"] = fn.get("name") or c["name"]
+                        c["arguments"] += fn.get("arguments") or ""
+    if calls:
+        yield ("tools", [calls[k] for k in sorted(calls)])
+
+
+async def web_answer(query: str) -> str:
+    """Short answer with web search (OpenRouter web plugin)."""
+    body = {"model": "google/gemini-3.8-flash", "plugins": [{"id": "web", "max_results": 4}],
+            "messages": [{"role": "user", "content": f"Найди в интернете и ответь по-русски коротко (до 5 предложений), с цифрами и датами: {query}"}]}
+    async with httpx.AsyncClient(timeout=60) as cl:
+        r = await cl.post(f"{BASE}/chat/completions", headers=_headers(), json=body)
+    if r.status_code != 200:
+        raise AIError(f"поиск: {r.status_code}")
+    c = r.json()["choices"][0]["message"].get("content") or ""
+    return c[:1800]

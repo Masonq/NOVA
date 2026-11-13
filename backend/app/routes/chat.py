@@ -32,14 +32,14 @@ def _sse(obj: dict) -> str:
 
 @router.get("")
 async def history(u: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
-    rows = (await db.execute(select(ChatMessage).where(ChatMessage.user_id == u.id)
+    rows = (await db.execute(select(ChatMessage).where(ChatMessage.user_id == u.id, ChatMessage.channel == "chat")
                              .order_by(ChatMessage.id.desc()).limit(100))).scalars().all()
     return [{"id": m.id, "role": m.role, "text": m.text, "at": m.created_at.isoformat()} for m in reversed(rows)]
 
 
 @router.delete("")
 async def clear(u: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
-    await db.execute(delete(ChatMessage).where(ChatMessage.user_id == u.id))
+    await db.execute(delete(ChatMessage).where(ChatMessage.user_id == u.id, ChatMessage.channel == "chat"))
     await db.commit()
     return {"ok": True}
 
@@ -48,13 +48,13 @@ async def clear(u: User = Depends(current_user), db: AsyncSession = Depends(get_
 async def send(body: ChatIn, u: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
     s = get_settings()
     today = (await db.execute(select(func.count()).select_from(ChatMessage).where(
-        ChatMessage.user_id == u.id, ChatMessage.role == "user", ChatMessage.created_at > now() - timedelta(days=1)))).scalar_one()
+        ChatMessage.user_id == u.id, ChatMessage.channel == "chat", ChatMessage.role == "user", ChatMessage.created_at > now() - timedelta(days=1)))).scalar_one()
     if today >= s.chat_daily_limit:
         raise HTTPException(429, "Лимит сообщений на сегодня исчерпан, продолжим завтра")
     text = body.text.strip()
     db.add(ChatMessage(user_id=u.id, role="user", text=text))
     await db.commit()
-    rows = (await db.execute(select(ChatMessage).where(ChatMessage.user_id == u.id)
+    rows = (await db.execute(select(ChatMessage).where(ChatMessage.user_id == u.id, ChatMessage.channel == "chat")
                              .order_by(ChatMessage.id.desc()).limit(HISTORY))).scalars().all()
     contents = [{"role": "assistant" if m.role == "model" else "user", "content": m.text} for m in reversed(rows)]
     facts = (await db.execute(select(Memory.text).where(Memory.user_id == u.id).order_by(Memory.id.desc()).limit(30))).scalars().all()

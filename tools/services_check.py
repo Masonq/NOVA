@@ -32,6 +32,24 @@ def main(path, image):
             out.append(f"- OpenRouter: ключ работает, потрачено ${r.get('usage')}, лимит {r.get('limit')}")
         except Exception as e:
             out.append(f"- OpenRouter: ошибка {e}")
+        # voice agent: does the model call the create tool (no generation is started here)?
+        try:
+            import json as _j
+            tools = [{"type": "function", "function": {"name": "create_media", "description": "Подготовить генерацию",
+                      "parameters": {"type": "object", "required": ["kind", "prompt"], "properties": {"kind": {"type": "string", "enum": ["image", "video", "music", "tts"]}, "prompt": {"type": "string"}}}}}]
+            t0 = time.time()
+            r = cl.post("https://openrouter.ai/api/v1/chat/completions", headers={"Authorization": "Bearer " + o}, json={
+                "model": "google/gemini-3.8-flash", "tools": tools,
+                "messages": [{"role": "system", "content": "Ты голосовой агент NOVA. Для генераций вызывай create_media."}, {"role": "user", "content": "Сделай логотип кофейни Зерно"}]}).json()
+            tc = (r["choices"][0]["message"].get("tool_calls") or [{}])[0].get("function", {})
+            out.append(f"- Агент: инструмент {tc.get('name') or 'не вызван'} {tc.get('arguments', '')[:120]} за {time.time() - t0:.1f} с")
+            t0 = time.time()
+            r = cl.post("https://openrouter.ai/api/v1/chat/completions", headers={"Authorization": "Bearer " + o}, json={
+                "model": "google/gemini-3.8-flash", "plugins": [{"id": "web", "max_results": 3}],
+                "messages": [{"role": "user", "content": "Какой сегодня курс евро к динару? Коротко."}]})
+            out.append(f"- Поиск в интернете: {r.status_code}, {time.time() - t0:.1f} с: {(r.json()['choices'][0]['message'].get('content') or '')[:160] if r.status_code == 200 else r.text[:160]}")
+        except Exception as e:
+            out.append(f"- Агент: ошибка {type(e).__name__} {e}")
         if image:
             t0 = time.time()
             body = {"model": "google/gemini-nano-banana-2.1", "modalities": ["image", "text"], "image_config": {"aspect_ratio": "1:1"},

@@ -52,7 +52,6 @@ export default function Home({ go, me }) {
   const done = (jobs || []).filter((j) => j.status === "done");
   const tool = (t) => {
     haptic("light");
-    if (t.k === "agent") return toast("Голосовой агент появится в следующем обновлении");
     go(t.k);
   };
   const a0 = active[0];
