@@ -46,7 +46,16 @@ export default function Home({ go, me }) {
   const [text, setText] = useState("");
   const [jobs, setJobs] = useState(null);
   const [sheet, setSheet] = useState(null);
-  const load = () => api("/api/jobs?limit=12").then(setJobs).catch(() => setJobs([]));
+  // a failed load (e.g. the server restarting after an update) keeps what was shown and retries; never pretends to be empty
+  const [loadErr, setLoadErr] = useState(false);
+  const load = async () => {
+    for (const wait of [0, 1500, 4000]) {
+      if (wait) await new Promise((r) => setTimeout(r, wait));
+      try { setJobs(await api("/api/jobs?limit=12")); setLoadErr(false); return; } catch {}
+    }
+    setLoadErr(true); setJobs((j) => j || []);
+  };
+  useEffect(() => { const f = () => document.visibilityState === "visible" && load(); document.addEventListener("visibilitychange", f); return () => document.removeEventListener("visibilitychange", f); }, []);
   useEffect(() => { load(); }, []);
   const active = useActiveJobs(load);
   const g = greeting();
@@ -81,7 +90,13 @@ export default function Home({ go, me }) {
       </nav>
       <section aria-labelledby="res-h">
         <div className="row-h"><h2 id="res-h">Ваши работы</h2>{done.length > 0 && <button className="link" onClick={() => go("archive")}>Архив</button>}</div>
-        {done.length > 0 ? (
+        {loadErr && done.length === 0 ? (
+          <div className="result empty">
+            <Icon n="spark" s={22} />
+            <p>Не удалось загрузить работы</p>
+            <button className="cta small" onClick={() => { setLoadErr(false); load(); }}>Повторить</button>
+          </div>
+        ) : jobs === null ? <div className="skeleton car-sk" /> : done.length > 0 ? (
           <Carousel label="Ваши работы" height={360} items={done.slice(0, 8).map((j) => ({
             key: j.id, img: thumbOf(j), kind: j.kind, voice: j.params?.voice, seed: j.id, ...cardText(j),
             onOpen: () => setSheet(j), onMore: () => setSheet(j),

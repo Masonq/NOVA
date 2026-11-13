@@ -121,7 +121,9 @@ h2 { font-size: 12.5px; font-weight: 600; color: var(--mut); margin: 0; }
 .toast { max-width: 420px; padding: 11px 16px; border-radius: 14px; background: rgba(34,34,40,.97); border: 1px solid var(--line2); font-size: 13.5px; font-weight: 500; color: var(--soft); animation: tin .25s ease-out; text-align: center; }
 .toast.error { border-color: rgba(255,69,58,.4); }
 @keyframes tin { from { opacity: 0; transform: translateY(-8px); } }
+
 .skeleton { height: 120px; border-radius: 18px; background: linear-gradient(90deg, var(--card), var(--card2), var(--card)); background-size: 200% 100%; animation: sh 1.2s linear infinite; }
+.skeleton.car-sk { height: 344px; margin: 8px 22%; border-radius: 24px; }
 @keyframes sh { to { background-position: -200% 0; } }
 .boot { min-height: 100dvh; background: var(--bg); }
 
