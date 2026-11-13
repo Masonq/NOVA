@@ -5,7 +5,7 @@ import Composer from "../ui/Composer.jsx";
 import { toast } from "../ui/Toast.jsx";
 import { api } from "../api.js";
 import { haptic } from "../tg.js";
-import { useActiveJobs, KIND, thumbOf } from "../jobs.js";
+import { useActiveJobs, KIND, thumbOf, cardText } from "../jobs.js";
 import { JobSheet } from "../ui/Sheet.jsx";
 import Carousel from "../ui/Carousel.jsx";
 import Orb from "../ui/Orb.jsx";
@@ -32,8 +32,7 @@ function Greeting({ text }) {
 
 const TOOLS = [
   { k: "image", t: "Фото", i: "image" }, { k: "video", t: "Видео", i: "video" },
-  { k: "music", t: "Музыка", i: "music" }, { k: "tts", t: "Озвучка", i: "wave" },
-  { k: "agent", t: "Агент", i: "agent" },
+  { k: "music", t: "Музыка", i: "music" }, { k: "tts", t: "Озвучка", i: "wave" }
 ];
 const SUGGEST = [
   { t: "Обложка трека", go: "image", p: { prompt: "Обложка трека: ночной город в неоне, атмосферно", style: "Арт" } },
@@ -84,8 +83,7 @@ export default function Home({ go, me }) {
         <div className="row-h"><h2 id="res-h">Ваши работы</h2>{done.length > 0 && <button className="link" onClick={() => go("archive")}>Архив</button>}</div>
         {done.length > 0 ? (
           <Carousel label="Ваши работы" height={360} items={done.slice(0, 8).map((j) => ({
-            key: j.id, img: thumbOf(j), kind: j.kind, title: j.prompt,
-            sub: { image: "Картинка", video: `Видео · ${j.params?.duration || 5} с`, music: `Трек · ${j.params?.genre || ""}`, tts: `Озвучка · ${j.params?.voice || ""}` }[j.kind],
+            key: j.id, img: thumbOf(j), kind: j.kind, voice: j.params?.voice, seed: j.id, ...cardText(j),
             onOpen: () => go(j.kind), onMore: () => setSheet(j),
           }))} />
         ) : (

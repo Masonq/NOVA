@@ -80,3 +80,23 @@ function whoOf(spec) {
   return "";
 }
 export const WHO_RU = { male: "мужской", female: "женский", duet: "дуэт", "": "без пометки" };
+
+
+/** Title, meta line and description for a work's card. Section marks like «[Куплет 1: мужской]» are not shown. */
+export function cardText(j) {
+  const clean = (j.prompt || "").replace(/^\s*\[[^\]]{1,82}\]\s*$/gm, "").replace(/\s+/g, " ").trim();
+  const p = j.params || {};
+  const track = (j.files || []).find((f) => f.title)?.title;
+  const date = j.at ? new Date(j.at).toLocaleDateString("ru-RU", { day: "numeric", month: "short" }) : "";
+  const meta = {
+    image: [p.style || "Картинка"], video: ["Видео", `${p.duration || 5} с`],
+    music: ["Трек", p.genre], tts: ["Озвучка", p.male && p.female ? `${p.male} и ${p.female}` : p.voice],
+  }[j.kind] || [KIND[j.kind]];
+  const lines = (j.prompt || "").split("\n").filter((l) => l.trim() && !/^\s*\[[^\]]{1,82}\]\s*$/.test(l));
+  const first = (lines[0] || "").trim().split(/(?<=[.!?…])\s/)[0];      // a lyric's first line, or the first sentence
+  const cut = first.length > 60 ? first.slice(0, 60).replace(/\s+\S*$/, "") + "…" : first;   // on a word boundary
+  const title = track || cut || KIND[j.kind] || "Работа";
+  // the rest when the title is a whole sentence, the full text when it was shortened: never the title twice, never half a word
+  const desc = (track ? clean : cut === first ? clean.slice(first.length) : clean).trim();
+  return { title, sub: [...meta, date].filter(Boolean).join(" · "), desc };
+}

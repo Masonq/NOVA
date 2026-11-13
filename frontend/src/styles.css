@@ -342,19 +342,26 @@ img.sheet-media { object-fit: contain; background: var(--card); }
 
 /* ---------- 3D glass carousel (ref: Glassy Carousel V2) ---------- */
 .gcar { position: relative; perspective: 1100px; perspective-origin: 50% 40%; touch-action: pan-y; user-select: none; -webkit-user-select: none; margin: 0 -18px; overflow: hidden; outline: none; }
-.gcard { position: absolute; top: 8px; bottom: 8px; left: 50%; width: min(64%, 300px); border-radius: 24px; overflow: hidden; background: #1A1A1F; border: 1px solid rgba(255,255,255,.14);
-  box-shadow: 0 18px 40px rgba(0,0,0,.5); transform-style: preserve-3d; transition: transform .5s cubic-bezier(.25,1,.35,1), opacity .4s; cursor: pointer; }
-.gcard.on { cursor: default; border-color: rgba(255,255,255,.22); }
-.gcard img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
-.gcard-ic { position: absolute; inset: 0 0 35% 0; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.8); }
-.gcard-dim { position: absolute; inset: 0; background: #0A0A0C; pointer-events: none; transition: opacity .4s; }
-.gcap { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 14px 14px; background: linear-gradient(180deg, rgba(20,20,24,0), rgba(20,20,24,.78) 38%, rgba(20,20,24,.92));
-  backdrop-filter: blur(0); }
-.gcard.on .gcap { -webkit-mask-image: none; }
+.gcard { position: absolute; top: 8px; bottom: 8px; left: 50%; width: min(56%, 280px); border-radius: 24px; overflow: hidden;
+  background: linear-gradient(180deg, #2A2A33, #16161B 62%); border: 1px solid rgba(255,255,255,.13);   /* opaque: nothing shows through */
+  box-shadow: 0 22px 44px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.08); transform-style: flat; backface-visibility: hidden;
+  transition: transform .5s cubic-bezier(.25,1,.35,1), opacity .4s; cursor: pointer; }
+.gcard.on { cursor: default; border-color: rgba(255,255,255,.24); }
+/* the picture takes the top and melts into the glass, like in the reference */
+.gmedia { position: absolute; left: 0; right: 0; top: 0; height: 64%; pointer-events: none;
+  -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent); mask-image: linear-gradient(180deg, #000 55%, transparent); }
+.gmedia img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gart { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(90% 70% at 30% 25%, var(--a), transparent 70%), radial-gradient(80% 70% at 80% 60%, var(--b), transparent 70%), #15121f; }
+.gart-w { display: flex; align-items: center; gap: 3px; height: 34%; width: 62%; }
+.gart-w i { flex: 1; border-radius: 3px; background: rgba(255,255,255,.88); box-shadow: 0 0 10px rgba(255,255,255,.35); }
+.gcard-dim { position: absolute; inset: 0; background: #0A0A0C; pointer-events: none; transition: opacity .4s; z-index: 1; }
+.gcap { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 16px 16px; z-index: 1; }
 .gcap-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-.gcap-h b { font-size: 14.5px; font-weight: 650; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.gcap-h span { font-size: 11.5px; color: rgba(255,255,255,.55); flex-shrink: 0; font-variant-numeric: tabular-nums; }
-.gcap p { margin: 4px 0 0; font-size: 12px; line-height: 1.4; color: rgba(255,255,255,.62); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.gcap-h b { font-size: 15px; font-weight: 650; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gcap-h span { font-size: 11.5px; color: rgba(255,255,255,.5); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.gcap-s { display: block; margin-top: 3px; font-size: 11.5px; color: rgba(255,255,255,.5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gcap p { margin: 7px 0 0; font-size: 12px; line-height: 1.45; color: rgba(255,255,255,.62); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .gchip { position: absolute; top: 10px; z-index: 2; height: 30px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border-radius: 15px; font-size: 12px; font-weight: 600; color: #fff;
   background: rgba(20,20,24,.45); border: 1px solid rgba(255,255,255,.2); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 .gchip.l { left: 10px; padding: 0 11px 0 9px; } .gchip.r { right: 10px; width: 30px; }

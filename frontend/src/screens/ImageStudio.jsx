@@ -2,7 +2,7 @@ import { useState } from "react";
 import { StudioTop, Opts, PromptBox, Dock, Progress, Toggle } from "../ui/Studio.jsx";
 import { JobSheet } from "../ui/Sheet.jsx";
 import { useStudio } from "../studio.js";
-import { priceOf, PRICE } from "../jobs.js";
+import { priceOf, PRICE, cardText } from "../jobs.js";
 import Carousel from "../ui/Carousel.jsx";
 
 const STYLES = ["Фото", "Арт", "Логотип", "3D", "Аниме"];
@@ -41,8 +41,7 @@ export default function ImageStudio({ go, me, reloadMe, params }) {
       ) : gallery.length > 0 && (
         <section aria-label="Ваши картинки">
           <Carousel key={cur?.id} label="Ваши картинки" height={400} items={gallery.map(({ j, f }) => ({
-            key: f.url, img: f.thumb_url || f.url, title: j.prompt,
-            sub: `${j.params?.style || "Фото"} · ${new Date(j.at).toLocaleDateString("ru-RU", { day: "numeric", month: "short" })}`,
+            key: f.url, img: f.thumb_url || f.url, ...cardText(j),
             onOpen: () => setSheet({ j, f }), onMore: () => setSheet({ j, f }),
           }))} />
         </section>)}
