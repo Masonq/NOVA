@@ -266,3 +266,32 @@ async def test_music_vocals_male_female_duet(client, monkeypatch):
     assert "vocal_gender" not in sent[1] and "[Verse 1: Duet]" in sent[1]["lyrics"]
     bad = await client.post("/api/jobs", json={"kind": "music", "prompt": "x y", "params": {"voices": "choir"}}, headers=h)
     assert bad.status_code == 422
+
+
+
+@A
+async def test_track_from_voice_over_as_duet(client, monkeypatch):
+    from app import runner, kie, storage, ai
+    reads = []
+    async def speech(text, voice=None, instructions=""):
+        reads.append(voice); return ai.pcm_to_wav(b"\x00\x00" * 2400)
+    async def split(text):
+        return [{"who": "male", "text": "Я иду по городу"}, {"who": "female", "text": "А я жду тебя"}, {"who": "male", "text": "Огни горят"}]
+    monkeypatch.setattr(ai, "speech", speech); monkeypatch.setattr(ai, "duet_split", split)
+    h, tid = await _job(client, 8811, "tts", "Я иду по городу. А я жду тебя. Огни горят", {"voice": "Sulafat"})
+    await runner.run_job({}, tid)
+    sent = {}
+    async def create(model, inp):
+        sent.update(inp); return "d1"
+    async def wait(task, tick, timeout):
+        return {"data": [{"audio_url": "https://a/x.mp3"}]}
+    async def dl(job, name, url, max_mb=300): return storage.save_bytes(job, name, b"1")
+    monkeypatch.setattr(kie, "create", create); monkeypatch.setattr(kie, "wait", wait); monkeypatch.setattr(runner, "download", dl)
+    r = await client.post("/api/jobs", json={"kind": "music", "prompt": "Трек из озвучки", "params": {"voice_job": tid, "voices": "duet"}}, headers=h)
+    await runner.run_job({}, r.json()["id"])
+    assert reads[-3:] == ["Orus", "Sulafat", "Orus"]                      # male parts by a male voice, female by the voice-over's own
+    assert "[Female Vocal]" in sent["lyrics"] and "[Male Vocal]" in sent["lyrics"]
+    w = ai.join_wavs([ai.pcm_to_wav(b"\x01\x00" * 100), ai.pcm_to_wav(b"\x01\x00" * 100)], gap=0.1)
+    import wave, io
+    with wave.open(io.BytesIO(w)) as f:
+        assert f.getnframes() == 200 + int(f.getframerate() * 0.1)

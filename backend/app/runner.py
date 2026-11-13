@@ -150,12 +150,22 @@ async def run_music_from_voice(job: Job, p: dict):
     then Suno (Add Instrumental) builds the music around that vocal and keeps the words."""
     async with Session() as db:
         src = await db.get(Job, int(p["voice_job"]))
-    text, voice = src.prompt, (src.params or {}).get("voice")
+    text, voice = src.prompt, (src.params or {}).get("voice") or "Sulafat"
+    mode = p.get("voices") or "same"
+    if mode in ("male", "female") and ai.voice_gender(voice) != mode:      # another singer of the chosen gender
+        voice = "Orus" if mode == "male" else "Sulafat"
     vocal_rel = p.get("vocal")
     if not vocal_rel:
         await _update(job.id, status="running", progress=4, stage="Начитываю в ритм")
         rap = any(g.strip() in RHYTHM for g in (p.get("genre") or "").split(","))
-        wav = await ai.speech(text[:4900], voice, RHYTHM["Рэп"] if rap else RHYTHM_DEFAULT)
+        how = RHYTHM["Рэп"] if rap else RHYTHM_DEFAULT
+        if mode == "duet":       # the text is split between a male and a female voice and glued into one vocal track
+            pair = {"male": voice if ai.voice_gender(voice) == "male" else "Orus", "female": voice if ai.voice_gender(voice) == "female" else "Sulafat"}
+            parts = await ai.duet_split(text)
+            p = {**p, "duet": [{"who": x["who"], "text": x["text"][:400]} for x in parts]}
+            wav = ai.join_wavs([await ai.speech(x["text"], pair[x["who"]], how) for x in parts])
+        else:
+            wav = await ai.speech(text[:4900], voice, how)
         vocal_rel = save_bytes(job, "vocal.wav", wav)
         mp3 = vocal_rel[:-4] + ".mp3"
         if await ffmpeg("-i", str(abs_path(vocal_rel)), "-b:a", "192k", str(abs_path(mp3))):
@@ -167,9 +177,12 @@ async def run_music_from_voice(job: Job, p: dict):
     if not brief:
         await _update(job.id, progress=8, stage="Продумываю звучание")
         wish = job.prompt if job.prompt and job.prompt != "Трек из озвучки" else ""
+        sung = {"duet": "duet", "male": "male", "female": "female"}.get(mode, ai.voice_gender(voice))
         brief = await ai.music_brief(f"Музыка под готовый вокал с таким текстом: {text[:600]}" + (f". Пожелания: {wish}" if wish else ""),
-                                     p.get("genre", ""), p.get("mood", ""), True)
-        p = {**p, "brief": {**brief, "lyrics": text[:4900]}}
+                                     p.get("genre", ""), p.get("mood", ""), True, sung)
+        lyr = "\n\n".join(f"[{'Male' if x['who'] == 'male' else 'Female'} Vocal]\n{x['text']}" for x in p["duet"]) if p.get("duet") else text
+        p = {**p, "brief": {**brief, "lyrics": lyr[:4900]}}
+        brief = p["brief"]
         await _update(job.id, params=p)
     task = p.get("task")
     if not task:
@@ -177,7 +190,7 @@ async def run_music_from_voice(job: Job, p: dict):
         task = await kie.create("ai-music-api/add-instrumental", {
             "upload_url": f"{get_settings().public_url}/files/{vocal_rel}", "model": "V6",
             "title": (brief.get("title") or "Трек из озвучки")[:80], "tags": (brief.get("style") or "modern pop")[:200],
-            "negative_tags": "off-key, distorted vocals, harsh noise, muddy mix", "lyrics": text[:4900],
+            "negative_tags": "off-key, distorted vocals, harsh noise, muddy mix", "lyrics": brief.get("lyrics") or text[:4900],
             "audio_weight": 0.85, "style_weight": 0.65,
         })
         p = {**p, "task": task}

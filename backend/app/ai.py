@@ -266,6 +266,52 @@ async def music_brief(prompt: str, genre: str = "", mood: str = "", vocal: bool 
         return fallback
 
 
+def voice_gender(voice: str) -> str:
+    return "female" if "женский" in VOICES.get(voice, "") else "male"
+
+
+DUET_SPLIT = """Split song lyrics between a male and a female singer, like a real duet.
+Keep the text exactly as given, in order, without changes; only decide who sings each part.
+Prefer whole lines and sections: e.g. verses alternate, the chorus is sung together or by the other voice,
+dialogue lines go to the speaker they belong to. Return strict JSON: {"parts": [{"who": "male|female", "text": "..."}]}"""
+
+
+async def duet_split(text: str) -> list[dict]:
+    """Who sings which part. Falls back to alternating halves of the lines."""
+    try:
+        raw = await complete("google/gemini-3.8-flash", [{"role": "system", "content": DUET_SPLIT}, {"role": "user", "content": text[:4900]}],
+                             timeout=30, temperature=0.3, max_tokens=2500, response_format={"type": "json_object"})
+        m = re.search(r"\{.*\}", raw or "", re.S)
+        parts = [{"who": "female" if p.get("who") == "female" else "male", "text": str(p.get("text") or "").strip()}
+                 for p in (json.loads(m.group(0)).get("parts") if m else []) if str(p.get("text") or "").strip()]
+        joined = " ".join(p["text"] for p in parts)
+        if len(parts) >= 2 and len(joined) >= len(text.strip()) * 0.8:        # nothing important lost
+            return parts
+    except Exception:
+        pass
+    lines = [l for l in text.splitlines() if l.strip()] or [text]
+    if len(lines) == 1:
+        words = text.split(); half = max(1, len(words) // 2)
+        lines = [" ".join(words[:half]), " ".join(words[half:])]
+    step = max(1, len(lines) // 4)
+    return [{"who": "male" if (i // step) % 2 == 0 else "female", "text": l} for i, l in enumerate(lines)]
+
+
+def join_wavs(wavs: list[bytes], gap: float = 0.25) -> bytes:
+    """Glues WAV parts (same format) with a short pause between them."""
+    out, params = io.BytesIO(), None
+    frames = []
+    for w in wavs:
+        with wave.open(io.BytesIO(w)) as r:
+            params = params or r.getparams()
+            frames.append(r.readframes(r.getnframes()))
+    silence = b"\x00" * int(params.framerate * gap) * params.sampwidth * params.nchannels
+    with wave.open(out, "wb") as o:
+        o.setparams(params)
+        o.writeframes(silence.join(frames))
+    return out.getvalue()
+
+
 async def enhance_prompt(prompt: str, style: str = "", has_ref: bool = False) -> str:
     """Rewrites a short request into a detailed prompt. Falls back to the original text on any problem."""
     try:

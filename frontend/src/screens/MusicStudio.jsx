@@ -20,6 +20,7 @@ export default function MusicStudio({ go, me, reloadMe, params }) {
   const [genre, setGenre] = useState([]);
   const [mood, setMood] = useState([]);
   const [voices, setVoices] = useState("auto");
+  const [vjVoices, setVjVoices] = useState("same");
   const [vocal, setVocal] = useState(false);
   const [sheet, setSheet] = useState(null);
   const s = useStudio("music", reloadMe);
@@ -41,6 +42,9 @@ export default function MusicStudio({ go, me, reloadMe, params }) {
       <OptsMulti label="Жанр" value={genre} options={GENRES} onChange={setGenre} />
       <OptsMulti label="Настроение" value={mood} options={MOODS} onChange={setMood} />
       {!vj && <Toggle label="С вокалом" sub={vocal ? "ИИ напишет текст, поёт по‑русски" : "только музыка, без голоса"} on={vocal} onChange={setVocal} />}
+      {vj && <Opts label="Кто поёт" value={vjVoices} onChange={setVjVoices}
+        hint={{ same: `голос озвучки${vj.voice ? ` · ${vj.voice}` : ""}`, male: "мужской голос", female: "женский голос", duet: "ИИ поделит текст на партии" }[vjVoices]}
+        options={[{ v: "same", t: "Как в озвучке" }, { v: "male", t: "Мужской" }, { v: "female", t: "Женский" }, { v: "duet", t: "Дуэт" }]} />}
       {!vj && vocal && <Opts label="Голос" value={voices} onChange={setVoices}
         hint={{ auto: "ИИ решит по смыслу песни", male: "", female: "", duet: "ИИ распределит части" }[voices]}
         options={[{ v: "auto", t: "Авто" }, { v: "male", t: "Мужской" }, { v: "female", t: "Женский" }, { v: "duet", t: "Дуэт" }]} />}
@@ -60,7 +64,7 @@ export default function MusicStudio({ go, me, reloadMe, params }) {
       <Dock label={vj ? "Создать трек из озвучки" : vocal ? "Создать песню" : "Создать трек"} price={priceOf("music", vj ? { voice_chars: vj.text.length } : {})}
         balance={me?.balance} busy={s.busy} disabled={(!vj && prompt.trim().length < 2) || !!s.active}
         onClick={() => s.run(prompt.trim() || "Трек из озвучки", { genre: genre.join(", "), mood: mood.join(", "),
-          instrumental: vj ? false : !vocal, ...(vj ? { voice_job: vj.id } : vocal ? { voices } : {}) })} />
+          instrumental: vj ? false : !vocal, ...(vj ? { voice_job: vj.id, voices: vjVoices } : vocal ? { voices } : {}) })} />
       <Sheet open={pick} onClose={() => setPick(false)} title="Голос из озвучки">
         <h3 className="sheet-title">Выберите озвучку</h3>
         {tts === null ? <div className="skeleton" /> : tts.length === 0 ? (
