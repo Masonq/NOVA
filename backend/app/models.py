@@ -91,6 +91,8 @@ class LoginCode(Base):
     code: Mapped[str] = mapped_column(String(40), primary_key=True)
     user_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     used: Mapped[bool] = mapped_column(Boolean, default=False)
+    device: Mapped[str] = mapped_column(String(80), default="", server_default="")     # «Chrome · Windows» of the computer
+    ip: Mapped[str] = mapped_column(String(64), default="", server_default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
 

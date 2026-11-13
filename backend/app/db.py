@@ -32,5 +32,7 @@ async def init_db():
                      "CREATE UNIQUE INDEX IF NOT EXISTS ix_jobs_share_token ON jobs (share_token)",
                      "ALTER TABLE users ADD COLUMN IF NOT EXISTS referrer_id INTEGER",
                      "CREATE INDEX IF NOT EXISTS ix_users_referrer_id ON users (referrer_id)",
-                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS ref_rewarded BOOLEAN NOT NULL DEFAULT false"):
+                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS ref_rewarded BOOLEAN NOT NULL DEFAULT false",
+                     "ALTER TABLE login_codes ADD COLUMN IF NOT EXISTS device VARCHAR(80) NOT NULL DEFAULT ''",
+                     "ALTER TABLE login_codes ADD COLUMN IF NOT EXISTS ip VARCHAR(64) NOT NULL DEFAULT ''"):
             await conn.execute(text(stmt))

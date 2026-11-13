@@ -32,6 +32,7 @@ export default function Profile({ me, reload, go }) {
       </section>
       <PromoBox reloadMe={reload} onDone={() => api("/api/me/ledger").then(setLed).catch(() => {})} />
       <Invite />
+      <DesktopLogin />
       <Install />
       {me?.is_admin && (
         <button className="row-btn adm-entry" onClick={() => go("admin")}><Icon n="spark" />Админка<Icon n="chevron" s={15} /></button>)}
@@ -110,5 +111,35 @@ function Install() {
     <section className="card install">
       <button className="row-btn" onClick={go}><Icon n="download" />Установить NOVA на телефон<Icon n="chevron" s={15} /></button>
       {help && <p className="muted small inst-help">В Safari нажмите <b>«Поделиться»</b> внизу экрана, затем <b>«На экран „Домой“»</b>. NOVA откроется как приложение — без адресной строки.</p>}
+    </section>);
+}
+
+
+/** Sign in on a computer: scan the QR on the NOVA website with Telegram's scanner, check the device, confirm. */
+function DesktopLogin() {
+  const can = inTelegram && typeof tg?.showScanQrPopup === "function";
+  if (!can) return null;
+  const confirm = (info) => {
+    const text = `Войти в NOVA на этом устройстве?\n\n${info.device}${info.ip ? `\nIP ${info.ip}` : ""}\nКод создан ${info.ago}\n\nПодтверждайте, только если это ваш компьютер.`;
+    tg.showConfirm(text, async (ok) => {
+      if (!ok) return;
+      try { await api("/api/auth/scan/confirm", { method: "POST", body: { code: info.code } }); haptic("success"); toast("Готово — компьютер вошёл в NOVA"); }
+      catch (e) { haptic("error"); toast(e.message, "error"); }
+    });
+  };
+  const scan = () => {
+    haptic("light");
+    let busy = false;
+    tg.showScanQrPopup({ text: "Наведите на QR-код на сайте NOVA" }, (text) => {
+      if (busy || !/login_|^[A-Za-z0-9_-]{16,40}$/.test(text || "")) return false;    // keep scanning until our code shows up
+      busy = true;
+      api("/api/auth/scan", { method: "POST", body: { qr: text } })
+        .then(confirm).catch((e) => { haptic("error"); toast(e.message, "error"); });
+      return true;                                                                       // closes the scanner
+    });
+  };
+  return (
+    <section className="install">
+      <button className="row-btn" onClick={scan}><Icon n="qr" />Войти на компьютере<span className="muted small rb-sub">сканер QR</span><Icon n="chevron" s={15} /></button>
     </section>);
 }

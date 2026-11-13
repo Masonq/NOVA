@@ -28,7 +28,7 @@ async def test_share_page_and_random_folder(client, monkeypatch):
     r = (await client.post(f"/api/jobs/{jid}/share", headers=h)).json()
     assert r["url"].startswith("https://nova.test/s/")
     page = await client.get(r["url"].replace("https://nova.test", ""))
-    assert page.status_code == 200 and 'property="og:image"' in page.text and "Лиса в неоне" in page.text and "start=ref_" in page.text
+    assert page.status_code == 200 and "property=\"og:image\"" in page.text and "Лиса в неоне" not in page.text and "start=ref_" in page.text
     h2 = await login(client, 5102)
     assert (await client.post(f"/api/jobs/{jid}/share", headers=h2)).status_code == 404     # only the owner shares
     assert (await client.get("/s/nope")).status_code == 404
@@ -66,3 +66,20 @@ async def test_referral_by_bot_and_webapp_reward_once(client):
     ref = (await client.get("/api/me/referral", headers=inviter)).json()
     assert ref["invited"] == 2 and ref["paid"] == 1 and ref["earned"] == 100
     assert (await client.get("/api/me", headers=inviter)).json()["balance"] == me["balance"] + 100
+
+
+@A
+async def test_qr_scan_login_from_mini_app(client):
+    ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36"
+    c = (await client.post("/api/auth/code", headers={"User-Agent": ua, "X-Real-IP": "91.1.2.3"})).json()
+    assert (await client.get(f"/api/auth/code/{c['code']}")).json()["status"] == "waiting"
+    h = await login(client, 5301)
+    info = (await client.post("/api/auth/scan", json={"qr": c["link"]}, headers=h)).json()
+    assert info["device"] == "Chrome · Windows" and info["ip"] == "91.1.2.3" and info["code"] == c["code"]
+    assert (await client.post("/api/auth/scan/confirm", json={"code": info["code"]}, headers=h)).json()["ok"]
+    r = (await client.get(f"/api/auth/code/{c['code']}")).json()                      # the computer is signed in
+    me = (await client.get("/api/me", headers=h)).json()
+    assert r["status"] == "ok" and (await client.get("/api/me", headers={"Authorization": "Bearer " + r["token"]})).json()["id"] == me["id"]
+    assert (await client.post("/api/auth/scan/confirm", json={"code": c["code"]}, headers=h)).status_code == 410   # once only
+    assert (await client.post("/api/auth/scan", json={"qr": "https://example.com/not-ours"}, headers=h)).status_code == 410
+    assert (await client.post("/api/auth/scan", json={"qr": c["link"]})).status_code == 401                   # needs the mini app session

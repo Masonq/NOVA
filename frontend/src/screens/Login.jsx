@@ -46,11 +46,11 @@ export default function Login({ onDone }) {
       {desktop && code && state !== "expired" && (
         <div className="qr-card">
           <QR text={code.link} />
-          <ol className="qr-steps"><li>Наведите камеру телефона на&nbsp;код</li><li>Нажмите «Старт» в&nbsp;боте @{code.link.split("t.me/")[1].split("?")[0]}</li><li>Эта страница войдёт сама</li></ol>
+          <ol className="qr-steps"><li>В&nbsp;Telegram откройте NOVA → Профиль → «Войти на&nbsp;компьютере»</li><li>Наведите сканер на&nbsp;код и&nbsp;подтвердите</li><li>Эта страница войдёт сама</li></ol>
         </div>)}
       {desktop && state === "expired" && <button className="cta" onClick={() => fresh(false)}>Обновить код</button>}
       {!desktop && <button className="cta" onClick={() => fresh(true)}>{state === "waiting" ? "Ждём подтверждения в Telegram…" : "Войти через Telegram"}</button>}
-      {desktop && code && <button className="link" onClick={() => openLink(code.link)}>Открыть Telegram на этом компьютере</button>}
+      {desktop && code && <p className="muted small qr-alt">Или наведите камеру телефона и нажмите «Старт» в боте. <button className="link" onClick={() => openLink(code.link)}>Открыть Telegram на компьютере</button></p>}
       {!desktop && state === "waiting" && <p className="muted small">Нажмите «Старт» в боте — страница войдёт сама. <button className="link" onClick={() => fresh(true)}>Открыть бота снова</button></p>}
       {err && <p className="err">{err}</p>}
     </main>);
