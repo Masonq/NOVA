@@ -66,8 +66,9 @@ async def _fail(job_id: int, reason: str):
 
 
 async def _notify(j: Job, u: User, what: str):
-    if u and u.can_message and j.kind in ("video", "music"):
-        await bot.send(u.tg_id, f"Готово: {what} «{j.prompt[:60]}»", bot.open_app_markup("Открыть", f"#/archive?job={j.id}"))
+    """The finished work itself goes to the chat with the bot: photo, video, or the NOVA player card."""
+    from .deliver import deliver
+    await deliver(j, u)
 
 
 # ---------------- image ----------------

@@ -149,7 +149,7 @@ systemctl is-active --quiet nova-worker && log "Воркер: работает" 
 # --- telegram ---
 TOKEN=$(getv BOT_TOKEN); WH=$(getv WEBHOOK_SECRET)
 r=$(curl -fsS "https://api.telegram.org/bot$TOKEN/setWebhook" -d "url=https://$DOMAIN/api/tg/webhook" -d "secret_token=$WH" \
-     -d 'allowed_updates=["message","my_chat_member","pre_checkout_query"]' -d "drop_pending_updates=false" || true)
+     -d 'allowed_updates=["message","my_chat_member","pre_checkout_query","widget_query"]' -d "drop_pending_updates=false" || true)
 echo "$r" | grep -q '"ok":true' && log "Бот: вебхук подключён" || fail "вебхук бота: $r"
 curl -fsS "https://api.telegram.org/bot$TOKEN/setChatMenuButton" -H 'Content-Type: application/json' \
   -d "{\"menu_button\":{\"type\":\"web_app\",\"text\":\"NOVA\",\"web_app\":{\"url\":\"https://$DOMAIN/\"}}}" | grep -q '"ok":true' && log "Бот: кнопка меню открывает приложение" || fail "кнопка меню бота"

@@ -48,6 +48,10 @@ async def webhook(request: Request, x_telegram_bot_api_secret_token: str = Heade
     if x_telegram_bot_api_secret_token != get_settings().webhook_secret:
         raise HTTPException(403)
     upd = await request.json()
+    if upd.get("widget_query"):
+        from ..deliver import on_widget_query
+        await on_widget_query(upd["widget_query"], db)
+        return {"ok": True}
     if upd.get("pre_checkout_query"):
         return await _pre_checkout(upd["pre_checkout_query"], db)
     if (upd.get("message") or {}).get("successful_payment"):
