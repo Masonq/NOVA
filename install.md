@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-13 23:09 UTC
+# Установка NOVA 2026-11-13 23:16 UTC
 
-- Версия: 435d721 Music: own artist (Suno persona), length, «Без чего», Эксперимент (V6 Wild)
+- Версия: 65044a8 Music screen redesign: genre cover tiles, mood pad, stretchable length wave, vocal cards, «Без чего» quick picks, Эксперимент with sparks
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
