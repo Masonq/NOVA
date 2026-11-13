@@ -3,6 +3,7 @@ import { StudioTop, Opts, PromptBox, Dock, Progress } from "../ui/Studio.jsx";
 import { JobSheet } from "../ui/Sheet.jsx";
 import { useStudio } from "../studio.js";
 import { priceOf } from "../jobs.js";
+import Carousel from "../ui/Carousel.jsx";
 
 const STYLES = ["Фото", "Арт", "Логотип", "3D", "Аниме"];
 const ASPECTS = [{ v: "1:1", t: "1:1" }, { v: "3:4", t: "3:4" }, { v: "9:16", t: "9:16" }, { v: "16:9", t: "16:9" }];
@@ -35,14 +36,11 @@ export default function ImageStudio({ go, me, reloadMe, params }) {
         </section>
       ) : cur && imgs.length > 0 && (
         <section aria-label="Результат">
-          <button className="hero-img" style={{ aspectRatio: ratio(pa) }} onClick={() => setSheet(imgs[sel] || imgs[0])}>
-            <img src={(imgs[sel] || imgs[0]).url} alt={cur.prompt} />
-          </button>
-          {imgs.length > 1 && (
-            <div className="variants">
-              {imgs.map((f, i) => <button key={f.url} className={"var" + (i === sel ? " on" : "")} aria-label={`Вариант ${i + 1}`}
-                style={{ backgroundImage: `url(${f.url})` }} onClick={() => setSel(i)} />)}
-            </div>)}
+          <Carousel key={cur.id} label="Варианты" height={imgs.length > 1 ? 400 : 380}
+            onChange={setSel} items={imgs.map((f, i) => ({
+              key: f.url, img: f.url, title: `Вариант ${i + 1}`, sub: `${cur.params?.style || "Фото"} · ${pa} · ${cur.prompt}`,
+              onOpen: () => setSheet(f), onMore: () => setSheet(f),
+            }))} />
         </section>)}
 
       {s.recent.length > 1 && (

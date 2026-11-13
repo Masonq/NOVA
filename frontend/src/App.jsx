@@ -14,6 +14,8 @@ import MusicStudio from "./screens/MusicStudio.jsx";
 import TtsStudio from "./screens/TtsStudio.jsx";
 import Tasks from "./screens/Tasks.jsx";
 import Feed from "./screens/Feed.jsx";
+import TabBar from "./ui/TabBar.jsx";
+import { toast } from "./ui/Toast.jsx";
 
 const parse = () => (location.hash.replace(/^#\/?/, "") || "home").split("?")[0];
 const TABS = [{ k: "home", t: "Главная", i: "home" }, { k: "archive", t: "Архив", i: "clock" }, { k: "profile", t: "Профиль", i: "user" }];
@@ -72,13 +74,8 @@ export default function App() {
     <div className={"app r-" + route}>
       {screen}
       {!["chat", "image", "video", "music", "tts", "feed"].includes(route) && (
-        <nav className="tabbar" aria-label="Разделы">
-          {TABS.map((t) => (
-            <button key={t.k} className={route === t.k ? "on" : ""} aria-current={route === t.k ? "page" : undefined}
-              onClick={() => { haptic("select"); go(t.k); }}>
-              <Icon n={t.i} s={21} /><span>{t.t}</span>
-            </button>))}
-        </nav>)}
+        <TabBar tabs={TABS} active={TABS.find((t) => t.k === route) ? route : "home"} onSelect={(k) => go(k)}
+          side={{ i: "agent", label: "Голосовой агент", accent: true, onClick: () => toast("Голосовой агент появится в следующем обновлении") }} />)}
       <Toaster />
     </div>);
 }

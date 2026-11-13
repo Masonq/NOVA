@@ -6,6 +6,7 @@ import { api } from "../api.js";
 import { haptic } from "../tg.js";
 import { useActiveJobs, KIND, thumbOf } from "../jobs.js";
 import { JobSheet } from "../ui/Sheet.jsx";
+import Carousel from "../ui/Carousel.jsx";
 
 function greeting() {
   const h = new Date().getHours();
@@ -48,8 +49,6 @@ export default function Home({ go, me }) {
   const active = useActiveJobs(load);
   const g = greeting();
   const done = (jobs || []).filter((j) => j.status === "done");
-  const last = done[0];
-  const lastTh = last && thumbOf(last);
   const tool = (t) => {
     haptic("light");
     if (t.k === "agent") return toast("Голосовой агент появится в следующем обновлении");
@@ -80,13 +79,13 @@ export default function Home({ go, me }) {
           <span className="tool-ic"><Icon n={t.i} s={20} /></span><span className="tool-t">{t.t}</span></button>)}
       </nav>
       <section aria-labelledby="res-h">
-        <div className="row-h"><h2 id="res-h">Результат</h2>{last && <button className="link" onClick={() => go(last.kind)}>Открыть</button>}</div>
-        {last ? (
-          <button className={"result k-" + last.kind} style={lastTh ? { backgroundImage: `url(${lastTh})` } : undefined} onClick={() => setSheet(last)}>
-            <span className="pill">{KIND[last.kind]}</span>
-            {!lastTh && <span className="result-ic"><Icon n={last.kind === "music" ? "music" : "wave"} s={28} /></span>}
-            <span className="result-cap">{last.prompt}</span>
-          </button>
+        <div className="row-h"><h2 id="res-h">Ваши работы</h2>{done.length > 0 && <button className="link" onClick={() => go("archive")}>Архив</button>}</div>
+        {done.length > 0 ? (
+          <Carousel label="Ваши работы" height={360} items={done.slice(0, 8).map((j) => ({
+            key: j.id, img: thumbOf(j), kind: j.kind, title: j.prompt,
+            sub: { image: "Картинка", video: `Видео · ${j.params?.duration || 5} с`, music: `Трек · ${j.params?.genre || ""}`, tts: `Озвучка · ${j.params?.voice || ""}` }[j.kind],
+            onOpen: () => go(j.kind), onMore: () => setSheet(j),
+          }))} />
         ) : (
           <div className="result empty">
             <Icon n="spark" s={22} />
@@ -95,15 +94,6 @@ export default function Home({ go, me }) {
           </div>
         )}
       </section>
-      {done.length > 1 && (
-        <section aria-labelledby="rec-h">
-          <div className="row-h"><h2 id="rec-h">Недавнее</h2><button className="link" onClick={() => go("archive")}>Все</button></div>
-          <div className="recent">{done.slice(1, 9).map((j) => {
-            const th = thumbOf(j);
-            return <button key={j.id} className={"thumb k-" + j.kind + (th ? " img" : " ic")} style={th ? { backgroundImage: `url(${th})` } : undefined}
-              onClick={() => setSheet(j)} aria-label={j.prompt}>{!th && <Icon n={j.kind === "music" ? "music" : "wave"} s={22} />}</button>;
-          })}</div>
-        </section>)}
       <JobSheet job={sheet} onClose={() => setSheet(null)} go={go} onChange={(j) => { setSheet(j); load(); }} />
     </main>);
 }

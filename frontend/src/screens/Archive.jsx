@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import Icon from "../ui/Icon.jsx";
 import { JobSheet } from "../ui/Sheet.jsx";
+import { SlideTabs } from "../ui/TabBar.jsx";
 import { api } from "../api.js";
 import { KIND, thumbOf } from "../jobs.js";
 
-const FILTERS = [{ k: "", t: "Все" }, { k: "image", t: "Фото" }, { k: "video", t: "Видео" }, { k: "music", t: "Музыка" }, { k: "tts", t: "Озвучка" }, { k: "fav", t: "Избранное" }];
+const FILTERS = [{ k: "", t: "Все" }, { k: "image", t: "Фото", i: "image" }, { k: "video", t: "Видео", i: "video" }, { k: "music", t: "Музыка", i: "music" }, { k: "tts", t: "Озвучка", i: "wave" }, { k: "fav", t: "Избранное", i: "heart" }];
 function left(iso) {
   if (!iso) return "";
   const d = Math.ceil((new Date(iso) - Date.now()) / 864e5);
@@ -22,7 +23,7 @@ export default function Archive({ go, params }) {
       <header className="bar"><h1>Архив</h1>
         {jobs?.some((j) => j.kind === "image" || j.kind === "video") && <button className="chip" onClick={() => go("feed")}>Лента</button>}</header>
       {jobs?.length > 0 && (
-        <div className="chips" role="tablist">{FILTERS.map((x) => <button key={x.k} role="tab" aria-selected={f === x.k} className={"chip" + (f === x.k ? " on" : "")} onClick={() => setF(x.k)}>{x.t}</button>)}</div>)}
+        <SlideTabs label="Фильтр" items={FILTERS} value={f} onChange={setF} />)}
       {jobs === null && <div className="skeleton" />}
       {jobs?.length === 0 && (
         <div className="empty-state">
