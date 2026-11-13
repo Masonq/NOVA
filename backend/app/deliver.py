@@ -12,7 +12,7 @@ from .models import Job, User
 from .storage import abs_path
 
 log = logging.getLogger("nova.deliver")
-ICON = {"image": "🖼", "video": "🎬", "music": "🎵", "tts": "🎙", "clip": "🎬", "reel": "📱", "greeting": "🎁"}
+ICON = {"image": "🖼", "video": "🎬", "music": "🎵", "tts": "🎙"}
 VOCALS = {"male": "мужской вокал", "female": "женский вокал", "duet": "дуэт"}
 
 
@@ -22,10 +22,6 @@ def _markup(j: Job) -> dict:
 
 def _caption(j: Job) -> str:
     p = j.params or {}
-    if j.kind == "greeting":
-        return f"🎁 {p.get('occasion', 'Поздравление')} — для {p.get('name', '')}"[:180]
-    if j.kind == "reel":
-        return f"📱 {p.get('title') or j.prompt}"[:180]
     title = next((f.get("title") for f in j.files or [] if f.get("title")), "") or j.prompt
     return f"{ICON.get(j.kind, '✨')} {title[:180]}"
 
@@ -131,27 +127,6 @@ async def deliver(j: Job, u: User) -> None:
                 up["thumbnail"] = ("thumb.jpg", open(abs_path(th["path"]), "rb"), "image/jpeg")
             await bot.call_files("sendVideo", {"chat_id": u.tg_id, "caption": _caption(j), "supports_streaming": True,
                                                "reply_markup": _markup(j)}, up)
-        elif j.kind in ("clip", "reel", "greeting"):
-            v = next((x for x in files if x.get("type") == "video"), None)
-            th = next((x for x in files if x.get("type") == "thumb"), None)
-            if v:
-                up = {"video": ("nova.mp4", open(abs_path(v["path"]), "rb"), "video/mp4")}
-                if th:
-                    up["thumbnail"] = ("thumb.jpg", open(abs_path(th["path"]), "rb"), "image/jpeg")
-                await bot.call_files("sendVideo", {"chat_id": u.tg_id, "caption": _caption(j), "supports_streaming": True,
-                                                   "width": 1080 if j.kind != "greeting" else None, "height": 1920 if j.kind != "greeting" else None,
-                                                   "reply_markup": _markup(j)}, up)
-            if j.kind == "greeting":
-                card = next((x for x in files if x.get("type") == "image"), None)
-                if card:
-                    await bot.call_files("sendPhoto", {"chat_id": u.tg_id, "caption": "🎁 Открытка", "reply_markup": _markup(j)},
-                                         {"photo": ("card.png", open(abs_path(card["path"]), "rb"), "image/png")})
-                song = next((x for x in files if x.get("type") == "audio"), None)
-                if song:
-                    d = await bot.call("sendWidget", {"chat_id": u.tg_id, "html": player_html(j, song), "caption": "🎵 " + (song.get("title") or "Песня")[:180],
-                                                      "allow_queries": True, "height": 0, "reply_markup": _markup(j)})
-                    if not d.get("ok"):
-                        await send_audio(u.tg_id, j, song)
         elif j.kind in ("music", "tts"):
             f = next((x for x in files if x.get("type") == "audio"), None)
             if not f:

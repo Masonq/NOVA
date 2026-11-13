@@ -227,38 +227,8 @@ h2 { font-size: 12.5px; font-weight: 600; color: var(--mut); margin: 0; }
 .part.female { background: rgba(255,90,170,.15); color: #FFA6D0; }
 .part.duet { background: rgba(170,120,255,.16); color: #CDB0FF; }
 
-.field { display: flex; flex-direction: column; gap: 7px; }
-.field > span { font-size: 12.5px; font-weight: 600; color: var(--mut); }
-.field input { height: 50px; padding: 0 14px; border-radius: 15px; border: 1px solid var(--line); background: var(--card); color: var(--txt); font: inherit; font-size: 16px; outline: none; }
-.field input:focus { border-color: rgba(10,132,255,.6); }
-.toggles { padding: 4px 0; }
-.toggles .toggle-row { width: 100%; box-sizing: border-box; background: none; border: none; border-radius: 0; }
-.toggles .toggle-row + .toggle-row { border-top: 1px solid var(--line); }
-.gr-row { width: 100%; justify-content: flex-start; height: auto; min-height: 62px; padding: 9px 12px; gap: 12px; text-align: left; }
-.gr-th { width: 44px; height: 44px; border-radius: 12px; background: #23232a center/cover; display: inline-flex; align-items: center; justify-content: center; color: #C9A8FF; flex-shrink: 0; }
-.gr-row > svg:last-child { margin-left: auto; color: var(--mut2); }
 .list > h2 { margin: 6px 2px 8px; }
 .list { display: flex; flex-direction: column; gap: 8px; }
-.clip-track { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
-.clip-track .player { width: 100%; }
-.clip-out { display: flex; flex-direction: column; gap: 10px; }
-.clip-out video { width: 100%; max-height: 70vh; aspect-ratio: 9/16; object-fit: contain; border-radius: 20px; background: #000; }
-.reel-head { display: flex; align-items: center; gap: 12px; }
-.reel-title { flex: 1; min-width: 0; height: 46px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--card); color: var(--txt); font: inherit; font-size: 16px; font-weight: 650; }
-.scenes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-.scene { display: flex; flex-direction: column; gap: 8px; padding: 12px; }
-.sc-h { display: flex; align-items: center; justify-content: space-between; min-height: 30px; }
-.sc-h b { font-size: 12.5px; color: var(--mut); font-weight: 600; }
-.sc-h .ic-btn { width: 30px; height: 30px; }
-.scene textarea { width: 100%; resize: vertical; min-height: 54px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: rgba(0,0,0,.18);
-  color: var(--txt); font: inherit; font-size: 15px; line-height: 1.45; outline: none; box-sizing: border-box; }
-.scene textarea:focus { border-color: rgba(10,132,255,.55); }
-.scene details summary { list-style: none; font-size: 12.5px; color: var(--accent); cursor: pointer; padding: 2px 0; }
-.scene details summary::-webkit-details-marker { display: none; }
-.scene details[open] summary { margin-bottom: 6px; }
-.scene details textarea { font-size: 13.5px; color: var(--soft); }
-.add-scene { width: 100%; justify-content: center; gap: 8px; }
-.card-media { max-height: 40vh; object-fit: contain; }
 
 /* ---------- island, tasks ---------- */
 .island { position: relative; display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 16px; border-radius: 22px; background: #16161A; border: 1px solid var(--line2); overflow: hidden; text-align: left; }

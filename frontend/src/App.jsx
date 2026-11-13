@@ -13,9 +13,6 @@ const VideoStudio = lazy(() => import("./screens/VideoStudio.jsx"));
 const MusicStudio = lazy(() => import("./screens/MusicStudio.jsx"));
 const TtsStudio = lazy(() => import("./screens/TtsStudio.jsx"));
 const Tasks = lazy(() => import("./screens/Tasks.jsx"));
-const GreetingStudio = lazy(() => import("./screens/GreetingStudio.jsx"));
-const ReelStudio = lazy(() => import("./screens/ReelStudio.jsx"));
-const ClipStudio = lazy(() => import("./screens/ClipStudio.jsx"));
 const Feed = lazy(() => import("./screens/Feed.jsx"));
 const Agent = lazy(() => import("./screens/Agent.jsx"));
 const Admin = lazy(() => import("./screens/Admin.jsx"));
@@ -25,7 +22,7 @@ import Topup from "./ui/Topup.jsx";
 import Onboarding from "./ui/Onboarding.jsx";
 import { toast } from "./ui/Toast.jsx";
 
-const ROUTES = new Set(["home", "archive", "profile", "image", "video", "music", "tts", "reel", "clip", "greeting",
+const ROUTES = new Set(["home", "archive", "profile", "image", "video", "music", "tts",
   "tasks", "feed", "chat", "agent", "admin"]);
 // Telegram opens the app with its own data in the hash (#tgWebAppData=…): anything that isn't our screen is home
 const parse = () => { const r = location.hash.replace(/^#\/?/, "").split("?")[0]; return ROUTES.has(r) ? r : "home"; };
@@ -37,7 +34,7 @@ export default function App() {
   const [route, setRoute] = useState(parse());
   const [onb, setOnb] = useState(() => !localStorage.getItem("nova_onb"));
   const prevRoute = useRef(route);
-  const DEPTH = { greeting: 1, reel: 1, clip: 1, admin: 1, home: 0, archive: 0, profile: 0, image: 1, video: 1, music: 1, tts: 1, tasks: 1, chat: 1, agent: 1, feed: 2 };
+  const DEPTH = { admin: 1, home: 0, archive: 0, profile: 0, image: 1, video: 1, music: 1, tts: 1, tasks: 1, chat: 1, agent: 1, feed: 2 };
   const dir = useMemo(() => {
     const a = DEPTH[prevRoute.current] ?? 0, b = DEPTH[route] ?? 0;
     const d = prevRoute.current === route ? "tab" : b > a ? "fwd" : b < a ? "back" : "tab";
@@ -106,7 +103,7 @@ export default function App() {
   if (!authed) return <><Suspense fallback={null}><Login onDone={() => setAuthed(true)} /></Suspense><Toaster /></>;
 
   const sp = { go, me, reloadMe: loadMe, params };
-  const STUDIOS = { image: ImageStudio, video: VideoStudio, music: MusicStudio, tts: TtsStudio, greeting: GreetingStudio, reel: ReelStudio, clip: ClipStudio };
+  const STUDIOS = { image: ImageStudio, video: VideoStudio, music: MusicStudio, tts: TtsStudio };
   const Studio = STUDIOS[route];
   const screen = Studio ? <Studio key={route + JSON.stringify(params || {})} {...sp} />
     : route === "admin" && me?.is_admin ? <Admin go={go} params={params} />

@@ -106,10 +106,8 @@ function Row({ ic, t, sub, on, cls }) {
 
 export function JobSheet({ job, file, onClose, go, onChange }) {
   if (!job) return null;
-  const combo = ["clip", "reel", "greeting"].includes(job.kind);
+  const combo = ["clip", "reel", "greeting"].includes(job.kind);      // older works of removed kinds still open
   const f = combo ? (job.files || []).find((x) => x.type === "video") || job.files?.[0] : file || job.files?.[0];
-  const song = job.kind === "greeting" ? (job.files || []).find((x) => x.type === "audio") : null;
-  const card = job.kind === "greeting" ? (job.files || []).find((x) => x.type === "image") : null;
   const ext = (f?.url || "").split(".").pop();
   const name = `nova-${job.kind}-${job.id}.${ext}`;
   const fav = async () => { const r = await api(`/api/jobs/${job.id}/favorite`, { method: "POST" }); onChange?.({ ...job, favorite: r.favorite }); };
@@ -127,12 +125,6 @@ export function JobSheet({ job, file, onClose, go, onChange }) {
       {f && job.kind === "image" && <img className="sheet-media" src={f.url} alt={job.prompt} />}
       {f && (job.kind === "video" || (combo && f.type === "video")) && <video className="sheet-media" src={f.url} poster={thumbOf(job) || undefined} controls playsInline preload="metadata" />}
       {f && (job.kind === "music" || job.kind === "tts") && <Player src={f.url} title={f.title || job.prompt.slice(0, 40)} sub={job.kind === "tts" ? job.params?.voice : job.params?.genre} cover={f.cover_url || null} />}
-      {card && f?.type === "video" && <img className="sheet-media card-media" src={card.url} alt="Открытка" />}
-      {card && f?.type !== "video" && <img className="sheet-media" src={card.url} alt="Открытка" />}
-      {song && <Player src={song.url} title={song.title || "Песня"} sub="Песня-поздравление" cover={song.cover_url || null} />}
-      {job.kind === "greeting" && job.params?.st?.brief?.lyrics && (
-        <details className="lyrics"><summary>Текст песни</summary><pre>{job.params.st.brief.lyrics}</pre></details>)}
-      {job.kind === "music" && f && <Row ic="video" t="Сделать клип" sub="сцены по тексту песни, вертикальное видео" cls="accent" on={() => { onClose(); go("clip", { track: job }); }} />}
       {job.kind === "music" && job.params?.brief?.lyrics && (
         <details className="lyrics"><summary>Текст песни</summary><pre>{job.params.brief.lyrics}</pre></details>)}
       {f && <Row ic="download" t="Скачать" on={() => saveFile(f.url, name)} />}
@@ -140,7 +132,7 @@ export function JobSheet({ job, file, onClose, go, onChange }) {
       {job.kind === "image" && f && <Row ic="video" t="Оживить в видео" sub="картинка станет первым кадром" cls="accent" on={() => { onClose(); go("video", { image: f.url }); }} />}
       {job.kind === "tts" && f && <Row ic="music" t="Сделать трек из этой озвучки" sub="тем же голосом и с этим текстом" cls="accent"
         on={() => { onClose(); go("music", { voice_job: job.id, voice_text: job.prompt, voice: job.params?.voice }); }} />}
-      {!["tts", "clip", "greeting"].includes(job.kind) && <Row ic="spark" t="Сделать похожее" on={() => { onClose(); go(job.kind, { prompt: job.prompt }); }} />}
+      {!["tts", "clip", "reel", "greeting"].includes(job.kind) && <Row ic="spark" t="Сделать похожее" on={() => { onClose(); go(job.kind, { prompt: job.prompt }); }} />}
       <Row ic="trash" t="Удалить" cls="danger" on={del} />
     </Sheet>);
 }
