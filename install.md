@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-13 23:28 UTC
+# Установка NOVA 2026-11-13 23:34 UTC
 
-- Версия: 1432638 Live icons: tile pictures move while selected, switch icons animate when on, home tools as gradient app icons
+- Версия: f85bc12 Icons: drop hand-made icon animations (keep the «Звук» equalizer)
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
