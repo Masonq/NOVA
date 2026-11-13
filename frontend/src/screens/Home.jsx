@@ -105,7 +105,7 @@ export default function Home({ go, me }) {
           <div className="result empty">
             <Icon n="spark" s={22} />
             <p>Здесь появится первая работа</p>
-            <span className="muted small">Опишите идею в строке выше — у вас {me?.balance ?? 300} кредитов на старт</span>
+            <span className="muted small">Опишите идею в строке выше — {me?.jobs ? `на балансе ${me?.balance ?? 0} кредитов` : `у вас ${me?.balance ?? 100} кредитов на старт`}</span>
           </div>
         )}
       </section>
