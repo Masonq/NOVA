@@ -5,10 +5,31 @@ import { toast } from "../ui/Toast.jsx";
 import { api, auth } from "../api.js";
 import { inTelegram, haptic, tg } from "../tg.js";
 
-const fmt = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+const tfmt = new Intl.DateTimeFormat("ru-RU", { hour: "2-digit", minute: "2-digit" });
+const dfmt = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long" });
+const dayKey = (d) => d.toDateString();
+const dayName = (d) => {
+  const t = new Date(), y = new Date(t); y.setDate(t.getDate() - 1);
+  return dayKey(d) === dayKey(t) ? "Сегодня" : dayKey(d) === dayKey(y) ? "Вчера" : dfmt.format(d);
+};
+// one line per entry, grouped by day; same-titled neighbours (old per-turn agent charges) fold into «×N»
+function groupLedger(rows) {
+  const days = [];
+  for (const r of rows || []) {
+    const d = new Date(r.at), k = dayKey(d);
+    let day = days[days.length - 1];
+    if (!day || day.k !== k) days.push(day = { k, name: dayName(d), items: [] });
+    const last = day.items[day.items.length - 1];
+    if (last && last.title === r.title && Math.sign(last.delta) === Math.sign(r.delta)) { last.delta += r.delta; last.n += 1; continue; }
+    day.items.push({ ...r, n: 1, time: tfmt.format(d) });
+  }
+  return days;
+}
+const PAGE = 20;
 export default function Profile({ me, reload, go }) {
   const [led, setLed] = useState(null);
   const [mem, setMem] = useState(null);
+  const [more, setMore] = useState(false);
   useEffect(() => {
     if (location.hash.includes("topup=card")) {           // came from Telegram to pay by card
       history.replaceState(null, "", location.pathname + "#/profile");
@@ -44,9 +65,28 @@ export default function Profile({ me, reload, go }) {
       </section>
       <section aria-labelledby="led-h">
         <div className="row-h"><h2 id="led-h">История</h2></div>
-        <ul className="list">{led?.map((r) => (
-          <li key={r.id}><span><b className="t">{r.title}</b><span className="muted small">{fmt.format(new Date(r.at))}</span></span>
-            <span className={"delta " + (r.delta > 0 ? "plus" : "")}>{r.delta > 0 ? "+" : ""}{r.delta}</span></li>))}</ul>
+        {(() => {
+          let left = more ? Infinity : PAGE, total = 0;
+          const days = groupLedger(led);
+          days.forEach((d) => { total += d.items.length; });
+          return (<>
+            {days.map((d) => {
+              if (left <= 0) return null;
+              const items = d.items.slice(0, left); left -= items.length;
+              return (<div className="led-day" key={d.k}>
+                <div className="led-dh">{d.name}</div>
+                <ul className="led">{items.map((r) => (
+                  <li key={r.id}>
+                    <span className="led-t">{r.title}{r.n > 1 && <em> ×{r.n}</em>}</span>
+                    <span className="led-time">{r.time}</span>
+                    <span className={"led-d " + (r.delta > 0 ? "plus" : "")}>{r.delta > 0 ? "+" : ""}{r.delta}</span>
+                  </li>))}</ul>
+              </div>);
+            })}
+            {!more && total > PAGE && <button className="led-more" onClick={() => { haptic("select"); setMore(true); }}>Показать всё</button>}
+            {led && !led.length && <p className="muted small">Пока пусто</p>}
+          </>);
+        })()}
       </section>
       <section className="danger-zone">
         {!inTelegram && <button className="row-btn" onClick={() => { auth.clear(); location.reload(); }}><Icon n="logout" />Выйти</button>}

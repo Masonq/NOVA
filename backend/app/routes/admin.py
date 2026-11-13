@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-from sqlalchemy import Date, cast, delete, func, or_, select
+from sqlalchemy import Date, Integer, cast, delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import bot, pricing
@@ -46,6 +46,8 @@ async def stats(days: int = 30, a: User = Depends(admin_user), db: AsyncSession 
                              .where(Job.created_at > since).group_by(jday, Job.kind, Job.status))).all()
     spent = (await db.execute(select(func.coalesce(func.sum(-Ledger.delta), 0)).where(Ledger.kind == "charge", Ledger.created_at > since))).scalar_one()
     agent_turns = (await db.execute(select(func.count()).select_from(Ledger).where(Ledger.title.like("Агент: разговор%"), Ledger.created_at > since))).scalar_one()
+    agent_turns += (await db.execute(select(func.coalesce(func.sum(cast(func.substring(Ledger.title, r"^Агент: (\d+)"), Integer)), 0))
+                                     .where(Ledger.title.op("~")(r"^Агент: \d"), Ledger.created_at > since))).scalar_one()   # daily folded lines
     series = []
     for i in range(days - 1, -1, -1):
         d = str((datetime.now(timezone.utc) - timedelta(days=i)).date())

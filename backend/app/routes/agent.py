@@ -21,7 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import ai
 from ..config import get_settings
-from ..credits import charge
+from ..credits import charge, charge_daily
 from ..db import Session, get_db
 from ..models import ChatMessage, Job, Memory, User
 from ..pricing import PRICE, cost as price_of, refresh as refresh_prices
@@ -393,8 +393,8 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
                 db2.add(ChatMessage(user_id=uid, role="user", text=heard, channel="agent"))
             if reply:
                 db2.add(ChatMessage(user_id=uid, role="model", text=reply, channel="agent"))
-            if price:
-                await charge(db2, user, min(price, user.balance), "Агент: разговор" + (" и поиск" if searches else ""), None)
+            if price and user.balance > 0:      # one ledger line per day: «Агент: N реплик»
+                await charge_daily(db2, user, min(price, user.balance), "Агент", ("реплика", "реплики", "реплик"))
             await db2.commit()
             bal = user.balance
         yield _sse({"type": "done", "balance": bal, "cost": price, "heard": heard or ""})

@@ -57,3 +57,22 @@ async def test_chat_costs_one_credit_one_ledger_line_refund_on_failure(client, m
     r = await client.post("/api/chat", json={"text": "ещё"}, headers=h)
     assert "кредит вернулся" in r.text
     assert (await client.get("/api/me", headers=h)).json()["balance"] == bal - 3
+
+
+@A
+async def test_agent_charges_fold_into_one_daily_line(client):
+    from app.credits import charge_daily
+    from app.db import Session
+    from app.models import User
+    h = await login(client)
+    uid = (await client.get("/api/me", headers=h)).json()["id"]
+    bal = (await client.get("/api/me", headers=h)).json()["balance"]
+    async with Session() as db:
+        for amount in (1, 3, 1):
+            u = await db.get(User, uid)
+            await charge_daily(db, u, amount, "Агент", ("реплика", "реплики", "реплик"))
+            await db.commit()
+    led = (await client.get("/api/me/ledger", headers=h)).json()
+    rows = [l for l in led if l["title"].startswith("Агент")]
+    assert len(rows) == 1 and rows[0]["title"] == "Агент: 3 реплики" and rows[0]["delta"] == -5
+    assert (await client.get("/api/me", headers=h)).json()["balance"] == bal - 5
