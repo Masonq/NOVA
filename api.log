@@ -1,56 +1,3 @@
-Nov 13 22:38:00 impressed-jade.ptr.network uvicorn[946434]: INFO:     87.116.135.226:0 - "GET /api/me HTTP/1.1" 200 OK
-Nov 13 22:38:00 impressed-jade.ptr.network uvicorn[946435]: 2026-11-13 22:38:00,684 httpx INFO HTTP Request: GET https://openrouter.ai/api/v1/credits "HTTP/1.1 200 OK"
-Nov 13 22:38:00 impressed-jade.ptr.network uvicorn[946435]: 2026-11-13 22:38:00,726 httpx INFO HTTP Request: GET https://openrouter.ai/api/v1/key "HTTP/1.1 200 OK"
-Nov 13 22:38:00 impressed-jade.ptr.network uvicorn[946435]: 2026-11-13 22:38:00,980 httpx INFO HTTP Request: GET https://api.kie.ai/api/v1/chat/credit "HTTP/1.1 200 OK"
-Nov 13 22:38:00 impressed-jade.ptr.network uvicorn[946435]: INFO:     87.116.135.226:0 - "GET /api/admin/stats?days=30 HTTP/1.1" 200 OK
-Nov 13 22:38:02 impressed-jade.ptr.network uvicorn[946434]: INFO:     87.116.135.226:0 - "GET /api/admin/users?q= HTTP/1.1" 200 OK
-Nov 13 22:38:03 impressed-jade.ptr.network uvicorn[946434]: INFO:     87.116.135.226:0 - "GET /api/admin/users/2 HTTP/1.1" 200 OK
-Nov 13 22:38:04 impressed-jade.ptr.network uvicorn[946434]: INFO:     87.116.135.226:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 22:38:12 impressed-jade.ptr.network uvicorn[946434]: INFO:     87.116.135.226:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 22:38:17 impressed-jade.ptr.network uvicorn[946435]: INFO:     87.116.135.226:0 - "GET /api/me/referral HTTP/1.1" 200 OK
-Nov 13 22:38:17 impressed-jade.ptr.network uvicorn[946435]: INFO:     87.116.135.226:0 - "GET /api/me/memory HTTP/1.1" 200 OK
-Nov 13 22:38:17 impressed-jade.ptr.network uvicorn[946435]: INFO:     87.116.135.226:0 - "GET /api/me/ledger HTTP/1.1" 200 OK
-Nov 13 22:38:17 impressed-jade.ptr.network uvicorn[946435]: INFO:     87.116.135.226:0 - "GET /api/me HTTP/1.1" 200 OK
-Nov 13 22:38:20 impressed-jade.ptr.network uvicorn[946435]: INFO:     87.116.135.226:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 22:38:20 impressed-jade.ptr.network uvicorn[946434]: INFO:     87.116.135.226:0 - "GET /api/me HTTP/1.1" 200 OK
-Nov 13 22:38:20 impressed-jade.ptr.network uvicorn[946434]: INFO:     87.116.135.226:0 - "GET /api/jobs?limit=12 HTTP/1.1" 200 OK
-Nov 13 22:38:24 impressed-jade.ptr.network uvicorn[946434]: INFO:     87.116.135.226:0 - "GET /assets/Agent-Dh_VVqYN.js HTTP/1.1" 200 OK
-Nov 13 22:38:24 impressed-jade.ptr.network uvicorn[946434]: INFO:     87.116.135.226:0 - "GET /assets/Studio-Bha3jLCr.js HTTP/1.1" 200 OK
-Nov 13 22:38:24 impressed-jade.ptr.network uvicorn[946435]: INFO:     87.116.135.226:0 - "GET /api/me HTTP/1.1" 200 OK
-Nov 13 22:38:24 impressed-jade.ptr.network uvicorn[946434]: INFO:     87.116.135.226:0 - "GET /api/agent/settings HTTP/1.1" 200 OK
-Nov 13 22:38:28 impressed-jade.ptr.network uvicorn[946434]: INFO:     87.116.135.226:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 22:38:30 impressed-jade.ptr.network uvicorn[946434]: INFO:     87.116.135.226:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 22:38:33 impressed-jade.ptr.network uvicorn[946434]: INFO:     87.116.135.226:0 - "POST /api/agent/turn HTTP/1.1" 200 OK
-Nov 13 22:38:35 impressed-jade.ptr.network uvicorn[946435]: INFO:     87.116.135.226:0 - "POST /api/agent/turn HTTP/1.1" 200 OK
-Nov 13 22:38:36 impressed-jade.ptr.network uvicorn[946434]: INFO:     87.116.135.226:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 22:38:36 impressed-jade.ptr.network uvicorn[946434]: 2026-11-13 22:38:36,799 httpx INFO HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
-Nov 13 22:38:37 impressed-jade.ptr.network uvicorn[946434]: 2026-11-13 22:38:37,122 httpx INFO HTTP Request: POST https://openrouter.ai/api/v1/audio/speech "HTTP/1.1 402 Payment Required"
-Nov 13 22:38:37 impressed-jade.ptr.network uvicorn[946434]: 2026-11-13 22:38:37,123 nova.agent WARNING agent tts failed for user 1, sentence 0: озвучка: 402 {"error":{"message":"This request's maximum cost exceeds your available credits. Add credits.","code":402,"metadata":{"reason":"weight_exceeds_budget","limit_source":"openrouter_credits","remedy_hint"
-Nov 13 22:38:37 impressed-jade.ptr.network uvicorn[946434]: 2026-11-13 22:38:37,209 httpx INFO HTTP Request: POST https://openrouter.ai/api/v1/audio/speech "HTTP/1.1 402 Payment Required"
-Nov 13 22:38:37 impressed-jade.ptr.network uvicorn[946434]: 2026-11-13 22:38:37,210 nova.agent WARNING agent tts failed for user 1, sentence 1: озвучка: 402 {"error":{"message":"This request's maximum cost exceeds your available credits. Add credits.","code":402,"metadata":{"reason":"weight_exceeds_budget","limit_source":"openrouter_credits","remedy_hint"
-Nov 13 22:38:37 impressed-jade.ptr.network uvicorn[946434]: 2026-11-13 22:38:37,428 httpx INFO HTTP Request: POST https://openrouter.ai/api/v1/audio/speech "HTTP/1.1 402 Payment Required"
-Nov 13 22:38:37 impressed-jade.ptr.network uvicorn[946434]: 2026-11-13 22:38:37,430 nova.agent WARNING agent tts failed for user 1, sentence 2: озвучка: 402 {"error":{"message":"This request's maximum cost exceeds your available credits. Add credits.","code":402,"metadata":{"reason":"weight_exceeds_budget","limit_source":"openrouter_credits","remedy_hint"
-Nov 13 22:38:39 impressed-jade.ptr.network uvicorn[946435]: 2026-11-13 22:38:39,955 httpx INFO HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
-Nov 13 22:38:42 impressed-jade.ptr.network uvicorn[946435]: 2026-11-13 22:38:42,067 httpx INFO HTTP Request: POST https://openrouter.ai/api/v1/audio/speech "HTTP/1.1 402 Payment Required"
-Nov 13 22:38:42 impressed-jade.ptr.network uvicorn[946435]: 2026-11-13 22:38:42,068 nova.agent WARNING agent tts failed for user 1, sentence 0: озвучка: 402 {"error":{"message":"This request's maximum cost exceeds your available credits. Add credits.","code":402,"metadata":{"reason":"weight_exceeds_budget","limit_source":"openrouter_credits","remedy_hint"
-Nov 13 22:38:42 impressed-jade.ptr.network uvicorn[946435]: 2026-11-13 22:38:42,244 httpx INFO HTTP Request: POST https://openrouter.ai/api/v1/audio/speech "HTTP/1.1 402 Payment Required"
-Nov 13 22:38:42 impressed-jade.ptr.network uvicorn[946435]: 2026-11-13 22:38:42,245 nova.agent WARNING agent tts failed for user 1, sentence 1: озвучка: 402 {"error":{"message":"This request's maximum cost exceeds your available credits. Add credits.","code":402,"metadata":{"reason":"weight_exceeds_budget","limit_source":"openrouter_credits","remedy_hint"
-Nov 13 22:38:42 impressed-jade.ptr.network uvicorn[946434]: INFO:     87.116.135.226:0 - "GET /api/me HTTP/1.1" 200 OK
-Nov 13 22:38:44 impressed-jade.ptr.network uvicorn[946434]: INFO:     87.116.135.226:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 22:38:49 impressed-jade.ptr.network uvicorn[946434]: INFO:     87.116.135.226:0 - "POST /api/agent/turn HTTP/1.1" 200 OK
-Nov 13 22:38:52 impressed-jade.ptr.network uvicorn[946434]: 2026-11-13 22:38:52,161 httpx INFO HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
-Nov 13 22:38:52 impressed-jade.ptr.network uvicorn[946434]: INFO:     87.116.135.226:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 22:38:52 impressed-jade.ptr.network uvicorn[946434]: 2026-11-13 22:38:52,710 httpx INFO HTTP Request: POST https://openrouter.ai/api/v1/audio/speech "HTTP/1.1 402 Payment Required"
-Nov 13 22:38:52 impressed-jade.ptr.network uvicorn[946434]: 2026-11-13 22:38:52,711 nova.agent WARNING agent tts failed for user 1, sentence 0: озвучка: 402 {"error":{"message":"This request's maximum cost exceeds your available credits. Add credits.","code":402,"metadata":{"reason":"weight_exceeds_budget","limit_source":"openrouter_credits","remedy_hint"
-Nov 13 22:38:52 impressed-jade.ptr.network uvicorn[946434]: 2026-11-13 22:38:52,729 httpx INFO HTTP Request: POST https://openrouter.ai/api/v1/audio/speech "HTTP/1.1 402 Payment Required"
-Nov 13 22:38:52 impressed-jade.ptr.network uvicorn[946434]: 2026-11-13 22:38:52,730 nova.agent WARNING agent tts failed for user 1, sentence 1: озвучка: 402 {"error":{"message":"This request's maximum cost exceeds your available credits. Add credits.","code":402,"metadata":{"reason":"weight_exceeds_budget","limit_source":"openrouter_credits","remedy_hint"
-Nov 13 22:38:52 impressed-jade.ptr.network uvicorn[946434]: 2026-11-13 22:38:52,967 httpx INFO HTTP Request: POST https://openrouter.ai/api/v1/audio/speech "HTTP/1.1 402 Payment Required"
-Nov 13 22:38:52 impressed-jade.ptr.network uvicorn[946434]: 2026-11-13 22:38:52,968 nova.agent WARNING agent tts failed for user 1, sentence 2: озвучка: 402 {"error":{"message":"This request's maximum cost exceeds your available credits. Add credits.","code":402,"metadata":{"reason":"weight_exceeds_budget","limit_source":"openrouter_credits","remedy_hint"
-Nov 13 22:38:53 impressed-jade.ptr.network uvicorn[946434]: INFO:     87.116.135.226:0 - "GET /api/me HTTP/1.1" 200 OK
-Nov 13 22:39:00 impressed-jade.ptr.network uvicorn[946434]: INFO:     87.116.135.226:0 - "POST /api/agent/turn HTTP/1.1" 200 OK
-Nov 13 22:39:00 impressed-jade.ptr.network uvicorn[946434]: INFO:     87.116.135.226:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
-Nov 13 22:39:02 impressed-jade.ptr.network uvicorn[946434]: 2026-11-13 22:39:02,837 httpx INFO HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
-Nov 13 22:39:03 impressed-jade.ptr.network uvicorn[946434]: 2026-11-13 22:39:03,688 httpx INFO HTTP Request: POST https://openrouter.ai/api/v1/audio/speech "HTTP/1.1 402 Payment Required"
 Nov 13 22:39:03 impressed-jade.ptr.network uvicorn[946434]: 2026-11-13 22:39:03,689 nova.agent WARNING agent tts failed for user 1, sentence 0: озвучка: 402 {"error":{"message":"This request's maximum cost exceeds your available credits. Add credits.","code":402,"metadata":{"reason":"weight_exceeds_budget","limit_source":"openrouter_credits","remedy_hint"
 Nov 13 22:39:03 impressed-jade.ptr.network uvicorn[946434]: 2026-11-13 22:39:03,780 httpx INFO HTTP Request: POST https://openrouter.ai/api/v1/audio/speech "HTTP/1.1 402 Payment Required"
 Nov 13 22:39:03 impressed-jade.ptr.network uvicorn[946434]: 2026-11-13 22:39:03,781 nova.agent WARNING agent tts failed for user 1, sentence 1: озвучка: 402 {"error":{"message":"This request's maximum cost exceeds your available credits. Add credits.","code":402,"metadata":{"reason":"weight_exceeds_budget","limit_source":"openrouter_credits","remedy_hint"
@@ -198,3 +145,56 @@ Nov 14 00:45:52 impressed-jade.ptr.network uvicorn[1019522]: INFO:     Waiting f
 Nov 14 00:45:52 impressed-jade.ptr.network uvicorn[1019522]: INFO:     Application startup complete.
 Nov 14 00:45:54 impressed-jade.ptr.network uvicorn[1019522]: INFO:     89.208.113.147:0 - "GET /api/health HTTP/1.1" 200 OK
 Nov 14 00:45:54 impressed-jade.ptr.network uvicorn[1019522]: INFO:     89.208.113.147:0 - "GET / HTTP/1.1" 200 OK
+Nov 14 00:49:05 impressed-jade.ptr.network uvicorn[1019522]: INFO:     87.116.135.226:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 14 00:49:08 impressed-jade.ptr.network uvicorn[1019523]: INFO:     87.116.135.226:0 - "GET / HTTP/1.1" 200 OK
+Nov 14 00:49:08 impressed-jade.ptr.network uvicorn[1019523]: INFO:     87.116.135.226:0 - "GET /assets/index-BAPuETgG.js HTTP/1.1" 200 OK
+Nov 14 00:49:08 impressed-jade.ptr.network uvicorn[1019523]: INFO:     87.116.135.226:0 - "GET /assets/index-BKy6R9jg.css HTTP/1.1" 200 OK
+Nov 14 00:49:08 impressed-jade.ptr.network uvicorn[1019522]: INFO:     87.116.135.226:0 - "GET /manifest.webmanifest HTTP/1.1" 200 OK
+Nov 14 00:49:08 impressed-jade.ptr.network uvicorn[1019522]: INFO:     87.116.135.226:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 14 00:49:08 impressed-jade.ptr.network uvicorn[1019523]: INFO:     87.116.135.226:0 - "GET /api/me/config HTTP/1.1" 200 OK
+Nov 14 00:49:08 impressed-jade.ptr.network uvicorn[1019523]: INFO:     87.116.135.226:0 - "POST /api/auth/webapp HTTP/1.1" 200 OK
+Nov 14 00:49:08 impressed-jade.ptr.network uvicorn[1019522]: INFO:     87.116.135.226:0 - "GET /api/jobs?limit=12 HTTP/1.1" 200 OK
+Nov 14 00:49:08 impressed-jade.ptr.network uvicorn[1019522]: INFO:     87.116.135.226:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 14 00:49:16 impressed-jade.ptr.network uvicorn[1019522]: INFO:     87.116.135.226:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 14 00:49:24 impressed-jade.ptr.network uvicorn[1019522]: INFO:     87.116.135.226:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 14 00:52:19 impressed-jade.ptr.network uvicorn[1019522]: INFO:     87.116.135.226:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 14 00:52:27 impressed-jade.ptr.network uvicorn[1019522]: INFO:     87.116.135.226:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 14 00:52:35 impressed-jade.ptr.network uvicorn[1019522]: INFO:     87.116.135.226:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 14 00:52:43 impressed-jade.ptr.network uvicorn[1019523]: INFO:     87.116.135.226:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 14 00:52:46 impressed-jade.ptr.network uvicorn[1019523]: INFO:     87.116.135.226:0 - "GET /assets/Studio-Dd9Z2ikS.js HTTP/1.1" 200 OK
+Nov 14 00:52:46 impressed-jade.ptr.network uvicorn[1019522]: INFO:     87.116.135.226:0 - "GET /assets/Agent-D2K_DuNb.js HTTP/1.1" 200 OK
+Nov 14 00:52:46 impressed-jade.ptr.network uvicorn[1019523]: INFO:     87.116.135.226:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 14 00:52:46 impressed-jade.ptr.network uvicorn[1019522]: INFO:     87.116.135.226:0 - "GET /api/agent/settings HTTP/1.1" 200 OK
+Nov 14 00:52:51 impressed-jade.ptr.network uvicorn[1019522]: INFO:     87.116.135.226:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 14 00:52:59 impressed-jade.ptr.network uvicorn[1019522]: INFO:     87.116.135.226:0 - "GET /api/jobs/active HTTP/1.1" 200 OK
+Nov 14 00:53:02 impressed-jade.ptr.network uvicorn[1019523]: INFO:     87.116.135.226:0 - "GET /api/jobs?limit=12 HTTP/1.1" 200 OK
+Nov 14 00:53:02 impressed-jade.ptr.network uvicorn[1019522]: INFO:     87.116.135.226:0 - "GET /api/me HTTP/1.1" 200 OK
+Nov 14 00:56:19 impressed-jade.ptr.network systemd[1]: Stopping nova-api.service - NOVA API...
+Nov 14 00:56:19 impressed-jade.ptr.network uvicorn[1019517]: INFO:     Received SIGTERM, exiting.
+Nov 14 00:56:19 impressed-jade.ptr.network uvicorn[1019517]: INFO:     Terminated child process [1019522]
+Nov 14 00:56:19 impressed-jade.ptr.network uvicorn[1019517]: INFO:     Terminated child process [1019523]
+Nov 14 00:56:19 impressed-jade.ptr.network uvicorn[1019517]: INFO:     Waiting for child process [1019522]
+Nov 14 00:56:20 impressed-jade.ptr.network uvicorn[1019523]: INFO:     Shutting down
+Nov 14 00:56:20 impressed-jade.ptr.network uvicorn[1019522]: INFO:     Shutting down
+Nov 14 00:56:20 impressed-jade.ptr.network uvicorn[1019523]: INFO:     Waiting for application shutdown.
+Nov 14 00:56:20 impressed-jade.ptr.network uvicorn[1019523]: INFO:     Application shutdown complete.
+Nov 14 00:56:20 impressed-jade.ptr.network uvicorn[1019523]: INFO:     Finished server process [1019523]
+Nov 14 00:56:20 impressed-jade.ptr.network uvicorn[1019522]: INFO:     Waiting for application shutdown.
+Nov 14 00:56:20 impressed-jade.ptr.network uvicorn[1019522]: INFO:     Application shutdown complete.
+Nov 14 00:56:20 impressed-jade.ptr.network uvicorn[1019522]: INFO:     Finished server process [1019522]
+Nov 14 00:56:20 impressed-jade.ptr.network uvicorn[1019517]: INFO:     Waiting for child process [1019523]
+Nov 14 00:56:20 impressed-jade.ptr.network uvicorn[1019517]: INFO:     Stopping parent process [1019517]
+Nov 14 00:56:20 impressed-jade.ptr.network systemd[1]: nova-api.service: Deactivated successfully.
+Nov 14 00:56:20 impressed-jade.ptr.network systemd[1]: Stopped nova-api.service - NOVA API.
+Nov 14 00:56:20 impressed-jade.ptr.network systemd[1]: nova-api.service: Consumed 4.214s CPU time, 153.9M memory peak, 0B memory swap peak.
+Nov 14 00:56:20 impressed-jade.ptr.network systemd[1]: Started nova-api.service - NOVA API.
+Nov 14 00:56:20 impressed-jade.ptr.network uvicorn[1025881]: INFO:     Uvicorn running on http://127.0.0.1:8795 (Press CTRL+C to quit)
+Nov 14 00:56:20 impressed-jade.ptr.network uvicorn[1025881]: INFO:     Started parent process [1025881]
+Nov 14 00:56:21 impressed-jade.ptr.network uvicorn[1025887]: INFO:     Started server process [1025887]
+Nov 14 00:56:21 impressed-jade.ptr.network uvicorn[1025887]: INFO:     Waiting for application startup.
+Nov 14 00:56:21 impressed-jade.ptr.network uvicorn[1025887]: INFO:     Application startup complete.
+Nov 14 00:56:21 impressed-jade.ptr.network uvicorn[1025886]: INFO:     Started server process [1025886]
+Nov 14 00:56:21 impressed-jade.ptr.network uvicorn[1025886]: INFO:     Waiting for application startup.
+Nov 14 00:56:21 impressed-jade.ptr.network uvicorn[1025886]: INFO:     Application startup complete.
+Nov 14 00:56:23 impressed-jade.ptr.network uvicorn[1025886]: INFO:     89.208.113.147:0 - "GET /api/health HTTP/1.1" 200 OK
+Nov 14 00:56:24 impressed-jade.ptr.network uvicorn[1025886]: INFO:     89.208.113.147:0 - "GET / HTTP/1.1" 200 OK
