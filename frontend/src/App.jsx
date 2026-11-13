@@ -13,6 +13,9 @@ const VideoStudio = lazy(() => import("./screens/VideoStudio.jsx"));
 const MusicStudio = lazy(() => import("./screens/MusicStudio.jsx"));
 const TtsStudio = lazy(() => import("./screens/TtsStudio.jsx"));
 const Tasks = lazy(() => import("./screens/Tasks.jsx"));
+const GreetingStudio = lazy(() => import("./screens/GreetingStudio.jsx"));
+const ReelStudio = lazy(() => import("./screens/ReelStudio.jsx"));
+const ClipStudio = lazy(() => import("./screens/ClipStudio.jsx"));
 const Feed = lazy(() => import("./screens/Feed.jsx"));
 const Agent = lazy(() => import("./screens/Agent.jsx"));
 const Admin = lazy(() => import("./screens/Admin.jsx"));
@@ -31,7 +34,7 @@ export default function App() {
   const [route, setRoute] = useState(parse());
   const [onb, setOnb] = useState(() => !localStorage.getItem("nova_onb"));
   const prevRoute = useRef(route);
-  const DEPTH = { admin: 1, home: 0, archive: 0, profile: 0, image: 1, video: 1, music: 1, tts: 1, tasks: 1, chat: 1, agent: 1, feed: 2 };
+  const DEPTH = { greeting: 1, reel: 1, clip: 1, admin: 1, home: 0, archive: 0, profile: 0, image: 1, video: 1, music: 1, tts: 1, tasks: 1, chat: 1, agent: 1, feed: 2 };
   const dir = useMemo(() => {
     const a = DEPTH[prevRoute.current] ?? 0, b = DEPTH[route] ?? 0;
     const d = prevRoute.current === route ? "tab" : b > a ? "fwd" : b < a ? "back" : "tab";
@@ -99,7 +102,7 @@ export default function App() {
   if (!authed) return <><Suspense fallback={null}><Login onDone={() => setAuthed(true)} /></Suspense><Toaster /></>;
 
   const sp = { go, me, reloadMe: loadMe, params };
-  const STUDIOS = { image: ImageStudio, video: VideoStudio, music: MusicStudio, tts: TtsStudio };
+  const STUDIOS = { image: ImageStudio, video: VideoStudio, music: MusicStudio, tts: TtsStudio, greeting: GreetingStudio, reel: ReelStudio, clip: ClipStudio };
   const Studio = STUDIOS[route];
   const screen = Studio ? <Studio key={route + JSON.stringify(params || {})} {...sp} />
     : route === "admin" && me?.is_admin ? <Admin go={go} params={params} />
@@ -113,7 +116,7 @@ export default function App() {
   return (
     <div className={"app r-" + route}>
       <div key={route} className={"page " + dir}><Suspense fallback={<div className="screen"><div className="skeleton" /></div>}>{screen}</Suspense></div>
-      {!["chat", "image", "video", "music", "tts", "feed", "agent", "admin"].includes(route) && (
+      {(TABS.some((t) => t.k === route) || route === "archive") && (     /* only on the tab screens: never over a studio's button */
         <TabBar tabs={TABS} active={TABS.find((t) => t.k === route) ? route : "home"} onSelect={(k) => go(k)}
           side={{ orb: true, label: "Голосовой агент", accent: true, onClick: () => go("agent") }} />)}
       {onb && me && me.jobs === 0 && <Onboarding balance={me.balance} onDone={() => setOnb(false)} />}

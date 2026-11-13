@@ -41,6 +41,7 @@ command -v nginx >/dev/null || need="$need nginx"
 command -v certbot >/dev/null || need="$need certbot python3-certbot-nginx"
 python3 -c "import venv, ensurepip" 2>/dev/null || need="$need python3-venv"
 command -v ffmpeg >/dev/null || need="$need ffmpeg"
+[ -f /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf ] || need="$need fonts-dejavu-core"   # subtitles in clips and reels
 if [ -n "$need" ]; then DEBIAN_FRONTEND=noninteractive apt-get update -q && DEBIAN_FRONTEND=noninteractive apt-get install -y -q $need >/dev/null; log "Поставлены пакеты:$need"; fi
 systemctl enable --now postgresql redis-server >/dev/null 2>&1 || true
 

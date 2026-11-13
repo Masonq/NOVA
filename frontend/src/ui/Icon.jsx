@@ -29,6 +29,8 @@ const P = {
   gift: <><rect x="3.5" y="8" width="17" height="4" rx="1" /><path d="M5 12v8h14v-8M12 8v12" /><path d="M12 8c-1.5-3.5-5-4-5-1.5S10 8 12 8zM12 8c1.5-3.5 5-4 5-1.5S14 8 12 8z" /></>,
   card: <><rect x="3" y="5.5" width="18" height="13" rx="2.5" /><path d="M3 10h18M7 15h4" /></>,
   qr: <><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.2" /><rect x="14" y="3.5" width="6.5" height="6.5" rx="1.2" /><rect x="3.5" y="14" width="6.5" height="6.5" rx="1.2" /><path d="M14 14h2.5v2.5H14zM18 18h2.5v2.5H18zM14 18.5h1.5M18.5 14h2" /></>,
+  film: <><rect x="3.5" y="4" width="17" height="16" rx="2.5" /><path d="M7.5 4v16M16.5 4v16M3.5 9h4M3.5 15h4M16.5 9h4M16.5 15h4" /></>,
+  clip: <><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="M10.5 15.5V9.2l4.5-1v6.2" /><circle cx="9.3" cy="15.6" r="1.4" /><circle cx="13.8" cy="14.5" r="1.4" /></>,
   logout: <><path d="M15 4h4v16h-4" /><path d="M10 8l-4 4 4 4" /><path d="M6 12h10" /></>,
 };
 export default function Icon({ n, s = 18, w = 1.8 }) {

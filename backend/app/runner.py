@@ -272,6 +272,7 @@ async def run_music(job: Job):
             continue
         rel = await download(job, f"track{i + 1}.mp3", url, max_mb=60)
         f = {"path": rel, "type": "audio", "title": t.get("title") or brief.get("title") or "", "duration": t.get("duration") or 0}
+        f["task"], f["sid"] = task, t.get("id") or ""          # for synced subtitles in a clip later
         img = t.get("image_url") or t.get("imageUrl")
         if img:
             try:
@@ -310,8 +311,30 @@ async def run_tts(job: Job):
     return [{"path": rel, "type": "audio", "duration": round(len(wav) / 48000, 1)}], 0, ""
 
 
-RUNNERS = {"image": run_image, "video": run_video, "music": run_music, "tts": run_tts}
-NAMES = {"image": "картинки", "video": "видео", "music": "трек", "tts": "озвучка"}
+async def _combo(kind):
+    from . import combo
+    fn = {"clip": combo.run_clip, "reel": combo.run_reel, "greeting": combo.run_greeting}[kind]
+
+    async def run(job: Job):
+        return await fn(job, _update)
+    return run
+
+
+async def run_clip(job: Job):
+    return await (await _combo("clip"))(job)
+
+
+async def run_reel(job: Job):
+    return await (await _combo("reel"))(job)
+
+
+async def run_greeting(job: Job):
+    return await (await _combo("greeting"))(job)
+
+
+RUNNERS = {"image": run_image, "video": run_video, "music": run_music, "tts": run_tts,
+           "clip": run_clip, "reel": run_reel, "greeting": run_greeting}
+NAMES = {"clip": "клип", "reel": "ролик", "greeting": "поздравление", "image": "картинки", "video": "видео", "music": "трек", "tts": "озвучка"}
 
 
 async def run_job(ctx, job_id: int):

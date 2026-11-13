@@ -458,3 +458,62 @@ async def web_answer(query: str) -> str:
     costs.openrouter(r.json(), "web search")
     c = r.json()["choices"][0]["message"].get("content") or ""
     return c[:1800]
+
+
+
+# ---------------- directing: clips, reels, greetings ----------------
+async def _json(system: str, user: str, max_tokens: int = 2500, temperature: float = 0.7) -> dict:
+    raw = await complete("google/gemini-3.8-flash", [{"role": "system", "content": system}, {"role": "user", "content": user}],
+                         timeout=60, temperature=temperature, max_tokens=max_tokens, response_format={"type": "json_object"})
+    m = re.search(r"\{.*\}", raw or "", re.S)
+    return json.loads(m.group(0)) if m else {}
+
+
+CLIP_SCENES = """You are a music video director. From the song's lyrics and sound, plan {n} vertical (9:16) shots for a short clip.
+One visual world for all shots: the same main character (describe their look identically in every shot), the same palette and lighting.
+Each shot: a vivid, concrete English image prompt, 40–70 words, photographic or cinematic, no text on screen, no real people or brands,
+and a short camera move for animation ("slow push in", "orbit left", "handheld walk"). Keep it tasteful.
+Return strict JSON: {{"style": "the shared look in 15 words", "shots": [{{"visual": "...", "move": "..."}}]}}"""
+
+
+async def clip_shots(lyrics: str, style_tags: str, n: int) -> list[dict]:
+    d = await _json(CLIP_SCENES.format(n=n), f"Sound: {style_tags}\nLyrics:\n{lyrics[:3500]}")
+    shots = [s for s in d.get("shots") or [] if isinstance(s, dict) and s.get("visual")][:n]
+    while len(shots) < n:
+        shots.append({"visual": f"cinematic vertical shot matching the mood of the song: {style_tags}", "move": "slow push in"})
+    look = str(d.get("style") or "")[:200]
+    return [{"visual": (look + ". " if look else "") + str(s["visual"])[:900], "move": str(s.get("move") or "slow push in")[:80]} for s in shots]
+
+
+REEL_SCRIPT = """You write scripts for vertical short videos (Reels, TikTok, Shorts) in Russian.
+Topic from the user; target length about {sec} seconds of voice-over (~2.3 words per second in total).
+Make {n} scenes. Scene 1 is a strong hook. Each scene: the voice-over text in Russian (one or two short sentences, spoken style, no emojis),
+and an English image prompt for that scene, vertical 9:16, vivid and concrete, no text on screen, no real people or brands.
+Also a background music style in English tags (no vocals) and a short Russian title.
+Return strict JSON: {{"title": "...", "music": "lo-fi, warm, 90 bpm, instrumental", "scenes": [{{"text": "...", "visual": "..."}}]}}"""
+
+
+async def reel_script(topic: str, seconds: int) -> dict:
+    n = 6 if seconds <= 35 else 9
+    d = await _json(REEL_SCRIPT.format(sec=seconds, n=n), f"Тема: {topic[:500]}", temperature=0.8)
+    scenes = [{"text": str(s.get("text") or "").strip()[:300], "visual": str(s.get("visual") or "").strip()[:900]}
+              for s in d.get("scenes") or [] if isinstance(s, dict) and s.get("text")][:10]
+    if len(scenes) < 2:
+        raise AIError("сценарий не получился, попробуйте сформулировать тему иначе")
+    return {"title": str(d.get("title") or topic)[:80], "music": str(d.get("music") or "warm cinematic, instrumental")[:200], "scenes": scenes}
+
+
+GREETING = """You write a personal congratulation song in Russian and a greeting card.
+Use the person's name naturally, at least twice in the chorus. Warm, sincere, a bit of humour if it suits the occasion; no clichés like «желаю счастья, здоровья».
+Use details the user gave. Lyrics with section tags on their own lines: [Куплет 1], [Припев], [Куплет 2], [Припев], [Финал]; 1.5–2 minutes.
+Card: the exact short greeting line in Russian that will be written on the card (max 40 chars, with the name),
+and an English image prompt for a beautiful festive card that leaves clean space for that line.
+Return strict JSON: {"title": "...", "style": "English music tags, 8–12", "lyrics": "...", "card_text": "...", "card_visual": "..."}"""
+
+
+async def greeting_brief(name: str, occasion: str, about: str, voices: str) -> dict:
+    d = await _json(GREETING, f"Имя: {name}\nПовод: {occasion}\nО человеке и пожелания: {about or '—'}\nКто поёт: {voices}")
+    card = str(d.get("card_text") or f"{occasion}, {name}!")[:60]
+    return {"title": str(d.get("title") or f"Для {name}")[:80], "style": str(d.get("style") or "warm pop, celebratory, catchy")[:900],
+            "lyrics": str(d.get("lyrics") or "")[:4900], "card_text": card,
+            "card_visual": str(d.get("card_visual") or f"festive greeting card for {occasion}, elegant, warm light")[:900]}

@@ -30,15 +30,18 @@ from .jobs import job_out, start_job
 router = APIRouter(prefix="/api/agent", tags=["agent"])
 MODEL = "google/gemini-3.8-flash"
 HISTORY = 12
-KINDS = {"image": "картинку", "video": "видео", "music": "трек", "tts": "озвучку"}
+KINDS = {"image": "картинку", "video": "видео", "music": "трек", "tts": "озвучку", "greeting": "поздравление", "clip": "клип", "reel": "ролик"}
 
 SYSTEM = """Ты — NOVA, голосовой ИИ-агент в приложении NOVA. Говоришь по-русски живо и тепло, как умный друг.
 Твой ответ озвучивается голосом, поэтому:
 - отвечай коротко: 1–3 предложения, первое — самое короткое; без списков, markdown, эмодзи и ссылок;
 - числа и даты пиши так, как их естественно произнести.
 Возможности (инструменты):
-- create_media — создать картинку/логотип, видео, музыку или озвучку. Сначала вызови его — пользователь увидит цену;
+- create_media — создать картинку/логотип, видео, музыку или озвучку, а также готовые сборки:
+  поздравление (нужны имя и повод: песня с именем, открытка, видео-открытка), клип к треку пользователя (по умолчанию к последнему),
+  вертикальный ролик по теме (сценарий, голос, картинки, музыка, субтитры). Сначала вызови его — пользователь увидит цену;
   скажи цену одной фразой и спроси, запускать ли. Запускай только после явного согласия через confirm_pending.
+  Живые видео-сцены в клипе и ролике предлагай, только если пользователь сам хочет «живое видео»: это намного дороже.
 - search_archive — найти работы пользователя (за последние 30 дней).
 - web_search — свежие факты, новости, погода, цены.
 - remember / forget — запомнить или забыть факт о пользователе, когда он просит или сообщает что-то важное о себе.
@@ -49,8 +52,13 @@ HEARD_RULE = """Ответ начинай строго с [[точная рас�
 TOOLS = [
     {"type": "function", "function": {"name": "create_media", "description": "Подготовить генерацию: показать цену и ждать согласия пользователя",
         "parameters": {"type": "object", "required": ["kind", "prompt"], "properties": {
-            "kind": {"type": "string", "enum": ["image", "video", "music", "tts"]},
-            "prompt": {"type": "string", "description": "Подробное описание на русском (для tts — точный текст для озвучки)"},
+            "kind": {"type": "string", "enum": ["image", "video", "music", "tts", "greeting", "clip", "reel"],
+                     "description": "greeting — поздравление (песня с именем + открытка + видео-открытка); clip — клип к треку пользователя; reel — вертикальный ролик по теме (сценарий, голос, картинки, музыка, субтитры)"},
+            "prompt": {"type": "string", "description": "Подробное описание на русском (для tts — точный текст; для greeting — о человеке и пожелания; для reel — тема ролика; для clip — какой трек)"},
+            "name": {"type": "string", "description": "greeting: имя того, кого поздравляем"},
+            "occasion": {"type": "string", "description": "greeting: повод, например «День рождения»"},
+            "seconds": {"type": "integer", "enum": [30, 60], "description": "reel: длина"},
+            "live": {"type": "boolean", "description": "clip/reel: живые видео-сцены вместо движения камеры (намного дороже)"},
             "style": {"type": "string", "enum": ["Фото", "Арт", "Логотип", "3D", "Аниме"]},
             "aspect": {"type": "string", "enum": ["1:1", "3:4", "9:16", "16:9"]},
             "duration": {"type": "integer", "enum": [5, 10, 15]},
@@ -171,6 +179,28 @@ async def run_tool(name: str, args: dict, u: User, emit) -> str:
             params = {k: args[k] for k in ("style", "aspect", "duration", "sound", "genre", "instrumental") if k in args}
             if kind == "tts":
                 params["voice"] = user.agent_voice
+            if kind == "greeting":
+                if not (args.get("name") or "").strip() or not (args.get("occasion") or "").strip():
+                    return "Для поздравления нужны имя и повод — спроси их."
+                params = {"name": args["name"].strip()[:40], "occasion": args["occasion"].strip()[:40], "voices": "auto",
+                          "parts": ["song", "card", "video"]}
+            if kind == "clip":
+                q = select(Job).where(Job.user_id == u.id, Job.kind == "music", Job.status == "done").order_by(Job.id.desc())
+                words = [w for w in re.findall(r"\w{3,}", (args.get("prompt") or "").lower()) if w not in ("клип", "трек", "последн", "моему")][:4]
+                tracks = (await db.execute(q.limit(30))).scalars().all()
+                pick = next((t for t in tracks if words and any(w in (t.prompt + " " + " ".join(f.get("title", "") for f in t.files or [])).lower() for w in words)), None) or (tracks[0] if tracks else None)
+                if not pick:
+                    return "Готовых треков нет — сначала нужно сделать трек."
+                params = {"track_job": pick.id, "live": bool(args.get("live")), "subs": True}
+                args["prompt"] = "Клип: " + (next((f.get("title") for f in pick.files or [] if f.get("title")), "") or pick.prompt)[:80]
+            if kind == "reel":
+                from .. import ai
+                try:
+                    sc = await ai.reel_script(args["prompt"].strip(), int(args.get("seconds") or 30))
+                except Exception:
+                    return "Сценарий не получился — попроси уточнить тему."
+                params = {"scenes": sc["scenes"], "voice": user.agent_voice, "live": bool(args.get("live")), "music": True, "subs": True,
+                          "title": sc["title"], "music_style": sc["music"]}
             price = price_of(kind, params, args["prompt"])
             await pending.set(u.id, {"kind": kind, "prompt": args["prompt"].strip(), "params": params, "cost": price})
             await emit({"type": "confirm", "kind": kind, "prompt": args["prompt"].strip(), "cost": price, "balance": user.balance})

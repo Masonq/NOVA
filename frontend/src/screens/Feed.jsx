@@ -10,7 +10,7 @@ export default function Feed({ go }) {
   const [sheet, setSheet] = useState(null);
   const box = useRef(null);
   useEffect(() => {
-    api("/api/jobs?limit=60").then((r) => setItems(r.filter((j) => j.status === "done" && (j.kind === "image" || j.kind === "video")).flatMap((j) =>
+    api("/api/jobs?limit=60").then((r) => setItems(r.filter((j) => j.status === "done" && (j.kind === "image" || j.files?.some((f) => f.type === "video"))).flatMap((j) =>
       j.kind === "image" ? j.files.filter((f) => f.type === "image").slice(0, 1).map((f) => ({ j, f })) : [{ j, f: j.files.find((f) => f.type === "video") }]))).catch(() => setItems([]));
   }, []);
   useEffect(() => {
@@ -25,7 +25,7 @@ export default function Feed({ go }) {
       {items?.length === 0 && <div className="empty-state"><p>Лента пустая</p><span className="muted small">Здесь будут ваши картинки и видео</span></div>}
       {items?.map(({ j, f }) => f && (
         <section key={f.url} className="slide">
-          {j.kind === "video"
+          {f.type === "video"
             ? <video src={f.url} poster={thumbOf(j) || undefined} loop playsInline muted preload="metadata" />
             : <img src={f.url} alt={j.prompt} loading="lazy" />}
           <div className="slide-cap"><p>{j.prompt}</p></div>

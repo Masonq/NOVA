@@ -3,9 +3,9 @@ import Icon from "../ui/Icon.jsx";
 import { JobSheet } from "../ui/Sheet.jsx";
 import { SlideTabs } from "../ui/TabBar.jsx";
 import { api } from "../api.js";
-import { KIND, thumbOf } from "../jobs.js";
+import { COMBO, KIND, thumbOf } from "../jobs.js";
 
-const FILTERS = [{ k: "", t: "Все" }, { k: "image", t: "Фото", i: "image" }, { k: "video", t: "Видео", i: "video" }, { k: "music", t: "Музыка", i: "music" }, { k: "tts", t: "Озвучка", i: "wave" }, { k: "fav", t: "Избранное", i: "heart" }];
+const FILTERS = [{ k: "", t: "Все" }, { k: "image", t: "Фото", i: "image" }, { k: "video", t: "Видео", i: "video" }, { k: "music", t: "Музыка", i: "music" }, { k: "tts", t: "Озвучка", i: "wave" }, { k: "combo", t: "Сборки", i: "film" }, { k: "fav", t: "Избранное", i: "heart" }];
 function left(iso) {
   if (!iso) return "";
   const d = Math.ceil((new Date(iso) - Date.now()) / 864e5);
@@ -17,7 +17,7 @@ export default function Archive({ go, params }) {
   const [sheet, setSheet] = useState(null);
   const load = () => api("/api/jobs?limit=100").then((r) => setJobs(r.filter((j) => j.status === "done"))).catch(() => setJobs([]));
   useEffect(() => { load(); }, []);
-  const shown = (jobs || []).filter((j) => !f || (f === "fav" ? j.favorite : j.kind === f));
+  const shown = (jobs || []).filter((j) => !f || (f === "fav" ? j.favorite : f === "combo" ? COMBO.has(j.kind) : j.kind === f));
   return (
     <main className="screen">
       <header className="bar"><h1>Архив</h1>

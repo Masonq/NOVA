@@ -45,6 +45,17 @@ async def create(model: str, inp: dict) -> str:
     raise KieError("не удалось создать задачу")
 
 
+async def create_sync(model: str, inp: dict) -> dict:
+    """Endpoints that answer at once (e.g. Suno's timestamped lyrics): the whole reply, {} on a failure."""
+    async with _client(60) as cl:
+        r = await cl.post(f"{BASE}/jobs/createTask", headers=_h(), json={"model": model, "input": inp})
+    try:
+        d = r.json()
+    except ValueError:
+        return {}
+    return d if int(d.get("code") or 0) == 200 else {}
+
+
 async def status(task_id: str) -> dict:
     """Returns {'state': waiting|queuing|generating|success|fail, 'result': dict, 'error': str}."""
     async with _client(30) as cl:
