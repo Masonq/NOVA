@@ -25,7 +25,10 @@ import Topup from "./ui/Topup.jsx";
 import Onboarding from "./ui/Onboarding.jsx";
 import { toast } from "./ui/Toast.jsx";
 
-const parse = () => (location.hash.replace(/^#\/?/, "") || "home").split("?")[0];
+const ROUTES = new Set(["home", "archive", "profile", "image", "video", "music", "tts", "reel", "clip", "greeting",
+  "tasks", "feed", "chat", "agent", "admin"]);
+// Telegram opens the app with its own data in the hash (#tgWebAppData=…): anything that isn't our screen is home
+const parse = () => { const r = location.hash.replace(/^#\/?/, "").split("?")[0]; return ROUTES.has(r) ? r : "home"; };
 const TABS = [{ k: "home", t: "Главная", i: "home" }, { k: "archive", t: "Архив", i: "clock" }, { k: "profile", t: "Профиль", i: "user" }];
 
 export default function App() {
