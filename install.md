@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-13 23:53 UTC
+# Установка NOVA 2026-11-13 23:56 UTC
 
-- Версия: 54953c9 Agent: retry busy model before answering, log why a turn failed, alert admin when OpenRouter credits or the key limit run out
+- Версия: d420c23 Motion: page and tab slides, smooth composer, spring sheets with animated close, toasts, rolling balance, progress button, result reveal; Russian update notes
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
