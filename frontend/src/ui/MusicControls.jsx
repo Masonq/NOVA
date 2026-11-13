@@ -33,7 +33,7 @@ export function GenreTiles({ value, onChange, max = 3 }) {
           return (
             <button key={g} className={"g-tile" + (on ? " on" : "") + (dim ? " dim" : "") + (g.length > 9 ? " long" : "")} aria-pressed={on} onClick={() => toggle(g)}
               style={{ "--ga": art.a, "--gb": art.b }}>
-              <span className="g-ic" aria-hidden="true"><Motif m={art.m} /></span>
+              <span className="g-ic" aria-hidden="true"><Motif m={art.m} size={22} /></span>
               <span>{g}</span>
               {on && <i className="g-check"><Icon n="check" s={11} w={3} /></i>}
             </button>);

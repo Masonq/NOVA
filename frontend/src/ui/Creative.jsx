@@ -29,7 +29,7 @@ export function Tiles({ label, hint, items, value, onChange, grid }) {
           return (
             <button key={it.v} role="radio" aria-checked={on} className={"g-tile" + (on ? " on" : "")} style={{ "--ga": it.a, "--gb": it.b }}
               onClick={() => { haptic("select"); onChange(it.v); }}>
-              <span className="g-ic" aria-hidden="true"><Motif m={it.m} size={grid ? 28 : 34} /></span>
+              <span className="g-ic" aria-hidden="true"><Motif m={it.m} size={items.length > 4 ? 20 : 22} /></span>
               <span>{it.t}{it.sub && <small>{it.sub}</small>}</span>
               {on && <i className="g-check"><Icon n="check" s={11} w={3} /></i>}
             </button>);
