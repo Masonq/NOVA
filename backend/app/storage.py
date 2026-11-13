@@ -7,7 +7,9 @@ from .models import Job
 
 
 def job_dir(job: Job) -> Path:
-    return Path(get_settings().storage_dir) / str(job.user_id) / str(job.id)
+    """New jobs live in a folder with a random part, so their files cannot be found by counting ids."""
+    name = f"{job.id}_{job.dir_token}" if job.dir_token else str(job.id)
+    return Path(get_settings().storage_dir) / str(job.user_id) / name
 
 
 def public_files(job: Job) -> list[dict]:
@@ -15,7 +17,12 @@ def public_files(job: Job) -> list[dict]:
     s = get_settings()
     out = []
     for f in job.files or []:
-        out.append({**f, "url": f"{s.public_url}/files/{f['path']}"})
+        x = {**f, "url": f"{s.public_url}/files/{f['path']}"}
+        if f.get("thumb"):
+            x["thumb_url"] = f"{s.public_url}/files/{f['thumb']}"
+        if f.get("cover"):
+            x["cover_url"] = f"{s.public_url}/files/{f.get('cover_thumb') or f['cover']}"
+        out.append(x)
     return out
 
 
@@ -39,7 +46,7 @@ import httpx
 
 
 def rel_path(job: Job, name: str) -> str:
-    return f"{job.user_id}/{job.id}/{name}"
+    return str(job_dir(job).relative_to(get_settings().storage_dir)) + "/" + name
 
 
 def save_bytes(job: Job, name: str, data: bytes) -> str:
@@ -87,3 +94,18 @@ def upload_dir(user_id: int) -> Path:
 
 def new_upload_name(ext: str) -> str:
     return f"{secrets.token_urlsafe(10)}.{ext}"
+
+
+def make_thumb(rel: str, size: int = 640) -> str | None:
+    """Small WebP preview next to the original (archive, home and carousels load these)."""
+    try:
+        from PIL import Image
+        src = abs_path(rel)
+        out = rel.rsplit(".", 1)[0] + ".thumb.webp"
+        with Image.open(src) as im:
+            im = im.convert("RGB")
+            im.thumbnail((size, size))
+            im.save(abs_path(out), "WEBP", quality=78, method=4)
+        return out
+    except Exception:
+        return None

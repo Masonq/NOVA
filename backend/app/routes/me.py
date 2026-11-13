@@ -91,3 +91,15 @@ async def delete_account(u: User = Depends(current_user), db: AsyncSession = Dep
     await db.execute(delete(User).where(User.id == u.id))
     await db.commit()
     return {"ok": True}
+
+
+
+@router.get("/referral")
+async def referral(u: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    from ..pricing import PRICE, refresh
+    await refresh(db)
+    s = get_settings()
+    invited = (await db.execute(select(func.count(User.id)).where(User.referrer_id == u.id))).scalar_one()
+    paid = (await db.execute(select(func.count(User.id)).where(User.referrer_id == u.id, User.ref_rewarded.is_(True)))).scalar_one()
+    return {"link": f"https://t.me/{s.bot_username}?start=ref_{u.id}", "invited": invited, "paid": paid,
+            "earned": paid * int(PRICE.get("ref_bonus", 0)), "friend_bonus": int(PRICE.get("ref_friend", 0)), "bonus": int(PRICE.get("ref_bonus", 0))}

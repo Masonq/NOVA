@@ -7,7 +7,7 @@ import { priceOf } from "../jobs.js";
 
 const GENRES = ["Поп", "Lo-fi", "Хип-хоп", "Электроника", "Рок", "Эмбиент", "Джаз", "Кино"];
 const MOODS = ["Спокойно", "Энергично", "Грустно", "Романтично", "Эпично"];
-const coverUrl = (f) => (f.cover ? f.url.replace(/[^/]+$/, f.cover.split("/").pop()) : null);
+const coverUrl = (f) => f.cover_url || null;
 
 export default function MusicStudio({ go, me, reloadMe, params }) {
   const [prompt, setPrompt] = useState(params?.prompt || "");

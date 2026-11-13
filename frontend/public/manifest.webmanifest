@@ -1,0 +1,21 @@
+{
+  "name": "NOVA — ИИ-агент",
+  "short_name": "NOVA",
+  "description": "Голосовой ИИ-агент: картинки, видео, музыка и озвучка",
+  "lang": "ru",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A0A0C",
+  "theme_color": "#0A0A0C",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Агент", "url": "/#/agent", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Фото", "url": "/#/image", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

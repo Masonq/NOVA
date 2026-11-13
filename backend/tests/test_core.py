@@ -9,9 +9,11 @@ A = pytest.mark.asyncio(loop_scope="session")
 BOT = "123:TEST"
 
 
-def init_data(uid=1001, name="Макс", age=0, token=BOT):
+def init_data(uid=1001, name="Макс", age=0, token=BOT, start_param=None):
     d = {"auth_date": str(int(time.time()) - age), "query_id": "q",
          "user": json.dumps({"id": uid, "first_name": name, "username": "max"}, ensure_ascii=False)}
+    if start_param:
+        d["start_param"] = start_param
     chk = "\n".join(f"{k}={v}" for k, v in sorted(d.items()))
     sec = hmac.new(b"WebAppData", token.encode(), hashlib.sha256).digest()
     d["hash"] = hmac.new(sec, chk.encode(), hashlib.sha256).hexdigest()

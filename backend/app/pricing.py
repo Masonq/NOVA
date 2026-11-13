@@ -14,6 +14,8 @@ DEFAULT_PRICE = {
     "tts_min": 2,
     "agent_min": 5,         # voice agent, per minute of speech
     "welcome": 300,         # credits for a new user
+    "ref_friend": 100,      # extra credits for a user who came by a friend's link
+    "ref_bonus": 100,       # credits for the inviter after the friend's first payment
 }
 DEFAULT_PACKS = [
     {"id": "p500", "credits": 500, "bonus": 0, "stars": 400, "usd": "4.99"},

@@ -454,6 +454,52 @@ img.sheet-media { object-fit: contain; background: var(--card); }
 .list li > .switch { flex-shrink: 0; margin-right: 6px; }
 .list li .bar-line { display: block; margin-top: 6px; }
 
+
+/* ---------- login with QR ---------- */
+.login-orb { line-height: 0; margin-bottom: 6px; animation: orb-in .9s var(--spring) backwards; }
+.login p.muted { max-width: 320px; text-align: center; text-wrap: balance; }
+.login.desk { justify-content: center; }
+.qr-card { display: flex; align-items: center; gap: 22px; padding: 18px; border-radius: 24px; background: var(--card); border: 1px solid var(--line); margin: 6px 0; animation: rise .5s .15s var(--ease-out) backwards; }
+.qr { width: 168px; height: 168px; padding: 12px; border-radius: 16px; background: #fff; flex-shrink: 0; }
+.qr svg { width: 100%; height: 100%; display: block; }
+.qr svg path { fill: #0A0A0C; }
+.qr-steps { margin: 0; padding-left: 20px; text-align: left; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--soft); max-width: 220px; }
+.qr-steps li::marker { color: var(--accent); font-weight: 700; }
+
+/* ---------- onboarding ---------- */
+.boot { position: fixed; inset: 0; background: var(--bg); }
+.onb { position: fixed; inset: 0; z-index: 60; background: radial-gradient(120% 70% at 50% 25%, #18122F, var(--bg) 62%); display: flex; flex-direction: column; align-items: center;
+  padding: calc(18px + var(--safe-t)) 24px calc(22px + var(--safe-b)); animation: pg-in .35s ease-out; }
+.onb-skip { align-self: flex-end; height: 36px; }
+.onb-art { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 240px; animation: orb-in .7s var(--spring) backwards; }
+.onb-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: min(300px, 100%); }
+.onb-tiles span { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; aspect-ratio: 1.15; border-radius: 22px; background: var(--card); border: 1px solid var(--line2); color: #A9C8FF; animation: pop .5s var(--spring) backwards; }
+.onb-tiles b { font-size: 14px; color: var(--txt); }
+.onb-gift { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #B38BFF; }
+.onb-gift b { font-size: 64px; font-weight: 800; line-height: 1; color: var(--txt); background: linear-gradient(90deg, #7FB2FF, #D28BFF); -webkit-background-clip: text; background-clip: text; color: transparent; font-variant-numeric: tabular-nums; }
+.onb-gift span { font-size: 15px; color: var(--soft); }
+.onb-txt { text-align: center; max-width: 340px; animation: rise .45s .08s var(--ease-out) backwards; }
+.onb-txt h2 { margin: 0 0 8px; color: var(--txt); font-size: 24px; font-weight: 750; letter-spacing: -.3px; }
+.onb-txt p { margin: 0; font-size: 15px; line-height: 1.5; color: var(--soft); text-wrap: balance; }
+.onb-dots { display: flex; gap: 7px; margin: 22px 0 18px; }
+.onb-dots i { width: 7px; height: 7px; border-radius: 4px; background: #3A3A42; transition: width .3s var(--ease-out), background .3s; }
+.onb-dots i.on { width: 22px; background: var(--txt); }
+.onb .cta.wide { width: 100%; max-width: 420px; height: 56px; }
+
+/* ---------- invite & install ---------- */
+.invite { display: flex; flex-direction: column; gap: 14px; background: linear-gradient(135deg, rgba(10,132,255,.12), rgba(170,90,255,.1)), var(--card); }
+.inv-h { display: flex; align-items: center; gap: 12px; }
+.inv-h .sr-t small { white-space: normal; line-height: 1.4; }
+.inv-ic { width: 42px; height: 42px; border-radius: 13px; display: inline-flex; align-items: center; justify-content: center; background: rgba(170,120,255,.18); color: #C9A8FF; flex-shrink: 0; }
+.inv-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.inv-stats span { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; border-radius: 14px; background: rgba(0,0,0,.22); font-size: 11.5px; color: var(--mut); }
+.inv-stats b { font-size: 18px; font-weight: 700; color: var(--txt); font-variant-numeric: tabular-nums; }
+.invite .cta.wide { height: 50px; }
+.install { padding: 0; background: none; border: none; }
+.install .row-btn { width: 100%; justify-content: flex-start; }
+.install .row-btn > svg:last-child { margin-left: auto; color: var(--mut2); }
+.inst-help { margin: 10px 4px 0; line-height: 1.5; }
+
 /* ---------- motion: page transitions, staggered blocks, pop-ins, press feedback ---------- */
 @keyframes pg-in { from { opacity: 0; } }
 @keyframes from-right { from { opacity: 0; transform: translateX(30px); } }

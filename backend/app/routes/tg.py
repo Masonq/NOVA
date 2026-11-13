@@ -64,7 +64,8 @@ async def webhook(request: Request, x_telegram_bot_api_secret_token: str = Heade
         return {"ok": True}
     if not frm.get("id") or msg.get("chat", {}).get("type") != "private":
         return {"ok": True}
-    u = await upsert_tg_user(db, frm)
+    ref = text.split(" ", 1)[1].strip() if text.startswith("/start ref_") else None
+    u = await upsert_tg_user(db, frm, ref=ref)
     u.can_message = True
     if text.startswith("/start login_"):
         code = text.split("login_", 1)[1].strip()

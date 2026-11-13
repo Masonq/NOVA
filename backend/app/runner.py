@@ -10,7 +10,7 @@ from .config import get_settings
 from .credits import refund
 from .db import Session
 from .models import Job, User, now
-from .storage import abs_path, download, ffmpeg, save_bytes
+from .storage import abs_path, download, ffmpeg, make_thumb, save_bytes
 
 log = logging.getLogger("nova.runner")
 
@@ -83,9 +83,10 @@ async def run_image(job: Job):
         nonlocal done
         data = await ai.image(prompt, p.get("aspect", "1:1"), refs)
         rel = save_bytes(job, f"v{i + 1}.png", data)
+        th = await asyncio.to_thread(make_thumb, rel)
         done += 1
         await _update(job.id, progress=int(10 + 85 * done / n), stage=f"Готово {done} из {n}")
-        return {"path": rel, "type": "image", "w": 0, "h": 0}
+        return {"path": rel, "type": "image", "w": 0, "h": 0, **({"thumb": th} if th else {})}
 
     await _update(job.id, status="running", progress=8, stage="Рисую варианты")
     res = await asyncio.gather(*[one(i) for i in range(n)], return_exceptions=True)
@@ -126,7 +127,8 @@ async def run_video(job: Job):
     files = [{"path": rel, "type": "video"}]
     thumb = rel.rsplit("/", 1)[0] + "/thumb.jpg"
     if await ffmpeg("-i", str(abs_path(rel)), "-frames:v", "1", "-vf", "scale=640:-2", "-q:v", "4", str(abs_path(thumb))):
-        files.append({"path": thumb, "type": "thumb"})
+        th = await asyncio.to_thread(make_thumb, thumb)
+        files.append({"path": thumb, "type": "thumb", **({"thumb": th} if th else {})})
     return files, 0, ""
 
 
@@ -161,6 +163,9 @@ async def run_music(job: Job):
         if img:
             try:
                 f["cover"] = await download(job, f"cover{i + 1}.jpg", img, max_mb=10)
+                th = await asyncio.to_thread(make_thumb, f["cover"], 400)
+                if th:
+                    f["cover_thumb"] = th
             except Exception:
                 pass
         files.append(f)

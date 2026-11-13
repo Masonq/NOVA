@@ -1,24 +1,25 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, auth } from "./api.js";
 import { inTelegram, tg, haptic } from "./tg.js";
 import Icon from "./ui/Icon.jsx";
 import { Toaster } from "./ui/Toast.jsx";
-import Login from "./screens/Login.jsx";
+const Login = lazy(() => import("./screens/Login.jsx"));
 import Home from "./screens/Home.jsx";
-import Chat from "./screens/Chat.jsx";
-import Archive from "./screens/Archive.jsx";
-import Profile from "./screens/Profile.jsx";
-import ImageStudio from "./screens/ImageStudio.jsx";
-import VideoStudio from "./screens/VideoStudio.jsx";
-import MusicStudio from "./screens/MusicStudio.jsx";
-import TtsStudio from "./screens/TtsStudio.jsx";
-import Tasks from "./screens/Tasks.jsx";
-import Feed from "./screens/Feed.jsx";
-import Agent from "./screens/Agent.jsx";
-import Admin from "./screens/Admin.jsx";
+const Chat = lazy(() => import("./screens/Chat.jsx"));
+const Archive = lazy(() => import("./screens/Archive.jsx"));
+const Profile = lazy(() => import("./screens/Profile.jsx"));
+const ImageStudio = lazy(() => import("./screens/ImageStudio.jsx"));
+const VideoStudio = lazy(() => import("./screens/VideoStudio.jsx"));
+const MusicStudio = lazy(() => import("./screens/MusicStudio.jsx"));
+const TtsStudio = lazy(() => import("./screens/TtsStudio.jsx"));
+const Tasks = lazy(() => import("./screens/Tasks.jsx"));
+const Feed = lazy(() => import("./screens/Feed.jsx"));
+const Agent = lazy(() => import("./screens/Agent.jsx"));
+const Admin = lazy(() => import("./screens/Admin.jsx"));
 import TabBar from "./ui/TabBar.jsx";
 import { loadPrices } from "./jobs.js";
 import Topup from "./ui/Topup.jsx";
+import Onboarding from "./ui/Onboarding.jsx";
 import { toast } from "./ui/Toast.jsx";
 
 const parse = () => (location.hash.replace(/^#\/?/, "") || "home").split("?")[0];
@@ -28,6 +29,7 @@ export default function App() {
   const [ready, setReady] = useState(false);
   const [authed, setAuthed] = useState(!!auth.get());
   const [route, setRoute] = useState(parse());
+  const [onb, setOnb] = useState(() => !localStorage.getItem("nova_onb"));
   const prevRoute = useRef(route);
   const DEPTH = { admin: 1, home: 0, archive: 0, profile: 0, image: 1, video: 1, music: 1, tts: 1, tasks: 1, chat: 1, agent: 1, feed: 2 };
   const dir = useMemo(() => {
@@ -71,7 +73,8 @@ export default function App() {
 
   if (!ready) return <div className="boot" aria-label="Загрузка" />;
   if (fatal) return <main className="login"><h1>NOVA</h1><p className="err">{fatal}</p><button className="cta" onClick={() => location.reload()}>Повторить</button></main>;
-  if (!authed) return <><Login onDone={() => setAuthed(true)} /><Toaster /></>;
+  if (authed && onb && !me) return <div className="boot" aria-busy="true" />;   // no flash of home before the first-run intro
+  if (!authed) return <><Suspense fallback={null}><Login onDone={() => setAuthed(true)} /></Suspense><Toaster /></>;
 
   const sp = { go, me, reloadMe: loadMe, params };
   const STUDIOS = { image: ImageStudio, video: VideoStudio, music: MusicStudio, tts: TtsStudio };
@@ -87,10 +90,11 @@ export default function App() {
     : <Home go={go} me={me} />;
   return (
     <div className={"app r-" + route}>
-      <div key={route} className={"page " + dir}>{screen}</div>
+      <div key={route} className={"page " + dir}><Suspense fallback={<div className="screen"><div className="skeleton" /></div>}>{screen}</Suspense></div>
       {!["chat", "image", "video", "music", "tts", "feed", "agent", "admin"].includes(route) && (
         <TabBar tabs={TABS} active={TABS.find((t) => t.k === route) ? route : "home"} onSelect={(k) => go(k)}
           side={{ orb: true, label: "Голосовой агент", accent: true, onClick: () => go("agent") }} />)}
+      {onb && me && me.jobs === 0 && <Onboarding balance={me.balance} onDone={() => setOnb(false)} />}
       <Topup me={me} reloadMe={loadMe} />
       <Toaster />
     </div>);

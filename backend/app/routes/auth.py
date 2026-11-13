@@ -28,7 +28,7 @@ async def webapp_login(body: WebAppIn, db: AsyncSession = Depends(get_db)):
         tg = verify_init_data(body.initData, get_settings().bot_token)
     except Exception:
         raise HTTPException(401, "Не удалось подтвердить вход через Telegram")
-    u = await upsert_tg_user(db, tg)
+    u = await upsert_tg_user(db, tg, ref=tg.get("_start_param"))
     if u.blocked:
         raise HTTPException(403, "Аккаунт заблокирован")
     return _out(u)

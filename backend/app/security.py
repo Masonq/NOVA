@@ -35,6 +35,7 @@ def verify_init_data(init_data: str, bot_token: str, max_age: int = INIT_DATA_MA
     user = json.loads(pairs.get("user", "{}"))
     if not user.get("id"):
         raise ValueError("no user")
+    user["_start_param"] = pairs.get("start_param") or ""   # e.g. ref_12 when opened by a friend's link
     return user
 
 
@@ -49,7 +50,7 @@ def read_token(token: str) -> int:
     return int(data["uid"])
 
 
-async def upsert_tg_user(db: AsyncSession, tg: dict) -> User:
+async def upsert_tg_user(db: AsyncSession, tg: dict, ref: str | None = None) -> User:
     """Create or refresh a user from Telegram data. New users get the welcome pack once."""
     from .credits import grant
     s = get_settings()
@@ -67,6 +68,11 @@ async def upsert_tg_user(db: AsyncSession, tg: dict) -> User:
         from .pricing import PRICE, refresh
         await refresh(db)
         await grant(db, u, int(PRICE["welcome"]), "welcome", "Приветственный пакет")
+        rid = int(ref[4:]) if ref and ref.startswith("ref_") and ref[4:].isdigit() else None
+        if rid and rid != u.id and await db.get(User, rid) is not None:
+            u.referrer_id = rid
+            if PRICE.get("ref_friend"):
+                await grant(db, u, int(PRICE["ref_friend"]), "promo", "Бонус за приглашение от друга")
     await db.commit()
     await db.refresh(u)
     return u

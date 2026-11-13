@@ -1,3 +1,4 @@
+import secrets
 from datetime import datetime, timezone
 
 from sqlalchemy import UniqueConstraint, BigInteger, Boolean, DateTime, ForeignKey, Index, Integer, String, Text, JSON
@@ -21,6 +22,8 @@ class User(Base):
     blocked: Mapped[bool] = mapped_column(Boolean, default=False)
     can_message: Mapped[bool] = mapped_column(Boolean, default=True)
     agent_voice: Mapped[str] = mapped_column(String(32), default="Sulafat", server_default="Sulafat")
+    referrer_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    ref_rewarded: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     last_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
@@ -46,6 +49,8 @@ class Job(Base):
     kind: Mapped[str] = mapped_column(String(16))
     status: Mapped[str] = mapped_column(String(16), default="queued")  # review|queued|running|done|failed|cancelled|rejected|expired
     moderation: Mapped[str] = mapped_column(String(300), default="", server_default="")
+    dir_token: Mapped[str] = mapped_column(String(24), default=lambda: secrets.token_hex(8), server_default="")   # unguessable folder
+    share_token: Mapped[str | None] = mapped_column(String(24), nullable=True, unique=True, index=True)
     prompt: Mapped[str] = mapped_column(Text, default="")
     params: Mapped[dict] = mapped_column(JSON, default=dict)
     model: Mapped[str] = mapped_column(String(64), default="")

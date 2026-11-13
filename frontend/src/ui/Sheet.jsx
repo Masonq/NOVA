@@ -10,9 +10,15 @@ export function saveFile(url, name) {
   try { if (tg?.downloadFile) { tg.downloadFile({ url, file_name: name }); return; } } catch {}
   const a = document.createElement("a"); a.href = url; a.download = name; a.target = "_blank"; a.rel = "noopener"; a.click();
 }
-export async function shareFile(url) {
-  try { if (navigator.share) { await navigator.share({ url }); return; } } catch (e) { if (e?.name === "AbortError") return; }
-  try { await navigator.clipboard.writeText(url); toast("Ссылка скопирована"); } catch { toast("Не удалось поделиться"); }
+/** Shares a public page of the work (rich preview in Telegram) instead of a raw file link. */
+export async function shareJob(job) {
+  let r;
+  try { r = await api(`/api/jobs/${job.id}/share`, { method: "POST" }); } catch (e) { toast(e.message, "error"); return; }
+  if (tg?.openTelegramLink && tg.initData) {
+    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(r.url)}&text=${encodeURIComponent(r.text)}`); return;
+  }
+  try { if (navigator.share) { await navigator.share({ url: r.url, text: r.text }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  try { await navigator.clipboard.writeText(r.url); toast("Ссылка скопирована"); } catch { toast(r.url); }
 }
 
 export default function Sheet({ open, onClose, children, title }) {
@@ -58,9 +64,9 @@ export function JobSheet({ job, file, onClose, go, onChange }) {
       </div>
       {f && job.kind === "image" && <img className="sheet-media" src={f.url} alt={job.prompt} />}
       {f && job.kind === "video" && <video className="sheet-media" src={f.url} poster={thumbOf(job) || undefined} controls playsInline preload="metadata" />}
-      {f && (job.kind === "music" || job.kind === "tts") && <Player src={f.url} title={f.title || job.prompt.slice(0, 40)} sub={job.kind === "tts" ? job.params?.voice : job.params?.genre} cover={f.cover ? f.url.replace(/[^/]+$/, f.cover.split("/").pop()) : null} />}
+      {f && (job.kind === "music" || job.kind === "tts") && <Player src={f.url} title={f.title || job.prompt.slice(0, 40)} sub={job.kind === "tts" ? job.params?.voice : job.params?.genre} cover={f.cover_url || null} />}
       {f && <Row ic="download" t="Скачать" on={() => saveFile(f.url, name)} />}
-      {f && <Row ic="share" t="Поделиться" on={() => shareFile(f.url)} />}
+      {f && <Row ic="share" t="Поделиться" sub="страница с превью для Telegram и соцсетей" on={() => shareJob(job)} />}
       {job.kind === "image" && f && <Row ic="video" t="Оживить в видео" sub="картинка станет первым кадром" cls="accent" on={() => { onClose(); go("video", { image: f.url }); }} />}
       {job.kind !== "tts" && <Row ic="spark" t="Сделать похожее" on={() => { onClose(); go(job.kind, { prompt: job.prompt }); }} />}
       <Row ic="trash" t="Удалить" cls="danger" on={del} />

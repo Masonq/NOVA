@@ -40,8 +40,18 @@ async def credit(db: AsyncSession, pay_id: int, external_id: str = "") -> Paymen
     pk = pack_by_id(p.pack) or {}
     price = f"{p.amount} ⭐" if p.currency == "XTR" else f"${p.amount}"
     await grant(db, u, p.credits, "purchase", f"Пополнение: {p.credits} кредитов ({price})")
+    inviter = None
+    if u.referrer_id and not u.ref_rewarded:          # the friend paid for the first time: reward the inviter once
+        from .pricing import PRICE
+        u.ref_rewarded = True
+        inviter = await db.get(User, u.referrer_id)
+        if inviter and PRICE.get("ref_bonus"):
+            await grant(db, inviter, int(PRICE["ref_bonus"]), "promo", f"Друг {u.first_name or 'по вашей ссылке'} сделал первую покупку")
     await db.commit()
     log.info("payment %s paid: user %s +%s", p.id, p.user_id, p.credits)
+    if inviter and inviter.can_message:
+        from .pricing import PRICE
+        await bot.send(inviter.tg_id, f"🎁 Ваш друг {u.first_name or ''} пополнил баланс — вам +{int(PRICE['ref_bonus'])} кредитов.", bot.open_app_markup("Открыть NOVA"))
     if u.can_message:
         bonus = f" (из них {pk.get('bonus')} бонусом)" if pk.get("bonus") else ""
         await bot.send(u.tg_id, f"✅ Оплата прошла: +{p.credits} кредитов{bonus}.\nБаланс: {u.balance}.", bot.open_app_markup("Открыть NOVA"))

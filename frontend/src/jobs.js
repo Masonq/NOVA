@@ -56,6 +56,7 @@ export async function startJob(kind, prompt, params) {
 
 export function thumbOf(j) {
   const f = j.files || [];
-  return f.find((x) => x.type === "thumb")?.url || f.find((x) => x.type === "image")?.url
-    || (f[0]?.cover ? f[0].url.replace(/[^/]+$/, f[0].cover.split("/").pop()) : null);
+  const im = f.find((x) => x.type === "thumb") || f.find((x) => x.type === "image");
+  if (im) return im.thumb_url || im.url;
+  return f.find((x) => x.cover_url)?.cover_url || null;
 }

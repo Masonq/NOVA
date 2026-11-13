@@ -26,5 +26,11 @@ async def init_db():
         for stmt in ("ALTER TABLE users ADD COLUMN IF NOT EXISTS agent_voice VARCHAR(32) NOT NULL DEFAULT 'Sulafat'",
                      "ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS channel VARCHAR(8) NOT NULL DEFAULT 'chat'",
                      "CREATE INDEX IF NOT EXISTS ix_chat_messages_channel ON chat_messages (channel)",
-                     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS moderation VARCHAR(300) NOT NULL DEFAULT ''"):
+                     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS moderation VARCHAR(300) NOT NULL DEFAULT ''",
+                     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS dir_token VARCHAR(24) NOT NULL DEFAULT ''",
+                     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS share_token VARCHAR(24)",
+                     "CREATE UNIQUE INDEX IF NOT EXISTS ix_jobs_share_token ON jobs (share_token)",
+                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS referrer_id INTEGER",
+                     "CREATE INDEX IF NOT EXISTS ix_users_referrer_id ON users (referrer_id)",
+                     "ALTER TABLE users ADD COLUMN IF NOT EXISTS ref_rewarded BOOLEAN NOT NULL DEFAULT false"):
             await conn.execute(text(stmt))

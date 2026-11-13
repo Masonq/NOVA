@@ -3,7 +3,7 @@ import Icon from "../ui/Icon.jsx";
 import { openTopup } from "../ui/Topup.jsx";
 import { toast } from "../ui/Toast.jsx";
 import { api, auth } from "../api.js";
-import { inTelegram, haptic } from "../tg.js";
+import { inTelegram, haptic, tg } from "../tg.js";
 
 const fmt = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 export default function Profile({ me, reload, go }) {
@@ -27,6 +27,8 @@ export default function Profile({ me, reload, go }) {
         <button className="cta small" onClick={() => openTopup()}>Пополнить</button>
       </section>
       <PromoBox reloadMe={reload} onDone={() => api("/api/me/ledger").then(setLed).catch(() => {})} />
+      <Invite />
+      <Install />
       {me?.is_admin && (
         <button className="row-btn adm-entry" onClick={() => go("admin")}><Icon n="spark" />Админка<Icon n="chevron" s={15} /></button>)}
       <section aria-labelledby="mem-h">
@@ -66,4 +68,43 @@ function PromoBox({ reloadMe, onDone }) {
         placeholder="Промокод" aria-label="Промокод" maxLength={32} autoCapitalize="characters" />
       <button className="row-btn" disabled={busy || code.trim().length < 3} onClick={apply}>{busy ? "…" : "Применить"}</button>
     </div>);
+}
+
+
+function Invite() {
+  const [r, setR] = useState(null);
+  useEffect(() => { api("/api/me/referral").then(setR).catch(() => {}); }, []);
+  if (!r) return null;
+  const text = `Попробуй NOVA — голосовой ИИ-агент: картинки, видео и музыка одной фразой. По моей ссылке +${r.friend_bonus} кредитов`;
+  const share = async () => {
+    haptic("light");
+    if (tg?.openTelegramLink && tg.initData) { tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(r.link)}&text=${encodeURIComponent(text)}`); return; }
+    try { if (navigator.share) { await navigator.share({ url: r.link, text }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+    try { await navigator.clipboard.writeText(r.link); toast("Ссылка скопирована"); } catch { toast(r.link); }
+  };
+  return (
+    <section className="card invite">
+      <div className="inv-h"><span className="inv-ic"><Icon n="gift" s={20} /></span>
+        <span className="sr-t"><b>Пригласите друга</b><small>Другу +{r.friend_bonus} кредитов сразу, вам +{r.bonus} после его первой покупки</small></span></div>
+      <div className="inv-stats"><span><b>{r.invited}</b>пришли</span><span><b>{r.paid}</b>купили</span><span><b>+{r.earned}</b>заработано</span></div>
+      <button className="cta wide" onClick={share}>Поделиться ссылкой</button>
+    </section>);
+}
+
+function Install() {
+  const standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const [prompt, setPrompt] = useState(() => window.__installPrompt || null);
+  const [help, setHelp] = useState(false);
+  useEffect(() => { const f = () => setPrompt(window.__installPrompt); window.addEventListener("nova:installable", f); return () => window.removeEventListener("nova:installable", f); }, []);
+  if (inTelegram || standalone || (!prompt && !ios)) return null;
+  const go = async () => {
+    if (prompt) { prompt.prompt(); const r = await prompt.userChoice.catch(() => null); if (r?.outcome === "accepted") { window.__installPrompt = null; setPrompt(null); } return; }
+    setHelp((h) => !h);
+  };
+  return (
+    <section className="card install">
+      <button className="row-btn" onClick={go}><Icon n="download" />Установить NOVA на телефон<Icon n="chevron" s={15} /></button>
+      {help && <p className="muted small inst-help">В Safari нажмите <b>«Поделиться»</b> внизу экрана, затем <b>«На экран „Домой“»</b>. NOVA откроется как приложение — без адресной строки.</p>}
+    </section>);
 }
