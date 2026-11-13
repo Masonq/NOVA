@@ -1,6 +1,7 @@
 import { useMemo, useRef } from "react";
 import Icon from "./Icon.jsx";
 import { haptic } from "../tg.js";
+import { Motif, FeatureToggle } from "./Creative.jsx";
 
 /* ---------- genres: cover tiles ---------- */
 export const GENRE_ART = {
@@ -15,23 +16,6 @@ export const GENRE_ART = {
   "Кино":        { a: "#9AA8FF", b: "#141B45", m: "film" },
   "Фолк":        { a: "#A8D672", b: "#1E3511", m: "leaf" },
 };
-
-function Motif({ m }) {
-  const c = { fill: "none", stroke: "rgba(255,255,255,.85)", strokeWidth: 2.2, strokeLinecap: "round", strokeLinejoin: "round" };
-  switch (m) {
-    case "wave": return <path {...c} d="M4 30c6-14 10 14 16 0s10-22 16 0 10 14 16 0 6-10 8-6" />;
-    case "rings": return <g {...c}><circle cx="32" cy="30" r="8" /><circle cx="32" cy="30" r="16" opacity=".6" /><circle cx="32" cy="30" r="24" opacity=".3" /></g>;
-    case "vinyl": return <g {...c}><circle cx="32" cy="30" r="20" /><circle cx="32" cy="30" r="13" opacity=".5" /><circle cx="32" cy="30" r="4" fill="rgba(255,255,255,.85)" /></g>;
-    case "bars": return <g {...c} strokeWidth="5">{[14, 24, 34, 44, 54].map((x, i) => <path key={x} d={`M${x} 46V${[30, 16, 24, 10, 28][i]}`} />)}</g>;
-    case "grid": return <g {...c} strokeWidth="1.6" opacity=".9">{[12, 24, 36, 48].map((v) => <path key={v} d={`M${v} 8v44M8 ${v - 2}h48`} />)}<circle cx="36" cy="22" r="4" fill="rgba(255,255,255,.9)" /></g>;
-    case "bolt": return <path {...c} strokeWidth="2.6" d="M36 6L18 34h14l-4 20 20-30H34l2-18z" />;
-    case "mist": return <g {...c} opacity=".9"><path d="M6 22c10-6 18 6 28 0s18-6 24 0" /><path d="M6 34c10-6 18 6 28 0s18-6 24 0" opacity=".6" /><path d="M6 46c10-6 18 6 28 0s18-6 24 0" opacity=".35" /></g>;
-    case "notes": return <g {...c}><path d="M22 44V16l24-6v28" /><circle cx="17" cy="44" r="5" /><circle cx="41" cy="38" r="5" /></g>;
-    case "film": return <g {...c}><rect x="10" y="12" width="44" height="36" rx="4" /><path d="M10 22h44M10 38h44M20 12v10M32 12v10M44 12v10M20 38v10M32 38v10M44 38v10" opacity=".6" /></g>;
-    case "leaf": return <g {...c}><path d="M14 46C14 24 30 12 52 12c0 22-14 36-38 34z" /><path d="M14 46L40 22" opacity=".6" /></g>;
-    default: return null;
-  }
-}
 
 export function GenreTiles({ value, onChange, max = 3 }) {
   const toggle = (g) => {
@@ -178,10 +162,6 @@ export function AvoidField({ value, onChange, vocal }) {
 
 /* ---------- Эксперимент ---------- */
 export function WildToggle({ on, onChange }) {
-  return (
-    <button className={"wild" + (on ? " on" : "")} role="switch" aria-checked={on} onClick={() => { haptic(on ? "select" : "medium"); onChange(!on); }}>
-      <span className="wild-ic" aria-hidden="true"><Icon n="spark" s={18} w={2} />{on && <><i className="sp s1" /><i className="sp s2" /><i className="sp s3" /></>}</span>
-      <span className="sr-t"><span>Эксперимент</span><small>{on ? "V6 Wild: смелее и неожиданнее" : "необычное звучание, модель V6 Wild"}</small></span>
-      <span className={"switch" + (on ? " on" : "")} aria-hidden="true"><i /></span>
-    </button>);
+  return <FeatureToggle on={on} onChange={onChange} title="Эксперимент" icon="spark" tone="wild"
+    sub="необычное звучание, модель V6 Wild" subOn="V6 Wild: смелее и неожиданнее" />;
 }

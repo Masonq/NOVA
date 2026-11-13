@@ -1,12 +1,27 @@
 import { useState } from "react";
-import { StudioTop, Opts, PromptBox, Dock, Progress, Toggle } from "../ui/Studio.jsx";
+import { StudioTop, PromptBox, Dock, Progress } from "../ui/Studio.jsx";
+import { Tiles, AspectPicker, FeatureToggle, Glow, Ideas } from "../ui/Creative.jsx";
 import { JobSheet } from "../ui/Sheet.jsx";
 import { useStudio } from "../studio.js";
 import { priceOf, PRICE, cardText } from "../jobs.js";
 import Carousel from "../ui/Carousel.jsx";
 
-const STYLES = ["Фото", "Арт", "Логотип", "3D", "Аниме"];
-const ASPECTS = [{ v: "1:1", t: "1:1" }, { v: "3:4", t: "3:4" }, { v: "9:16", t: "9:16" }, { v: "16:9", t: "16:9" }];
+const STYLES = [
+  { v: "Фото", t: "Фото", a: "#4FA3FF", b: "#0B2342", m: "aperture" },
+  { v: "Арт", t: "Арт", a: "#FF7A59", b: "#3B1020", m: "brush" },
+  { v: "Логотип", t: "Логотип", a: "#F5C343", b: "#2B2206", m: "hex" },
+  { v: "3D", t: "3D", a: "#7C6CFF", b: "#18113F", m: "cube" },
+  { v: "Аниме", t: "Аниме", a: "#FF6FB5", b: "#3A0F2E", m: "sparkle" },
+];
+const ASPECTS = [{ v: "1:1", t: "Квадрат", use: "аватар, пост" }, { v: "3:4", t: "Портрет", use: "пост в ленту" },
+  { v: "9:16", t: "Сторис", use: "сторис, обои на телефон" }, { v: "16:9", t: "Экран", use: "обложка, обои на компьютер" }];
+const IDEAS = {
+  "Фото": ["Кофейня на рассвете, мягкий свет", "Портрет в неоновом дожде", "Белград с высоты на закате"],
+  "Арт": ["Кит летит над ночным городом, акварель", "Лиса в осеннем лесу, масло", "Галактика в стеклянной банке"],
+  "Логотип": ["Логотип кофейни «Зерно», минимализм", "Значок фитнес-приложения", "Монограмма N, золото на чёрном"],
+  "3D": ["Милый робот-курьер с посылкой", "Парящий остров с водопадом", "Домик из конфет, мягкий свет"],
+  "Аниме": ["Девушка на крыше под звёздами", "Самурай под сакурой", "Уютная комната в дождь"],
+};
 const ratio = (a) => { const [w, h] = a.split(":").map(Number); return `${w} / ${h}`; };
 
 export default function ImageStudio({ go, me, reloadMe, params }) {
@@ -23,15 +38,18 @@ export default function ImageStudio({ go, me, reloadMe, params }) {
   const first = (j) => (j?.files || []).find((f) => f.type === "image");
   const gallery = [cur, ...s.recent.filter((j) => j.id !== cur?.id)].filter((j) => first(j)).slice(0, 12).map((j) => ({ j, f: first(j) }));
   return (
-    <main className="screen studio">
+    <main className="screen studio mus">
+      <Glow color={STYLES.find((x) => x.v === style)?.a} />
       <StudioTop title="Фото" me={me} go={go} />
       <PromptBox value={prompt} onChange={setPrompt} max={1200} placeholder="Опишите картинку: что, где, какое настроение"
         attach={ref} onAttach={setRef} attachLabel="Своё фото" />
-      {ref && <p className="muted small pad">Нейросеть изменит ваше фото по описанию</p>}
-      <Opts label="Стиль" value={style} options={STYLES} onChange={setStyle}
+      {ref ? <p className="muted small pad">Нейросеть изменит ваше фото по описанию</p>
+        : !prompt.trim() && <Ideas items={IDEAS[style]} onPick={setPrompt} />}
+      <Tiles label="Стиль" items={STYLES} value={style} onChange={setStyle} grid
         hint={hq ? "GPT Image 2.6 · high" : ref ? "Nano Banana 2.1 · 2K" : style === "Логотип" ? "GPT Image 2.6" : "Seedream 5.5 · 2K"} />
-      <Opts label="Формат" value={aspect} options={ASPECTS} onChange={setAspect} />
-      <Toggle label="Высокое качество" sub={`точнее текст и детали · +${PRICE.image_hq} кр.`} on={hq} onChange={pickHq} />
+      <AspectPicker value={aspect} onChange={setAspect} items={ASPECTS} />
+      <FeatureToggle on={hq} onChange={pickHq} tone="gold" icon="spark" title="Высокое качество"
+        sub={`точнее текст и детали · +${PRICE.image_hq} кр.`} subOn={`GPT Image 2.6 high · +${PRICE.image_hq} кр.`} />
 
       {s.active ? (
         <section className="reveal" style={{ aspectRatio: ratio(s.active.params?.aspect || aspect) }} aria-label="Идёт генерация">

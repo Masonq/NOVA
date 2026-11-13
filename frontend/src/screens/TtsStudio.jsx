@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { StudioTop, Opts, PromptBox, Dock, Progress } from "../ui/Studio.jsx";
+import { StudioTop, PromptBox, Dock, Progress } from "../ui/Studio.jsx";
+import { Tiles, Glow } from "../ui/Creative.jsx";
 import { JobSheet } from "../ui/Sheet.jsx";
 import Player from "../ui/Player.jsx";
 import Icon from "../ui/Icon.jsx";
@@ -9,6 +10,12 @@ import { api } from "../api.js";
 import { toast } from "../ui/Toast.jsx";
 
 let sampleAudio = null;
+const TONES = [
+  { v: "Спокойно", t: "Спокойно", a: "#4FD1C5", b: "#0B3330", m: "calm" },
+  { v: "Бодро", t: "Бодро", a: "#FF8A3D", b: "#3D1A05", m: "bolt" },
+  { v: "Диктор", t: "Диктор", a: "#4FA3FF", b: "#0B2342", m: "mic" },
+  { v: "Шёпот", t: "Шёпот", a: "#B18CFF", b: "#211340", m: "whisper" },
+];
 
 export default function TtsStudio({ go, me, reloadMe, params }) {
   const [text, setText] = useState(params?.prompt || "");
@@ -35,7 +42,8 @@ export default function TtsStudio({ go, me, reloadMe, params }) {
   };
   const list = s.current ? [s.current, ...s.recent.filter((j) => j.id !== s.current.id)] : s.recent;
   return (
-    <main className="screen studio">
+    <main className="screen studio mus">
+      <Glow color={TONES.find((x) => x.v === tone)?.a} />
       <StudioTop title="Озвучка" me={me} go={go} />
       <PromptBox value={text} onChange={setText} max={5000} placeholder="Вставьте текст — прочитаю его живым голосом" />
       {sections.length === 0 ? (
@@ -48,7 +56,7 @@ export default function TtsStudio({ go, me, reloadMe, params }) {
       {needs.has("male") && <VoiceGrid short title="Мужской голос" list={voices.filter((v) => v.name.includes("мужской"))} value={male} onPick={setMale} playing={playing} sample={sample} />}
       {needs.has("female") && <VoiceGrid short title="Женский голос" list={voices.filter((v) => v.name.includes("женский"))} value={female} onPick={setFemale} playing={playing} sample={sample} />}
       {(sections.length === 0 || needs.has("")) && <VoiceGrid title={sections.length ? "Голос для частей без пометки" : "Голос"} list={voices} value={voice} onPick={setVoice} playing={playing} sample={sample} hint="нажмите ▶, чтобы послушать" />}
-      <Opts label="Интонация" value={tone} options={["Спокойно", "Бодро", "Диктор", "Шёпот"]} onChange={setTone} />
+      <Tiles label="Интонация" items={TONES} value={tone} onChange={setTone} grid />
       {s.active && <section className="card render"><Progress job={s.active} /></section>}
       {list.length > 0 && (
         <section className="tracks" aria-label="Озвучки">
@@ -64,7 +72,7 @@ export default function TtsStudio({ go, me, reloadMe, params }) {
 
 
 function VoiceGrid({ title, list, value, onPick, playing, sample, hint, short }) {
-  const label = (n) => { const t = short ? n.replace(/\s*(мужской|женский)$/, "") : n; return t[0].toUpperCase() + t.slice(1); };
+  const label = (n) => { const t = n.replace(/\s*(мужской|женский)$/, ""); return t[0].toUpperCase() + t.slice(1); };   // the avatar colour shows the gender
   return (
     <div className="opts" role="group" aria-label={title}>
       <div className="opts-h"><span>{title}</span>{hint && <small>{hint}</small>}</div>
@@ -72,9 +80,10 @@ function VoiceGrid({ title, list, value, onPick, playing, sample, hint, short })
         {list.map((v) => (
           <div key={v.id} className={"voice" + (value === v.id ? " on" : "")}>
             <button className="v-pick" aria-pressed={value === v.id} onClick={() => onPick(v.id)}>
-              <b>{label(v.name)}</b><small>{v.id}</small></button>
-            <button className="v-play" aria-label={`Послушать: ${v.name}`} onClick={() => sample(v.id)}>
-              {playing === v.id ? <Icon n="pause" s={13} /> : <Icon n="play" s={13} />}</button>
+              <span className={"v-av " + (v.name.includes("мужской") ? "m" : "f")} aria-hidden="true">{label(v.name)[0]}</span>
+              <span className="v-tx"><b>{label(v.name)}</b><small>{v.id}</small></span></button>
+            <button className={"v-play" + (playing === v.id ? " on" : "")} aria-label={`Послушать: ${v.name}`} onClick={() => sample(v.id)}>
+              {playing === v.id ? <span className="eq sm"><i /><i /><i /></span> : <Icon n="play" s={13} />}</button>
           </div>))}
       </div>
     </div>);

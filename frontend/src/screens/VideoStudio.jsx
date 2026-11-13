@@ -1,13 +1,18 @@
 import { useState } from "react";
-import { StudioTop, Opts, PromptBox, Dock, Progress, Toggle } from "../ui/Studio.jsx";
+import { StudioTop, PromptBox, Dock, Progress } from "../ui/Studio.jsx";
+import { AspectPicker, CardChoice, FeatureToggle, Glow, Ideas } from "../ui/Creative.jsx";
 import { JobSheet } from "../ui/Sheet.jsx";
 import { useStudio } from "../studio.js";
-import { priceOf, thumbOf } from "../jobs.js";
+import { priceOf, thumbOf, PRICE } from "../jobs.js";
 
 const STEPS = [
   { t: "Сценарий", match: ["Сценарий"] }, { t: "Очередь", match: ["В очереди"] },
   { t: "Кадры", match: ["Рисую кадры"] }, { t: "Сборка", match: ["Сборка", "Сохраняю", "Готово"] },
 ];
+
+const ASPECTS = [{ v: "9:16", t: "Вертикаль", use: "рилс, тикток, сторис" }, { v: "16:9", t: "Горизонт", use: "YouTube, экран" }, { v: "1:1", t: "Квадрат", use: "пост" }];
+const IDEAS = ["Камера пролетает над ночным городом", "Кот в очках читает газету в кафе", "Волны разбиваются о скалы, слоу-мо"];
+const Strip = ({ n }) => <span className="strip">{Array.from({ length: n }, (_, i) => <i key={i} />)}</span>;
 
 export default function VideoStudio({ go, me, reloadMe, params }) {
   const [prompt, setPrompt] = useState(params?.prompt || "");
@@ -22,15 +27,21 @@ export default function VideoStudio({ go, me, reloadMe, params }) {
   const cur = s.current;
   const vid = cur?.files?.find((f) => f.type === "video");
   return (
-    <main className="screen studio">
+    <main className="screen studio mus">
+      <Glow color={sound ? "#EC4899" : quality === "1080p" ? "#F5C343" : "#6E7BFF"} />
       <StudioTop title="Видео" me={me} go={go} />
       <PromptBox value={prompt} onChange={setPrompt} max={1500} placeholder="Что происходит в кадре: сцена, движение камеры, свет"
         attach={image} onAttach={setImage} attachLabel="Оживить фото" />
-      {image && <p className="muted small pad">Фото станет первым кадром, формат возьмётся из него</p>}
-      <Opts label="Длительность" value={duration} options={[{ v: 5, t: "5 с" }, { v: 10, t: "10 с" }, { v: 15, t: "15 с" }]} onChange={setDuration} />
-      <Opts label="Качество" value={quality} options={[{ v: "720p", t: "720p" }, { v: "1080p", t: "1080p" }]} onChange={setQuality} />
-      {!image && <Opts label="Формат" value={aspect} options={[{ v: "9:16", t: "9:16" }, { v: "16:9", t: "16:9" }, { v: "1:1", t: "1:1" }]} onChange={setAspect} />}
-      <Toggle label="Звук" sub="речь, шумы и атмосфера" on={sound} onChange={setSound} />
+      {image ? <p className="muted small pad">Фото станет первым кадром, формат возьмётся из него</p>
+        : !prompt.trim() && <Ideas items={IDEAS} onPick={setPrompt} />}
+      <CardChoice label="Длительность" hint="цена за ролик" value={duration} onChange={setDuration}
+        items={[5, 10, 15].map((d) => ({ v: d, t: `${d} секунд`, sub: `✦ ${priceOf("video", { ...p, duration: d })}`, vis: <Strip n={(d / 5) * 2} /> }))} />
+      <CardChoice label="Качество" value={quality} onChange={setQuality}
+        items={[{ v: "720p", t: "HD", sub: "720p · быстрее", vis: <span className="q-badge">HD</span> },
+                { v: "1080p", t: "Full HD", sub: "1080p · чётче", vis: <span className="q-badge gold">FHD</span> }]} />
+      {!image && <AspectPicker value={aspect} onChange={setAspect} items={ASPECTS} />}
+      <FeatureToggle on={sound} onChange={setSound} tone="sound" icon="wave" title="Звук"
+        sub="речь, шумы и атмосфера" subOn={`речь, шумы и атмосфера · цена ×${PRICE.video_sound_k}`} />
 
       {s.active ? (
         <section className="card render" aria-label="Идёт генерация">
