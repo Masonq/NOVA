@@ -107,13 +107,13 @@ export default function App() {
   const Studio = STUDIOS[route];
   const screen = Studio ? <Studio key={route + JSON.stringify(params || {})} {...sp} />
     : route === "admin" && me?.is_admin ? <Admin go={go} params={params} />
-    : route === "agent" ? <Agent go={go} me={me} reloadMe={loadMe} />
+    : route === "agent" ? <Agent go={go} me={me} reloadMe={loadMe} params={params} />
     : route === "tasks" ? <Tasks go={go} />
     : route === "feed" ? <Feed go={go} />
     : route === "chat" ? <Chat go={go} params={params} />
     : route === "archive" ? <Archive go={go} params={params} />
     : route === "profile" ? <Profile me={me} reload={loadMe} go={go} />
-    : <Home go={go} me={me} />;
+    : <Home go={go} me={me} reloadMe={loadMe} />;
   return (
     <div className={"app r-" + route}>
       <div key={route} className={"page " + dir}><Suspense fallback={<div className="screen"><div className="skeleton" /></div>}>{screen}</Suspense></div>

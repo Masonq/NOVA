@@ -42,7 +42,7 @@ const SUGGEST = [
   { t: "Фон для видео", go: "music", p: { prompt: "Спокойный фон для видео о путешествиях" } },
 ];
 
-export default function Home({ go, me }) {
+export default function Home({ go, me, reloadMe }) {
   const [text, setText] = useState("");
   const [jobs, setJobs] = useState(null);
   const [sheet, setSheet] = useState(null);
@@ -79,7 +79,7 @@ export default function Home({ go, me }) {
           <span className="isl-bar" aria-hidden="true"><i style={{ width: `${a0.progress}%` }} /></span>
         </button>)}
       <Greeting text={g} />
-      <Composer value={text} onChange={setText} onSend={(t) => go("chat", { draft: t })} />
+      <Composer value={text} onChange={setText} attach onBalance={() => reloadMe?.()} onSend={(t, image) => { setText(""); go("agent", { draft: t, image }); }} />
       <div className="chips" role="list">
         {SUGGEST.map((x, i) => <button key={x.t} role="listitem" className="chip ghost" onClick={() => { haptic("select"); go(x.go, x.p); }}>
           {i === 0 && <Icon n="spark" s={13} w={2} />}{x.t}</button>)}

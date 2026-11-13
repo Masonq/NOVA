@@ -117,3 +117,31 @@ export class Voice {
     this.ctx?.close().catch(() => {});
   }
 }
+
+/** Tap-to-start / tap-to-stop dictation for the composer: raw mic → WAV 16 kHz (max 2 min), plus a live level. */
+export class Dictation {
+  async start(onLevel) {
+    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    await this.ctx.resume();
+    this.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } });
+    const src = this.ctx.createMediaStreamSource(this.stream);
+    this.proc = this.ctx.createScriptProcessor(2048, 1, 1);
+    this.chunks = []; this.rate = this.ctx.sampleRate; this.t0 = performance.now();
+    this.proc.onaudioprocess = (e) => {
+      const d = e.inputBuffer.getChannelData(0);
+      this.chunks.push(new Float32Array(d));
+      if (onLevel) { let s = 0; for (let i = 0; i < d.length; i += 4) s += d[i] * d[i]; onLevel(Math.min(1, Math.sqrt(s / (d.length / 4)) * 9)); }
+      if (performance.now() - this.t0 > 120000) this.onLimit?.();
+    };
+    src.connect(this.proc);
+    const mute = this.ctx.createGain(); mute.gain.value = 0;
+    this.proc.connect(mute); mute.connect(this.ctx.destination);
+  }
+  stop() {
+    try { this.proc?.disconnect(); } catch { /* already closed */ }
+    this.stream?.getTracks().forEach((t) => t.stop());
+    this.ctx?.close().catch(() => {});
+    const w = this.chunks?.length ? toWav16k(this.chunks, this.rate) : null;
+    this.chunks = []; return w;
+  }
+}

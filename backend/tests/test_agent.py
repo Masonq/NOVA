@@ -164,3 +164,51 @@ async def test_no_funds_notice_and_one_alert(client, env, monkeypatch):
     assert any(e["type"] == "notice" and "Голос временно недоступен" in e["text"] for e in ev)
     assert any(e["type"] == "text" for e in ev) and not any(e["type"] == "audio" for e in ev)
     assert len(sent) == 1 and sent[0][0] == 777 and "OpenRouter" in sent[0][1]
+
+
+@A
+async def test_typed_turn_with_photo_no_voice_and_photo_becomes_source(client, env):
+    from test_jobs import PNG
+    h = await login(client, 9531)
+    up = (await client.post("/api/uploads", files={"file": ("a.png", PNG, "image/png")}, headers=h)).json()["url"]
+    seen = {}
+    async def stream(model, msgs, tools=None, timeout=90):
+        seen.setdefault("msgs", list(msgs))
+        rnd = env["script"].pop(0)
+        for item in rnd:
+            yield item
+    import app.ai as aim
+    aim.stream_events, old = stream, aim.stream_events
+    try:
+        env["script"] += [
+            [("tools", [{"id": "c1", "name": "create_media", "arguments": json.dumps({"kind": "image", "prompt": "Это фото в стиле аниме", "style": "Аниме"})}])],
+            [("text", "Это картинка, 18 кредитов. Делаю?")],
+        ]
+        ev = events((await client.post("/api/agent/turn", json={"text": "сделай в стиле аниме", "image": up, "speak": False}, headers=h)).text)
+    finally:
+        aim.stream_events = old
+    user_msg = seen["msgs"][-1]["content"]
+    assert user_msg[1]["image_url"]["url"].startswith("data:image/png;base64,")
+    assert not any(e["type"] == "audio" for e in ev)                 # typed: answer is read, not voiced
+    conf = next(e for e in ev if e["type"] == "confirm")
+    assert conf["cost"] == 18                                         # photo edit price
+    uid = (await client.get("/api/me", headers=h)).json()["id"]
+    assert env["store"][uid]["params"]["refs"] == [up]
+    # someone else's file or a made-up path is refused
+    r = await client.post("/api/agent/turn", json={"text": "оживи", "image": up.replace(f"/files/{uid}/", "/files/1/")}, headers=h)
+    assert r.status_code == 422
+
+
+@A
+async def test_dictation_costs_one_credit(client, monkeypatch):
+    h = await login(client, 9532)
+    bal = (await client.get("/api/me", headers=h)).json()["balance"]
+    async def complete(models, messages, timeout=120, **kw):
+        assert messages[0]["content"][1]["type"] == "input_audio"
+        return "«Сделай картинку с котом.»"
+    monkeypatch.setattr(ai, "complete", complete)
+    r = await client.post("/api/agent/stt", json={"audio": wav_b64()}, headers=h)
+    assert r.status_code == 200 and r.json()["text"] == "Сделай картинку с котом." and r.json()["balance"] == bal - 1
+    r = await client.post("/api/agent/stt", json={"audio": wav_b64(0.2)}, headers=h)
+    assert r.status_code == 422
+    assert (await client.get("/api/me", headers=h)).json()["balance"] == bal - 1

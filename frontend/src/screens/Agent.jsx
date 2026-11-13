@@ -20,10 +20,11 @@ const STATUS = {
 };
 const WHAT = { image: "Картинка", video: "Видео", music: "Трек", tts: "Озвучка" };
 
-export default function Agent({ go, me, reloadMe }) {
+export default function Agent({ go, me, reloadMe, params }) {
   const [phase, setPhase] = useState("off");
   const [muted, setMuted] = useState(false);
   const [heard, setHeard] = useState("");
+  const [heardImg, setHeardImg] = useState(null);
   const [answer, setAnswer] = useState("");
   const [steps, setSteps] = useState([]);
   const [confirm, setConfirm] = useState(null);
@@ -36,11 +37,15 @@ export default function Agent({ go, me, reloadMe }) {
   const [sheet, setSheet] = useState(null);
   const voice = useRef(null);
   const ctrl = useRef(null);
+  const draftSent = useRef(false);
   const levelFn = useRef(() => voice.current?.level || 0).current;
   const active = useActiveJobs((fin) => setJobs((js) => js.map((j) => (j.id === fin.id ? fin : j))));
 
   useEffect(() => {
     api("/api/agent/settings").then(setSettings).catch(() => {});
+    if (params?.draft && !draftSent.current) {           // from the home composer: a typed turn, optionally with a photo
+      draftSent.current = true; send({ text: params.draft, image: params.image || undefined });
+    }
     return () => { ctrl.current?.abort(); voice.current?.stop(); };
   }, []);
 
@@ -50,6 +55,8 @@ export default function Agent({ go, me, reloadMe }) {
     voice.current?.newTurn();
     setPhase("thinking"); setAnswer(""); setSteps([]); setCards([]);
     if (payload.text) setHeard(payload.text);
+    setHeardImg(payload.image || null);
+    payload = { ...payload, speak: !!voice.current };          // typed with the mic off: the answer is read, not voiced
     let gotAudio = false;
     try {
       await stream("/api/agent/turn", payload, (e) => {
@@ -68,12 +75,12 @@ export default function Agent({ go, me, reloadMe }) {
         else if (e.type === "done") { reloadMe?.(); }
       }, ac.signal);
     } catch (er) {
-      if (er.name !== "AbortError") { toast(er.message, "error"); setPhase(muted ? "muted" : "idle"); }
+      if (er.name !== "AbortError") { toast(er.message, "error"); setPhase(!voice.current ? "off" : muted ? "muted" : "idle"); }
       return;
     }
     if (ac.signal.aborted) return;
     voice.current?.endTurn();
-    if (!gotAudio) setPhase(muted ? "muted" : "idle");
+    if (!gotAudio) setPhase(!voice.current ? "off" : muted ? "muted" : "idle");
   };
 
   const begin = async () => {
@@ -106,16 +113,18 @@ export default function Agent({ go, me, reloadMe }) {
         <span className="balance" role="button" tabIndex={0} onClick={() => openTopup()} aria-label={`Баланс ${me?.balance ?? 0} кредитов, пополнить`}><Icon n="spark" s={14} w={2} />{me?.balance ?? "…"}</span>
       </header>
 
-      <section className={"ag-stage" + (heard || answer || confirm || jobs.length ? " compact" : "")}>
+      <section className={"ag-stage" + (heard || answer || confirm || jobs.length || params?.draft ? " compact" : "")}>
         <button className="ag-orb" onClick={begin} aria-label={phase === "off" ? "Начать разговор" : phase === "speaking" ? "Перебить" : "Сфера агента"}>
           <Orb size={orbSize} dense level={levelFn} energy={phase === "thinking" ? 0.35 : 0} pulseOnTap={false} />
         </button>
         <p className="ag-status" aria-live="polite">{STATUS[phase]}</p>
-        {phase === "off" && <p className="ag-hint">Разговор — {settings?.per_min ?? 5} кредитов в минуту, поиск в интернете +{PRICE.agent_search}. Генерации запускаю только после вашего «да».</p>}
+        {phase === "off" && !heard && <p className="ag-hint">Разговор — {settings?.per_min ?? 5} кредитов в минуту, поиск в интернете +{PRICE.agent_search}. Генерации запускаю только после вашего «да».</p>}
       </section>
 
       <section className="ag-talk" aria-live="polite">
-        {heard && <p className="ag-heard appear" key={heard}>{heard}</p>}
+        {heard && <div className="ag-heard-w appear" key={heard}>
+          {heardImg && <span className="ag-heard-img" style={{ backgroundImage: `url(${heardImg})` }} role="img" aria-label="Приложенное фото" />}
+          <p className="ag-heard">{heard}</p></div>}
         {answer && <p className="ag-answer appear">{answer}</p>}
         {steps.length > 0 && <ul className="ag-steps">{steps.map((s, i) => <li key={i} className={s.done ? "done" : ""}><i>{s.done ? <Icon n="check" s={11} w={3} /> : null}</i>{s.text}</li>)}</ul>}
 

@@ -135,6 +135,33 @@ def split_ready(buf: str, first: bool) -> tuple[list[str], str]:
 class TurnIn(BaseModel):
     audio: str | None = Field(default=None, max_length=8_000_000)   # base64 WAV, up to ~45 s of 16 kHz speech
     text: str | None = Field(default=None, max_length=2000)
+    image: str | None = Field(default=None, max_length=500)         # an /api/uploads URL: source photo for an edit or a video's first frame
+    speak: bool = True                                               # False: typed conversation, the answer is read, not voiced
+
+
+class SttIn(BaseModel):
+    audio: str = Field(max_length=4_000_000)                         # base64 WAV 16 kHz, up to ~2 min
+
+
+TEXT_RULE = """Сейчас пользователь пишет текстом и читает ответ глазами: можно 1–4 предложения, по-прежнему без markdown и списков."""
+IMAGE_RULE = """Пользователь приложил фото (оно в его сообщении). Если просит изменить, стилизовать, улучшить или сделать что-то на его основе —
+create_media с kind=image: фото подставится как исходник. Если просит оживить, анимировать, сделать видео — kind=video: фото станет первым кадром.
+Если непонятно, что сделать с фото, — коротко спроси. Цену называй ту, что вернул инструмент."""
+
+
+def own_upload(url: str | None, uid: int) -> Path | None:
+    """The attached photo must be this user's own upload; returns its file."""
+    if not url:
+        return None
+    from ..storage import upload_dir
+    prefix = f"{get_settings().public_url}/files/{uid}/uploads/"
+    name = url[len(prefix):] if url.startswith(prefix) else ""
+    if not re.fullmatch(r"[\w.-]{1,80}", name or "") or ".." in name:
+        raise HTTPException(422, "Фото не найдено — прикрепите его ещё раз")
+    f = upload_dir(uid) / name
+    if not f.is_file():
+        raise HTTPException(422, "Фото не найдено — прикрепите его ещё раз")
+    return f
 
 
 class SettingsIn(BaseModel):
@@ -162,7 +189,7 @@ async def clear(u: User = Depends(current_user), db: AsyncSession = Depends(get_
     return {"ok": True}
 
 
-async def run_tool(name: str, args: dict, u: User, emit) -> str:
+async def run_tool(name: str, args: dict, u: User, emit, image: str | None = None) -> str:
     """Executes a tool call; emits UI events; returns the text the model sees."""
     async with Session() as db:
         user = await db.get(User, u.id)
@@ -173,6 +200,10 @@ async def run_tool(name: str, args: dict, u: User, emit) -> str:
             params = {k: args[k] for k in ("style", "aspect", "duration", "sound", "genre", "instrumental") if k in args}
             if kind == "tts":
                 params["voice"] = user.agent_voice
+            if image and kind == "image":
+                params["refs"] = [image]
+            elif image and kind == "video":
+                params["image_url"] = image
             price = price_of(kind, params, args["prompt"])
             await pending.set(u.id, {"kind": kind, "prompt": args["prompt"].strip(), "params": params, "cost": price})
             await emit({"type": "confirm", "kind": kind, "prompt": args["prompt"].strip(), "cost": price, "balance": user.balance})
@@ -251,13 +282,23 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
         system += "\nЧто ты знаешь о пользователе:\n- " + "\n- ".join(facts)
     if raw:
         system += "\n" + HEARD_RULE
+    if not body.speak:
+        system += "\n" + TEXT_RULE
+    photo = own_upload(body.image, u.id)
+    if photo:
+        system += "\n" + IMAGE_RULE
     msgs = [{"role": "system", "content": system}]
     msgs += [{"role": "assistant" if m.role == "model" else "user", "content": m.text} for m in reversed(rows)]
     if raw:
         msgs.append({"role": "user", "content": [{"type": "input_audio", "input_audio": {"data": base64.b64encode(raw).decode(), "format": "wav"}}]})
+    elif photo:
+        mime = {"jpg": "jpeg", "png": "png", "webp": "webp"}.get(photo.suffix.lstrip(".").lower(), "jpeg")
+        msgs.append({"role": "user", "content": [{"type": "text", "text": body.text.strip()},
+                                                 {"type": "image_url", "image_url": {"url": f"data:image/{mime};base64,{base64.b64encode(photo.read_bytes()).decode()}"}}]})
     else:
         msgs.append({"role": "user", "content": body.text.strip()})
     uid, voice, in_sec = u.id, u.agent_voice, wav_seconds(raw) if raw else 0.0
+    speak_on, image_url = body.speak or bool(raw), (body.image if photo else None)
     s = get_settings()
     d = audio_dir(uid)
 
@@ -276,6 +317,8 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
         tts_gate = asyncio.Semaphore(2)          # two sentences at a time: the first plays at once, no burst into the rate limit
 
         async def speak(seq: int, text: str):
+            if not speak_on:
+                return None
             async with tts_gate:
                 try:
                     wav = await ai.speech(text, voice)
@@ -332,12 +375,12 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
                         args = json.loads(c["arguments"] or "{}")
                     except json.JSONDecodeError:
                         args = {}
-                    res = await run_tool(c["name"], args, u, emit)
+                    res = await run_tool(c["name"], args, u, emit, image_url)
                     convo.append({"role": "tool", "tool_call_id": c["id"] or f"c{i}", "content": res})
             if buf.strip():
                 tts_tasks.append(asyncio.create_task(speak(seq, buf.strip())))
             await emit({"type": "_textdone"})
-            if tts_tasks:                            # no sentence could be voiced: say so instead of silence
+            if tts_tasks and speak_on:               # no sentence could be voiced: say so instead of silence
                 await asyncio.gather(*tts_tasks, return_exceptions=True)
                 if all(t.done() and not t.result() for t in tts_tasks):
                     await emit({"type": "notice", "text": "Голос временно недоступен — ответ текстом"})
@@ -390,7 +433,7 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
         async with Session() as db2:
             user = await db2.get(User, uid)
             if heard:
-                db2.add(ChatMessage(user_id=uid, role="user", text=heard, channel="agent"))
+                db2.add(ChatMessage(user_id=uid, role="user", text=heard + (" [приложил фото]" if image_url else ""), channel="agent"))
             if reply:
                 db2.add(ChatMessage(user_id=uid, role="model", text=reply, channel="agent"))
             if price and user.balance > 0:      # one ledger line per day: «Агент: N реплик»
@@ -408,3 +451,35 @@ async def barge():
     """The user interrupted NOVA (or the mic took NOVA's own echo for speech): only a line in the server log."""
     log.info("agent barge-in")
     return {"ok": True}
+
+
+STT_PROMPT = "Перепиши дословно, что сказано в аудио, с правильной пунктуацией. Только сам текст, без кавычек и пояснений. Если речи нет — верни пустую строку."
+
+
+@router.post("/stt")
+async def stt(body: SttIn, u: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    """Dictation into the composer: speech → text, 1 credit (folded into one ledger line per day)."""
+    await refresh_prices(db)
+    price = int(PRICE.get("chat_msg", 1))
+    if u.balance < price:
+        raise HTTPException(402, "Кредиты закончились — пополните баланс")
+    try:
+        raw = base64.b64decode(body.audio.split(",")[-1], validate=False)
+    except Exception:
+        raise HTTPException(422, "Не удалось прочитать звук")
+    if not raw.startswith(b"RIFF") or wav_seconds(raw) < 0.4:
+        raise HTTPException(422, "Слишком короткая запись")
+    from .. import costs
+    costs.set_ctx(user_id=u.id, kind="stt", job_id=None)
+    try:
+        text = await ai.complete(MODEL, [{"role": "user", "content": [{"type": "text", "text": STT_PROMPT},
+                                          {"type": "input_audio", "input_audio": {"data": base64.b64encode(raw).decode(), "format": "wav"}}]}], timeout=60)
+    except ai.AIError:
+        raise HTTPException(503, "Не получилось распознать — попробуйте ещё раз")
+    text = re.sub(r"\s+", " ", (text or "").strip().strip('"«»')).strip()
+    if not text:
+        raise HTTPException(422, "Не расслышала — попробуйте ещё раз")
+    user = await db.get(User, u.id)
+    bal = await charge_daily(db, user, price, "Диктовка", ("запись", "записи", "записей"))
+    await db.commit()
+    return {"text": text[:2000], "balance": bal}
