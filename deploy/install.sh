@@ -125,7 +125,7 @@ for i in $(seq 1 30); do
   if curl -fsS "https://$DOMAIN/api/health" >/dev/null 2>&1; then ok=1; break; fi; sleep 2
 done
 [ -n "$ok" ] && log "Сайт: https://$DOMAIN — отвечает" || fail "сайт не отвечает (journalctl -u nova-api)"
-curl -fsSI "https://$DOMAIN/" | grep -qi "cache-control: no-cache" && log "Сброс кэша: index.html не кэшируется, файлы с хешем" || fail "заголовки кэша"
+curl -fsS -D - -o /dev/null "https://$DOMAIN/" | grep -qi "cache-control: no-cache" && log "Сброс кэша: index.html не кэшируется, файлы с хешем" || fail "заголовки кэша"
 systemctl is-active --quiet nova-worker && log "Воркер: работает" || fail "воркер не запустился"
 
 # --- telegram ---

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Icon from "../ui/Icon.jsx";
 import Composer from "../ui/Composer.jsx";
 import { toast } from "../ui/Toast.jsx";
@@ -13,12 +13,16 @@ function greeting() {
   return "Доброй ночи";
 }
 
-function Particles() {
-  const dots = useMemo(() => Array.from({ length: 14 }, (_, i) => ({
-    x: 2 + ((i * 37) % 60), y: 6 + ((i * 53) % 20), d: 1.4 + (i % 3) * 0.6, delay: (i * 0.13).toFixed(2),
-  })), []);
-  return <span className="particles" aria-hidden="true">{dots.map((p, i) =>
-    <i key={i} style={{ left: p.x, top: p.y, width: p.d, height: p.d, animationDelay: p.delay + "s" }} />)}</span>;
+let greeted = false; // assemble the greeting once per app launch
+
+function Greeting({ text }) {
+  const [animate] = useState(() => !greeted);
+  useEffect(() => { greeted = true; }, []);
+  return (
+    <h1 className={"greet" + (animate ? " assemble" : "")} aria-label={text}>
+      {[...text].map((ch, i) => (
+        <span key={i} aria-hidden="true" style={animate ? { animationDelay: (i * 45) + "ms" } : undefined}>{ch === " " ? "\u00a0" : ch}</span>))}
+    </h1>);
 }
 
 const TOOLS = [
@@ -40,9 +44,7 @@ export default function Home({ go, me }) {
         <span className="brand">NOVA</span>
         <span className="balance" aria-label={`Баланс ${me?.balance ?? 0} кредитов`}><Icon n="spark" s={14} w={2} />{me?.balance ?? "…"}</span>
       </header>
-      <div className="greet" aria-label={g}>
-        <span>{g.slice(0, -1)}</span><span className="fade">{g.slice(-1)}</span><Particles />
-      </div>
+      <Greeting text={g} />
       <Composer value={text} onChange={setText} onSend={(t) => go("chat", { draft: t })} />
       <div className="chips" role="list">
         {SUGGEST.map((s, i) => <button key={s} role="listitem" className="chip ghost" onClick={() => { haptic("select"); setText(s); }}>
@@ -62,7 +64,7 @@ export default function Home({ go, me }) {
           <div className="result empty">
             <Icon n="spark" s={22} />
             <p>Здесь появится первая работа</p>
-            <span className="muted small">Опишите идею в строке выше — у вас {me?.balance ?? 300} кредитов на старт</span>
+            <span className="muted small">Опишите идею в\u00a0строке выше\u00a0— у\u00a0вас {me?.balance ?? 300} кредитов на старт</span>
           </div>
         )}
       </section>
