@@ -140,10 +140,16 @@ async def run_video(job: Job):
 # ---------------- music ----------------
 async def run_music(job: Job):
     p = job.params or {}
-    style = ", ".join(x for x in [p.get("genre"), p.get("mood")] if x)
-    inp = {"prompt": job.prompt[:2900], "custom_mode": False, "instrumental": bool(p.get("instrumental", True)), "model": "V6"}
-    if style:
-        inp["style"] = style
+    vocal = not bool(p.get("instrumental", True))
+    brief = p.get("brief")
+    if not brief:   # Suno rejects artist names: describe the sound instead, add a title
+        await _update(job.id, status="running", progress=3, stage="Продумываю звучание")
+        brief = await ai.music_brief(job.prompt, p.get("genre", ""), p.get("mood", ""), vocal)
+        p = {**p, "brief": brief}
+        await _update(job.id, params=p)
+    inp = {"prompt": brief["idea"][:2900], "custom_mode": False, "instrumental": not vocal, "model": "V6"}
+    if brief.get("style"):
+        inp["style"] = brief["style"]
     task = p.get("task")
     if not task:
         await _update(job.id, status="running", progress=5, stage="Пишу трек")
@@ -163,7 +169,7 @@ async def run_music(job: Job):
         if not url:
             continue
         rel = await download(job, f"track{i + 1}.mp3", url, max_mb=60)
-        f = {"path": rel, "type": "audio", "title": t.get("title") or "", "duration": t.get("duration") or 0}
+        f = {"path": rel, "type": "audio", "title": t.get("title") or brief.get("title") or "", "duration": t.get("duration") or 0}
         img = t.get("image_url") or t.get("imageUrl")
         if img:
             try:

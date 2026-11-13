@@ -180,6 +180,30 @@ for photos: realistic camera and lens details; when a reference photo is attache
 Answer with the prompt only, 60–120 words, no preamble."""
 
 
+MUSIC_BRIEF = """You prepare a request for the Suno music model. Suno rejects real artist and band names, so never output them.
+From the user's request (usually Russian) and the chosen genre/mood return strict JSON:
+{"style": "comma-separated English style tags, 6–12 tags: genre, sub-genre, tempo/BPM, instruments, vocal type and gender, mood, production",
+ "title": "short track title in the user's language, max 40 chars",
+ "idea": "what the song is about, in the user's language, max 300 chars, no artist names"}
+When the user names an artist, describe that artist's typical sound in the tags instead of the name."""
+
+
+async def music_brief(prompt: str, genre: str = "", mood: str = "", vocal: bool = False) -> dict:
+    """Turns «a track like <artist>» into Suno-safe style tags, a title and an idea. Falls back to simple values."""
+    fallback = {"style": ", ".join(x for x in (genre, mood) if x), "title": "", "idea": prompt[:300]}
+    try:
+        raw = await complete("google/gemini-3.8-flash", [{"role": "system", "content": MUSIC_BRIEF}, {"role": "user", "content":
+                             f"Request: {prompt}\nGenre: {genre or 'any'}\nMood: {mood or 'any'}\nVocals: {'yes' if vocal else 'no, instrumental'}"}],
+                             timeout=20, temperature=0.5, max_tokens=400, response_format={"type": "json_object"})
+        import re as _re
+        m = _re.search(r"\{.*\}", raw or "", _re.S)
+        d = json.loads(m.group(0)) if m else {}
+        out = {"style": str(d.get("style") or "")[:900], "title": str(d.get("title") or "")[:80], "idea": str(d.get("idea") or "")[:2900]}
+        return {k: (v or fallback[k]) for k, v in out.items()}
+    except Exception:
+        return fallback
+
+
 async def enhance_prompt(prompt: str, style: str = "", has_ref: bool = False) -> str:
     """Rewrites a short request into a detailed prompt. Falls back to the original text on any problem."""
     try:

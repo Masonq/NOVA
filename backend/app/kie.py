@@ -15,12 +15,17 @@ class KieError(Exception):
     pass
 
 
+def _client(timeout: float) -> httpx.AsyncClient:
+    """The Kie key is locked to the server's IPv4 address: never let a request leave over IPv6."""
+    return httpx.AsyncClient(timeout=timeout, transport=httpx.AsyncHTTPTransport(local_address="0.0.0.0", retries=1))
+
+
 def _h():
     return {"Authorization": f"Bearer {get_settings().kie_key}", "Content-Type": "application/json"}
 
 
 async def create(model: str, inp: dict) -> str:
-    async with httpx.AsyncClient(timeout=60) as cl:
+    async with _client(60) as cl:
         for attempt in range(3):
             try:
                 r = await cl.post(f"{BASE}/jobs/createTask", headers=_h(), json={"model": model, "input": inp})
@@ -42,7 +47,7 @@ async def create(model: str, inp: dict) -> str:
 
 async def status(task_id: str) -> dict:
     """Returns {'state': waiting|queuing|generating|success|fail, 'result': dict, 'error': str}."""
-    async with httpx.AsyncClient(timeout=30) as cl:
+    async with _client(30) as cl:
         r = await cl.get(f"{BASE}/jobs/recordInfo", headers=_h(), params={"taskId": task_id})
         d = r.json()
     if int(d.get("code") or 0) != 200:

@@ -18,7 +18,15 @@ def main(path, image):
     out = ["# Проверка сервисов", "", time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime()), ""]
     with httpx.Client(timeout=120) as cl:
         k = env("KIE_KEY")
-        if k:
+        if k:   # the key is locked to the server IP: check the IPv4 route the app uses and the default route
+            for label, tr in (("IPv4", httpx.HTTPTransport(local_address="0.0.0.0")), ("по умолчанию", None)):
+                try:
+                    with httpx.Client(timeout=20, transport=tr) as c2:
+                        r = c2.get("https://api.kie.ai/api/v1/jobs/recordInfo", params={"taskId": "nova-check"}, headers={"Authorization": "Bearer " + k}).json()
+                    blocked = "whitelist" in str(r.get("msg", "")).lower()
+                    out.append(f"- Kie {label}: {'IP не в белом списке' if blocked else 'адрес разрешён'} ({r.get('code')})")
+                except Exception as e:
+                    out.append(f"- Kie {label}: ошибка {type(e).__name__}")
             try:
                 r = cl.get("https://api.kie.ai/api/v1/chat/credit", headers={"Authorization": "Bearer " + k}).json()
                 out.append(f"- Kie: код {r.get('code')}, баланс {r.get('data')} кредитов {r.get('msg') or ''}")

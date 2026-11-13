@@ -1,3 +1,4 @@
+import json
 import asyncio, json, os
 from pathlib import Path
 import pytest
@@ -171,3 +172,32 @@ async def test_image_model_per_task_and_enhanced_prompt(client, monkeypatch):
     assert j["params"]["enhanced"].startswith("A detailed prompt")
     assert (await client.get(f"/api/jobs/{j2}", headers=h)).json()["params"]["model"] == "openai/gpt-image-2.6-flare"
     assert (await client.get(f"/api/jobs/{j3}", headers=h)).json()["params"]["model"] == "google/gemini-nano-banana-2.1"
+
+
+
+def test_kie_requests_go_over_ipv4():
+    from app import kie
+    cl = kie._client(5)
+    pool = cl._transport._pool
+    assert pool._local_address == "0.0.0.0"
+
+
+@A
+async def test_music_brief_replaces_artist_name(client, monkeypatch):
+    from app import runner, kie, storage, ai
+    sent = {}
+    async def brief(prompt, genre="", mood="", vocal=False):
+        assert "icegergert" in prompt and vocal is True
+        return {"style": "melodic russian hip-hop, trap beats, autotune vocals, 140 bpm", "title": "Ночной город", "idea": "Песня о ночном городе"}
+    async def create(model, inp):
+        sent.update(inp); return "m9"
+    async def wait(task, tick, timeout):
+        return {"data": [{"audio_url": "https://a/1.mp3"}]}
+    async def dl(job, name, url, max_mb=300): return storage.save_bytes(job, name, b"1")
+    monkeypatch.setattr(ai, "music_brief", brief); monkeypatch.setattr(kie, "create", create)
+    monkeypatch.setattr(kie, "wait", wait); monkeypatch.setattr(runner, "download", dl)
+    h, jid = await _job(client, 8701, "music", "Крутой трек на подобии icegergert", {"genre": "Хип-хоп", "instrumental": False})
+    await runner.run_job({}, jid)
+    j = (await client.get(f"/api/jobs/{jid}", headers=h)).json()
+    assert j["status"] == "done" and j["files"][0]["title"] == "Ночной город"
+    assert "icegergert" not in json.dumps(sent, ensure_ascii=False).lower() and sent["style"].startswith("melodic") and sent["instrumental"] is False
