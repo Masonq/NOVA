@@ -31,7 +31,7 @@ export default function ImageStudio({ go, me, reloadMe, params }) {
       <Opts label="Стиль" value={style} options={STYLES} onChange={setStyle}
         hint={hq ? "GPT Image 2.6 · high" : ref ? "Nano Banana 2.1 · 2K" : style === "Логотип" ? "GPT Image 2.6" : "Seedream 5.5 · 2K"} />
       <Opts label="Формат" value={aspect} options={ASPECTS} onChange={setAspect} />
-      <Toggle label="Высокое качество" sub={`как в ChatGPT: точнее текст и детали · +${PRICE.image_hq} кр.`} on={hq} onChange={pickHq} />
+      <Toggle label="Высокое качество" sub={`точнее текст и детали · +${PRICE.image_hq} кр.`} on={hq} onChange={pickHq} />
 
       {s.active ? (
         <section className="reveal" style={{ aspectRatio: ratio(s.active.params?.aspect || aspect) }} aria-label="Идёт генерация">
