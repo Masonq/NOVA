@@ -406,8 +406,11 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
         async def run():
             try:
                 await producer()
-            except ai.AIError:
-                await emit({"type": "error", "text": "Модель сейчас перегружена, попробуйте ещё раз"})
+            except ai.AIError as e:
+                log.warning("agent turn failed for user %s: %s", uid, e)
+                busy = getattr(e, "code", 0) in (402, 403)
+                await emit({"type": "error", "text": "Агент временно недоступен — мы уже разбираемся, попробуйте чуть позже" if busy
+                            else "Модель сейчас перегружена, попробуйте ещё раз"})
             finally:
                 done_flag.set()
 

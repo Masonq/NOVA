@@ -212,3 +212,30 @@ async def test_dictation_costs_one_credit(client, monkeypatch):
     r = await client.post("/api/agent/stt", json={"audio": wav_b64(0.2)}, headers=h)
     assert r.status_code == 422
     assert (await client.get("/api/me", headers=h)).json()["balance"] == bal - 1
+
+
+@A
+async def test_stream_retries_busy_model_and_flags_spent_key(monkeypatch):
+    import httpx
+    from app import ai as aim, costs
+    calls = {"n": 0}
+    def handler(req):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return httpx.Response(429, text="busy")
+        body = 'data: {"choices":[{"delta":{"content":"Привет"}}]}\n\ndata: [DONE]\n\n'
+        return httpx.Response(200, text=body)
+    real = httpx.AsyncClient
+    monkeypatch.setattr(aim.httpx, "AsyncClient", lambda **kw: real(transport=httpx.MockTransport(handler), **kw))
+    async def nosleep(_): pass
+    monkeypatch.setattr(aim.asyncio, "sleep", nosleep)
+    out = [x async for x in aim.stream_events("m", [{"role": "user", "content": "hi"}])]
+    assert out == [("text", "Привет")] and calls["n"] == 2
+    flagged = []
+    monkeypatch.setattr(costs, "out_of_funds", lambda p, m="": flagged.append(p))
+    monkeypatch.setattr(aim.httpx, "AsyncClient", lambda **kw: real(transport=httpx.MockTransport(lambda r: httpx.Response(403, text='{"error":"Key limit exceeded"}')), **kw))
+    try:
+        [x async for x in aim.stream_events("m", [])]
+        assert False
+    except aim.AIError as e:
+        assert e.code == 403 and flagged == ["openrouter"]

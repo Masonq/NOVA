@@ -26,7 +26,9 @@ STYLE = "Говори по-русски живо и тепло, естестве
 
 
 class AIError(Exception):
-    pass
+    def __init__(self, msg: str = "", code: int = 0):
+        super().__init__(msg)
+        self.code = code
 
 
 def _headers() -> dict:
@@ -424,9 +426,24 @@ async def stream_events(model: str, messages: list[dict], tools: list | None = N
         body["tools"] = tools
     calls: dict[int, dict] = {}
     async with httpx.AsyncClient(timeout=timeout) as cl:
-        async with cl.stream("POST", f"{BASE}/chat/completions", headers=_headers(), json=body) as r:
+      for attempt in range(3):                       # a busy model or a dropped connection: retry before anything is said
+        try:
+            cm = cl.stream("POST", f"{BASE}/chat/completions", headers=_headers(), json=body)
+            r = await cm.__aenter__()
+        except httpx.HTTPError as e:
+            if attempt == 2:
+                raise AIError(f"network: {type(e).__name__}")
+            await asyncio.sleep(1 + 2 * attempt)
+            continue
+        try:
             if r.status_code != 200:
-                raise AIError(f"{r.status_code} {(await r.aread())[:200]!r}")
+                txt = (await r.aread())[:300].decode("utf-8", "replace")
+                if r.status_code == 402 or (r.status_code == 403 and "limit" in txt.lower()):
+                    costs.out_of_funds("openrouter", txt[:120])          # no credits or the key's limit is spent: admin alert
+                if r.status_code in RETRY_STATUS and attempt < 2:
+                    await asyncio.sleep(1 + 2 * attempt)
+                    continue
+                raise AIError(f"{r.status_code} {txt[:200]}", r.status_code)
             async for line in r.aiter_lines():
                 if not line.startswith("data:"):
                     continue
@@ -452,6 +469,9 @@ async def stream_events(model: str, messages: list[dict], tools: list | None = N
                         fn = tc.get("function") or {}
                         c["name"] = fn.get("name") or c["name"]
                         c["arguments"] += fn.get("arguments") or ""
+            break
+        finally:
+            await cm.__aexit__(None, None, None)
     if gid:
         costs.openrouter(gen_id=gid, note=model)
     if calls:
