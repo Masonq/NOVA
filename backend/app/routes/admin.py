@@ -17,7 +17,6 @@ from .jobs import job_out
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 RUB_PER_USD = 90   # for the revenue estimate only
-COST_USD = {"image": 0.04, "video_s": 0.08, "music": 0.08, "tts_1k": 0.017, "agent_turn": 0.003}   # rough model cost
 
 
 async def log(db, a: User, action: str, target: str = "", detail: str = ""):
@@ -65,13 +64,36 @@ async def stats(days: int = 30, a: User = Depends(admin_user), db: AsyncSession 
             x["credits"] += int(c or 0)
     stars = sum(r["stars"] for r in series); usd = sum(r["usd"] for r in series); rub = sum(r["rub"] for r in series)
     revenue = round(stars * 0.013 + usd * 0.97 + rub * 0.965 / RUB_PER_USD, 2)   # Stars ~$0.013, Crypto Pay ~3%, YooKassa ~3.5%
-    vid_sec = (await db.execute(select(func.coalesce(func.sum(cast(Job.params["duration"].as_string(), pricing_float())), 0))
-                                .where(Job.kind == "video", Job.status == "done", Job.created_at > since))).scalar_one()
-    cost = (by_kind.get("image", {}).get("done", 0) * COST_USD["image"] + float(vid_sec or 0) * COST_USD["video_s"]
-            + by_kind.get("music", {}).get("done", 0) * COST_USD["music"] + agent_turns * COST_USD["agent_turn"])
+    from ..models import Cost
+    crows = (await db.execute(select(Cost.provider, Cost.kind, func.sum(Cost.usd)).where(Cost.created_at > since)
+                              .group_by(Cost.provider, Cost.kind))).all()
+    cost = round(sum(float(x or 0) for _, _, x in crows), 4)
+    cost_by_kind, cost_by_provider = {}, {}
+    for prov, kind, x in crows:
+        cost_by_kind[kind] = round(cost_by_kind.get(kind, 0) + float(x or 0), 4)
+        cost_by_provider[prov] = round(cost_by_provider.get(prov, 0) + float(x or 0), 4)
+    first = (await db.execute(select(func.min(Cost.created_at)))).scalar_one()
     return {"days": days, "users": {"total": total, "dau": dau, "wau": wau}, "series": series, "by_kind": by_kind,
+            "costs": {"by_kind": cost_by_kind, "by_provider": cost_by_provider, "since": first.isoformat() if first else None},
+            "balances": await cached_balances(),
             "money": {"stars": stars, "usd": round(usd, 2), "rub": rub, "revenue_usd": revenue, "cost_usd": round(cost, 2),
                       "margin_usd": round(revenue - cost, 2), "credits_spent": int(spent), "agent_turns": agent_turns}}
+
+
+_bal = {"at": 0.0, "data": {}}
+
+
+async def cached_balances() -> dict:
+    """Live OpenRouter / Kie balances, refreshed at most once a minute."""
+    import time
+    from .. import costs
+    if time.time() - _bal["at"] > 60:
+        try:
+            _bal["data"] = await costs.balances()
+        except Exception:
+            pass
+        _bal["at"] = time.time()
+    return _bal["data"]
 
 
 def pricing_float():

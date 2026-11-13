@@ -69,6 +69,8 @@ async def send(body: ChatIn, u: User = Depends(current_user), db: AsyncSession =
     uid = u.id
 
     async def gen():
+        from .. import costs
+        costs.set_ctx(user_id=uid, kind="chat", job_id=None)
         out = []
         try:
             async for chunk in stream_text(s.chat_models, contents, system):

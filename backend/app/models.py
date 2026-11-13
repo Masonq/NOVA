@@ -1,7 +1,7 @@
 import secrets
 from datetime import datetime, timezone
 
-from sqlalchemy import UniqueConstraint, BigInteger, Boolean, DateTime, ForeignKey, Index, Integer, String, Text, JSON
+from sqlalchemy import Float, UniqueConstraint, BigInteger, Boolean, DateTime, ForeignKey, Index, Integer, String, Text, JSON
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .db import Base
@@ -165,3 +165,16 @@ class Broadcast(Base):
     failed: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class Cost(Base):
+    """Actual model spend reported by the providers (OpenRouter usage.cost / generation lookup, Kie creditsConsumed)."""
+    __tablename__ = "costs"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    provider: Mapped[str] = mapped_column(String(16))          # openrouter | kie
+    usd: Mapped[float] = mapped_column(Float, default=0.0)
+    kind: Mapped[str] = mapped_column(String(16), default="")  # image | video | music | tts | chat | agent | other
+    job_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    user_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    note: Mapped[str] = mapped_column(String(120), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, index=True)

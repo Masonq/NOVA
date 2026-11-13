@@ -10,6 +10,7 @@ import { haptic } from "../tg.js";
 const TABS = [{ k: "stats", t: "Сводка" }, { k: "users", t: "Люди" }, { k: "jobs", t: "Работы" }, { k: "prices", t: "Цены" },
   { k: "promo", t: "Промо" }, { k: "send", t: "Рассылка" }, { k: "log", t: "Журнал" }];
 const fmt = (n) => Number(n || 0).toLocaleString("ru-RU");
+const usd = (n) => { const v = Number(n || 0); return v.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: v < 1 && v > 0 ? 3 : 2 }); };
 const when = (iso) => iso ? new Date(iso).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—";
 const STATUS = { review: "На проверке", queued: "В очереди", running: "Идёт", done: "Готово", failed: "Ошибка", cancelled: "Отменено", rejected: "Отклонено" };
 
@@ -41,9 +42,19 @@ function Stats() {
       <div className="kpis">
         <div className="kpi"><span>Пользователи</span><b>{fmt(s.users.total)}</b><small>{s.users.dau} за день · {s.users.wau} за неделю</small></div>
         <div className="kpi"><span>Выручка 30 дн.</span><b>${fmt(s.money.revenue_usd)}</b><small>{fmt(s.money.stars)} ⭐ · {fmt(s.money.rub)} ₽ · ${s.money.usd}</small></div>
-        <div className="kpi"><span>Расходы на модели</span><b>${fmt(s.money.cost_usd)}</b><small>оценка по выполненным</small></div>
-        <div className={"kpi" + (s.money.margin_usd < 0 ? " neg" : " pos")}><span>Маржа</span><b>${fmt(s.money.margin_usd)}</b><small>{fmt(s.money.credits_spent)} кредитов потрачено</small></div>
+        <div className="kpi"><span>Расходы на модели</span><b>${usd(s.money.cost_usd)}</b><small>фактически, по OpenRouter и Kie</small></div>
+        <div className={"kpi" + (s.money.margin_usd < 0 ? " neg" : " pos")}><span>Маржа</span><b>{s.money.margin_usd < 0 ? "−" : ""}${usd(Math.abs(s.money.margin_usd))}</b><small>{fmt(s.money.credits_spent)} кредитов потрачено</small></div>
       </div>
+      <section className="card bals">
+        <div className="row-h"><h2>Балансы сервисов</h2><small className="muted">обновляется раз в минуту</small></div>
+        <div className="bal-row"><span><b>OpenRouter</b><small>фото, голос, чат, агент</small></span>
+          {s.balances?.openrouter?.error ? <em className="muted">нет связи</em> : <span className="bal-v"><b className={(s.balances?.openrouter?.left ?? 99) < 3 ? "low" : ""}>${usd(s.balances?.openrouter?.left)}</b>
+            <small>ключ: ${usd(s.balances?.openrouter?.key_used)}{s.balances?.openrouter?.key_limit ? ` из $${s.balances.openrouter.key_limit}` : " без лимита"}</small></span>}</div>
+        <div className="bal-row"><span><b>Kie</b><small>видео, музыка</small></span>
+          {s.balances?.kie?.error ? <em className="muted">нет связи</em> : <span className="bal-v"><b className={(s.balances?.kie?.usd ?? 99) < 2 ? "low" : ""}>${usd(s.balances?.kie?.usd)}</b>
+            <small>{fmt(s.balances?.kie?.credits)} кредитов Kie</small></span>}</div>
+        {Object.keys(s.costs?.by_provider || {}).length > 0 && <p className="muted small">За 30 дней: {Object.entries(s.costs.by_provider).map(([k, v]) => `${k === "kie" ? "Kie" : "OpenRouter"} $${usd(v)}`).join(" · ")}{s.costs.since ? ` · учёт с ${new Date(s.costs.since).toLocaleDateString("ru-RU")}` : ""}</p>}
+      </section>
       <section className="card">
         <div className="row-h"><h2>30 дней</h2></div>
         <div className="payseg three">
@@ -57,9 +68,10 @@ function Stats() {
       </section>
       <section className="card">
         <div className="row-h"><h2>Генерации по типам</h2></div>
-        <table className="tbl"><thead><tr><th>Тип</th><th>Всего</th><th>Готово</th><th>Ошибки</th><th>Кредиты</th></tr></thead>
-          <tbody>{Object.entries(s.by_kind).map(([k, v]) => <tr key={k}><td>{KIND[k]}</td><td>{v.total}</td><td>{v.done}</td><td>{v.failed}</td><td>{fmt(v.credits)}</td></tr>)}
-            <tr><td>Агент</td><td colSpan={3}>{fmt(s.money.agent_turns)} реплик</td><td></td></tr></tbody></table>
+        <table className="tbl"><thead><tr><th>Тип</th><th>Всего</th><th>Ошибки</th><th>Кредиты</th><th>Расход</th></tr></thead>
+          <tbody>{Object.entries(s.by_kind).map(([k, v]) => <tr key={k}><td>{KIND[k]}</td><td>{v.total}</td><td>{v.failed}</td><td>{fmt(v.credits)}</td><td>${usd(s.costs?.by_kind?.[k])}</td></tr>)}
+            <tr><td>Агент</td><td colSpan={2}>{fmt(s.money.agent_turns)} реплик</td><td></td><td>${usd(s.costs?.by_kind?.agent)}</td></tr>
+            <tr><td>Чат</td><td colSpan={3}></td><td>${usd(s.costs?.by_kind?.chat)}</td></tr></tbody></table>
       </section>
     </>);
 }

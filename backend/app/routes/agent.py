@@ -260,6 +260,8 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
     d = audio_dir(uid)
 
     async def gen():
+        from .. import costs
+        costs.set_ctx(user_id=uid, kind="agent", job_id=None)
         q: asyncio.Queue = asyncio.Queue()
         heard = None if raw else body.text.strip()
         answer: list[str] = []

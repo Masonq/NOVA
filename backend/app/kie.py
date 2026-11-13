@@ -59,7 +59,8 @@ async def status(task_id: str) -> dict:
             res = json.loads(data["resultJson"])
         except (TypeError, ValueError):
             res = {}
-    return {"state": data.get("state", "waiting"), "result": res or {}, "error": data.get("failMsg") or data.get("failCode") or ""}
+    return {"state": data.get("state", "waiting"), "result": res or {}, "error": data.get("failMsg") or data.get("failCode") or "",
+            "credits": data.get("creditsConsumed")}
 
 
 async def wait(task_id: str, on_tick=None, timeout: float = 1500, every: float = 5) -> dict:
@@ -78,6 +79,9 @@ async def wait(task_id: str, on_tick=None, timeout: float = 1500, every: float =
             continue
         if on_tick:
             await on_tick(st["state"], loop.time() - t0)
+        if st["state"] in ("success", "fail") and st.get("credits"):
+            from . import costs
+            costs.kie(st["credits"], f"kie task {task_id}")
         if st["state"] == "success":
             return st["result"]
         if st["state"] == "fail":

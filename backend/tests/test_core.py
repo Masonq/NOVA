@@ -162,7 +162,7 @@ async def test_speech_wraps_pcm(monkeypatch):
     import httpx
     from app import ai
     class R:
-        status_code = 200; content = b"\x00\x00" * 2400; text = ""
+        status_code = 200; content = b"\x00\x00" * 2400; text = ""; headers = {}
     class C:
         def __init__(self, *a, **k): pass
         async def __aenter__(self): return self

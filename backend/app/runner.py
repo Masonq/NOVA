@@ -281,6 +281,8 @@ async def run_job(ctx, job_id: int):
         job = await db.get(Job, job_id)
     if job is None or job.status not in ("queued", "running"):
         return
+    from . import costs
+    costs.set_ctx(job_id=job.id, user_id=job.user_id, kind=job.kind)
     t0 = time.time()
     try:
         files, part, note = await RUNNERS[job.kind](job)

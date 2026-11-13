@@ -10,6 +10,8 @@ from typing import AsyncIterator
 
 import httpx
 
+from . import costs
+
 from .config import get_settings
 
 log = logging.getLogger("nova.ai")
@@ -39,11 +41,12 @@ def _models(models) -> list[str]:
 
 async def stream_text(models, messages: list[dict], system: str, timeout: float = 120) -> AsyncIterator[str]:
     """Yields text chunks. Falls back to the next model only if nothing was sent yet."""
-    body = {"messages": [{"role": "system", "content": system}, *messages], "stream": True, "temperature": 0.8}
+    body = {"messages": [{"role": "system", "content": system}, *messages], "stream": True, "temperature": 0.8,
+            "stream_options": {"include_usage": True}}
     last = "нет ответа"
     async with httpx.AsyncClient(timeout=timeout) as cl:
         for m in _models(models):
-            sent = False
+            sent, gid = False, None
             try:
                 async with cl.stream("POST", f"{BASE}/chat/completions", headers=_headers(), json={**body, "model": m}) as r:
                     if r.status_code != 200:
@@ -61,11 +64,16 @@ async def stream_text(models, messages: list[dict], system: str, timeout: float 
                             continue
                         if d.get("error"):
                             raise AIError(str(d["error"])[:200])
+                        gid = d.get("id") or gid
+                        if d.get("usage"):
+                            costs.openrouter(d, m); gid = None
                         for ch in d.get("choices", []):
                             t = (ch.get("delta") or {}).get("content")
                             if t:
                                 sent = True
                                 yield t
+                    if gid:
+                        costs.openrouter(gen_id=gid, note=m)
                     if sent:
                         return
             except (httpx.HTTPError, AIError) as e:
@@ -87,6 +95,7 @@ async def complete(models, messages: list[dict], timeout: float = 120, **extra) 
                     await asyncio.sleep(1 + attempt)
                     continue
                 if r.status_code == 200:
+                    costs.openrouter(r.json(), m)
                     c = r.json()["choices"][0]["message"].get("content")
                     return c if isinstance(c, str) else "".join(p.get("text", "") for p in (c or []))
                 last = f"{m}: {r.status_code} {r.text[:200]}"
@@ -118,6 +127,11 @@ async def speech(text: str, voice: str | None = None, instructions: str = STYLE,
                 await asyncio.sleep(1 + attempt)
                 continue
             if r.status_code == 200 and r.content:
+                gid = r.headers.get("x-generation-id") or r.headers.get("x-openrouter-generation-id")
+                if gid:
+                    costs.openrouter(gen_id=gid, note=body["model"])
+                else:   # no id in the reply: Gemini TTS bills ~$9 per 1M audio tokens (25 tokens per second of audio)
+                    costs.record("openrouter", len(r.content) / 48000 * 25 * 9e-6, body["model"] + " (по длине звука)")
                 return pcm_to_wav(r.content)
             last = f"{r.status_code} {r.text[:200]}"
             if r.status_code not in RETRY_STATUS:
@@ -157,6 +171,7 @@ async def image(prompt: str, aspect: str = "1:1", ref_urls: list[str] | None = N
                 await asyncio.sleep(2 + attempt)
                 continue
             if r.status_code == 200:
+                costs.openrouter(r.json(), body["model"])
                 for it in r.json().get("data") or []:
                     if it.get("b64_json"):
                         return base64.b64decode(it["b64_json"])
@@ -211,6 +226,7 @@ async def artist_sound(prompt: str) -> str:
             r = await cl.post(f"{BASE}/chat/completions", headers=_headers(), json=body)
         if r.status_code != 200:
             return ""
+        costs.openrouter(r.json(), "web search")
         txt = (r.json()["choices"][0]["message"].get("content") or "").strip()
         return "" if "UNKNOWN" in txt[:40] else txt[:1200]
     except Exception:
@@ -252,7 +268,8 @@ async def enhance_prompt(prompt: str, style: str = "", has_ref: bool = False) ->
 
 async def stream_events(model: str, messages: list[dict], tools: list | None = None, timeout: float = 90):
     """Streams ('text', str), then ('tools', [{id,name,arguments}]) if the model called tools."""
-    body = {"model": model, "messages": messages, "stream": True, "temperature": 0.7}
+    body = {"model": model, "messages": messages, "stream": True, "temperature": 0.7, "stream_options": {"include_usage": True}}
+    gid = None
     if tools:
         body["tools"] = tools
     calls: dict[int, dict] = {}
@@ -272,6 +289,9 @@ async def stream_events(model: str, messages: list[dict], tools: list | None = N
                     continue
                 if d.get("error"):
                     raise AIError(str(d["error"])[:200])
+                gid = d.get("id") or gid
+                if d.get("usage"):
+                    costs.openrouter(d, model); gid = None
                 for ch in d.get("choices", []):
                     delta = ch.get("delta") or {}
                     if delta.get("content"):
@@ -282,6 +302,8 @@ async def stream_events(model: str, messages: list[dict], tools: list | None = N
                         fn = tc.get("function") or {}
                         c["name"] = fn.get("name") or c["name"]
                         c["arguments"] += fn.get("arguments") or ""
+    if gid:
+        costs.openrouter(gen_id=gid, note=model)
     if calls:
         yield ("tools", [calls[k] for k in sorted(calls)])
 
@@ -294,5 +316,6 @@ async def web_answer(query: str) -> str:
         r = await cl.post(f"{BASE}/chat/completions", headers=_headers(), json=body)
     if r.status_code != 200:
         raise AIError(f"поиск: {r.status_code}")
+    costs.openrouter(r.json(), "web search")
     c = r.json()["choices"][0]["message"].get("content") or ""
     return c[:1800]

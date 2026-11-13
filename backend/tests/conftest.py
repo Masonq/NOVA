@@ -25,8 +25,10 @@ async def client():
 
 @pytest.fixture(autouse=True)
 def no_network(monkeypatch):
-    """The bot and the prompt enhancer never go to the internet in tests; a test may override them."""
-    from app import bot, ai
+    """The bot, the prompt enhancer and the balance lookups never go to the internet in tests; a test may override them."""
+    from app import bot, ai, costs
+    async def nobal(): return {"openrouter": {"left": 4.2, "key_used": 0.8, "key_limit": 5}, "kie": {"credits": 1080, "usd": 5.4}}
+    monkeypatch.setattr(costs, "balances", nobal)
     async def same(prompt, style="", has_ref=False): return prompt
     monkeypatch.setattr(ai, "enhance_prompt", same)
     async def brief(prompt, genre="", mood="", vocal=False):
