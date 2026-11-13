@@ -7,6 +7,7 @@ import time
 DEFAULT_PRICE = {
     "image": 12,            # one picture: Seedream 5.5 2K / GPT Image 2.6 (~$0.03–0.035)
     "image_edit": 18,       # edit of the user's own photo: Nano Banana 2.1 2K (~$0.05–0.06)
+    "image_hq": 18,         # «Высокое качество» on top: GPT Image 2.6 high (~$0.13)
     "video_std_s": 24,      # Kling 3.0 std, per second
     "video_pro_s": 36,      # Kling 3.0 pro (1080p), per second
     "video_sound_k": 1.5,   # sound on
@@ -50,7 +51,8 @@ async def refresh(db, force: bool = False):
 
 def cost(kind: str, params: dict, prompt: str = "") -> int:
     if kind == "image":
-        return int(PRICE["image_edit"] if params.get("refs") else PRICE["image"])
+        base = int(PRICE["image_edit"] if params.get("refs") else PRICE["image"])
+        return base + (int(PRICE["image_hq"]) if params.get("hq") else 0)
     if kind == "video":
         sec = int(params.get("duration", 5))
         per = PRICE["video_pro_s"] if params.get("quality") == "1080p" else PRICE["video_std_s"]

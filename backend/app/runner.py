@@ -75,7 +75,7 @@ async def run_image(job: Job):
     p = job.params or {}
     hint = STYLE_HINT.get(p.get("style", "Фото"), "")
     refs = p.get("refs") or []
-    route = ai.image_route(p.get("style", "Фото"), bool(refs))
+    route = ai.image_route(p.get("style", "Фото"), bool(refs), bool(p.get("hq")))
     await _update(job.id, status="running", progress=4, stage="Продумываю детали")
     prompt = await ai.enhance_prompt(job.prompt, hint, bool(refs))
     if prompt == job.prompt and hint:

@@ -310,3 +310,21 @@ def test_exact_text_and_white_thumbs(tmp_path, monkeypatch):
     th = storage.make_thumb("logo.png", 32)
     with Image.open(tmp_path / th) as im:
         assert im.convert("RGB").getpixel((5, 5)) == (255, 255, 255)        # transparent -> white, not black
+
+
+@A
+async def test_image_high_quality_switch(client, monkeypatch):
+    from app import runner, ai
+    seen = []
+    async def fake_image(prompt, aspect, refs, route="picture"):
+        seen.append(route); return PNG
+    monkeypatch.setattr(ai, "image", fake_image)
+    h, jid = await _job(client, 9101, "image", "закат над Белградом", {"style": "Фото", "hq": True})
+    await runner.run_job({}, jid)
+    j = (await client.get(f"/api/jobs/{jid}", headers=h)).json()
+    assert j["cost"] == 30 and seen == ["hq"] and j["params"]["model"] == "openai/gpt-image-2.6-flare"
+    up = (await client.post("/api/uploads", files={"file": ("a.png", PNG, "image/png")}, headers=h)).json()["url"]
+    q = await client.post("/api/jobs/price", json={"kind": "image", "prompt": "x y", "params": {"refs": [up], "hq": True}}, headers=h)
+    assert q.json()["cost"] == 36
+    from app.ai import IMAGE_ROUTES
+    assert IMAGE_ROUTES["hq"]["quality"] == "high"
