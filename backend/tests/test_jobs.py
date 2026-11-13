@@ -143,22 +143,27 @@ async def test_upload_only_images(client):
 
 
 @A
-async def test_image_max_mode_enhanced_prompt(client, monkeypatch):
-    from app import runner, ai
-    seen = {}
+async def test_image_model_per_task_and_enhanced_prompt(client, monkeypatch):
+    from app import runner, ai, storage
+    seen = []
     async def enhance(prompt, style="", has_ref=False):
-        return "A detailed cinematic prompt about a fox in neon light, rich textures"
-    async def fake_image(prompt, aspect, refs, quality="fast"):
-        seen.update(prompt=prompt, quality=quality, aspect=aspect); return PNG
+        return "A detailed prompt: " + prompt
+    async def fake_image(prompt, aspect, refs, route="picture"):
+        seen.append((route, aspect, prompt)); return PNG
     monkeypatch.setattr(ai, "enhance_prompt", enhance)
     monkeypatch.setattr(ai, "image", fake_image)
-    h, jid = await _job(client, 8601, "image", "лиса в неоне", {"quality": "max", "aspect": "3:4"})
-    j0 = (await client.get(f"/api/jobs/{jid}", headers=h)).json()
-    assert j0["cost"] == 140
-    await runner.run_job({}, jid)
-    j = (await client.get(f"/api/jobs/{jid}", headers=h)).json()
-    assert j["status"] == "done" and seen["quality"] == "max" and seen["aspect"] == "3:4" and seen["prompt"].startswith("A detailed")
-    assert j["params"]["enhanced"].startswith("A detailed")
-    r = await client.post("/api/jobs/price", json={"kind": "image", "prompt": "x y", "params": {"quality": "fast"}}, headers=h)
-    assert r.json()["cost"] == 40
-    assert (await client.post("/api/jobs", json={"kind": "image", "prompt": "x y", "params": {"quality": "ultra"}}, headers=h)).status_code == 422
+    h, j1 = await _job(client, 8601, "image", "лиса в неоне", {"style": "Фото", "aspect": "3:4"})
+    _, j2 = await _job(client, 8601, "image", "логотип «Зерно»", {"style": "Логотип"})
+    up = (await client.post("/api/uploads", files={"file": ("a.png", PNG, "image/png")}, headers=h)).json()["url"]
+    _, j3 = await _job(client, 8601, "image", "сделай меня в костюме", {"style": "Арт", "refs": [up]})
+    for j in (j1, j2, j3):
+        await runner.run_job({}, j)
+    routes = {}
+    for r, a, p in seen:
+        routes.setdefault(r, set()).add(p)
+    assert set(routes) == {"picture", "logo", "edit"} and all(len(v) == 1 for v in routes.values())
+    j = (await client.get(f"/api/jobs/{j1}", headers=h)).json()
+    assert j["status"] == "done" and j["cost"] == 40 and j["params"]["model"] == "bytedance-seed/seedream-5-5"
+    assert j["params"]["enhanced"].startswith("A detailed prompt")
+    assert (await client.get(f"/api/jobs/{j2}", headers=h)).json()["params"]["model"] == "openai/gpt-image-2.6-flare"
+    assert (await client.get(f"/api/jobs/{j3}", headers=h)).json()["params"]["model"] == "google/gemini-nano-banana-2.1"

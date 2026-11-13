@@ -5,8 +5,7 @@ import math
 import time
 
 DEFAULT_PRICE = {
-    "image": 40,            # 4 variants, Nano Banana 2.1 1K (~$0.034 each)
-    "image_max": 140,       # 4 variants, Nano Banana Pro 2K (~$0.134 each)
+    "image": 40,            # 4 variants: Seedream 5.5 2K / GPT Image 2.6 / Nano Banana 2.1 2K (~$0.03–0.05 each)
     "video_std_s": 24,      # Kling 3.0 std, per second
     "video_pro_s": 36,      # Kling 3.0 pro (1080p), per second
     "video_sound_k": 1.5,   # sound on
@@ -47,7 +46,7 @@ async def refresh(db, force: bool = False):
 
 def cost(kind: str, params: dict, prompt: str = "") -> int:
     if kind == "image":
-        return int(PRICE["image_max"] if params.get("quality") == "max" else PRICE["image"])
+        return int(PRICE["image"])
     if kind == "video":
         sec = int(params.get("duration", 5))
         per = PRICE["video_pro_s"] if params.get("quality") == "1080p" else PRICE["video_std_s"]

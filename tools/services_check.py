@@ -58,12 +58,15 @@ def main(path, image):
         except Exception as e:
             out.append(f"- Агент: ошибка {type(e).__name__} {e}")
         if image:   # one real picture per photo mode through the images API (~$0.17 once)
-            for model, res in (("google/gemini-nano-banana-2.1", "1K"), ("google/gemini-3-pro-image", "2K")):
+            tests = [({"model": "bytedance-seed/seedream-5-5", "resolution": "2K"}, "Photorealistic portrait of a barista in a cosy coffee shop, morning window light, 85mm lens"),
+                     ({"model": "openai/gpt-image-2.6-flare", "quality": "medium"}, "Minimalist vector logo of a coffee shop with the word \"Зерно\": a cup and a coffee bean, warm colours, plain background"),
+                     ({"model": "google/gemini-nano-banana-2.1", "resolution": "2K"}, "A cosy coffee cup on a wooden table, soft daylight")]
+            for extra, prompt in tests:
+                model, res = extra["model"], extra.get("resolution") or extra.get("quality")
                 t0 = time.time()
                 try:
-                    r = cl.post("https://openrouter.ai/api/v1/images", headers={"Authorization": "Bearer " + o}, timeout=240, json={
-                        "model": model, "prompt": "Minimalist vector logo of a coffee shop with the word \"Зерно\": a cup and a coffee bean, warm colours, plain background",
-                        "aspect_ratio": "1:1", "resolution": res, "n": 1})
+                    r = cl.post("https://openrouter.ai/api/v1/images", headers={"Authorization": "Bearer " + o}, timeout=240,
+                                json={"prompt": prompt, "aspect_ratio": "1:1", "n": 1, **extra})
                     if r.status_code != 200:
                         out.append(f"- Фото {model} {res}: {r.status_code} {r.text[:200]}"); continue
                     d = r.json(); it = (d.get("data") or [{}])[0]

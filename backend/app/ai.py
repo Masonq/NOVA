@@ -125,14 +125,25 @@ async def speech(text: str, voice: str | None = None, instructions: str = STYLE,
     raise AIError(f"озвучка: {last}")
 
 
-IMAGE_MODELS = {"fast": ("google/gemini-nano-banana-2.1", "1K"), "max": ("google/gemini-3-pro-image", "2K")}
+# The best model per task at a mid price (Nov 2026): Seedream 5.5 for pictures, GPT Image 2.6 for logos and text,
+# Nano Banana 2.1 for edits of the user's own photo (keeps faces and objects recognisable).
+IMAGE_ROUTES = {
+    "picture": {"model": "bytedance-seed/seedream-5-5", "resolution": "2K"},
+    "logo": {"model": "openai/gpt-image-2.6-flare", "quality": "medium"},
+    "edit": {"model": "google/gemini-nano-banana-2.1", "resolution": "2K"},
+}
+GPT_ASPECTS = {"1:1", "3:2", "2:3", "4:3", "3:4", "16:9", "9:16", "21:9"}
 
 
-async def image(prompt: str, aspect: str = "1:1", ref_urls: list[str] | None = None, quality: str = "fast") -> bytes:
-    """One image through the OpenRouter images API. fast: Nano Banana 2.1 (1K), max: Nano Banana Pro (2K)."""
+def image_route(style: str, has_ref: bool) -> str:
+    return "edit" if has_ref else "logo" if style == "Логотип" else "picture"
+
+
+async def image(prompt: str, aspect: str = "1:1", ref_urls: list[str] | None = None, route: str = "picture") -> bytes:
+    """One image through the OpenRouter images API, model chosen by the task (see IMAGE_ROUTES)."""
     import base64
-    model, res = IMAGE_MODELS.get(quality, IMAGE_MODELS["fast"])
-    body = {"model": model, "prompt": prompt, "aspect_ratio": aspect, "resolution": res, "n": 1}
+    r0 = IMAGE_ROUTES.get(route, IMAGE_ROUTES["picture"])
+    body = {"prompt": prompt, "aspect_ratio": aspect if (route != "logo" or aspect in GPT_ASPECTS) else "1:1", "n": 1, **r0}
     if ref_urls:
         body["input_references"] = [{"type": "image_url", "image_url": {"url": u}} for u in ref_urls[:4]]
     last = ""
