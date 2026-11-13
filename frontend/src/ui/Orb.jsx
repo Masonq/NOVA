@@ -15,6 +15,125 @@ function loop(now) {
 function kick() { if (!raf) raf = requestAnimationFrame(loop); }
 if (typeof document !== "undefined") document.addEventListener("visibilitychange", () => !document.hidden && kick());
 
+
+/* ---------- WebGL energy orb: glowing rim, silky particle ribbons flowing around it, veils inside ---------- */
+const VS = "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
+const FS = `precision highp float;
+uniform vec2 res; uniform float t; uniform float e; uniform float ang;
+float h(vec3 p){p=fract(p*0.3183099+.1);p*=17.;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}
+float n3(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);
+ return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x),mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x),f.y),
+            mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x),mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x),f.y),f.z);}
+float fbm(vec3 p){float a=.5,s=0.;for(int i=0;i<4;i++){s+=a*n3(p);p=p*2.03+vec3(1.7,9.2,3.1);a*=.5;}return s;}
+mat3 rotY(float a){float c=cos(a),s=sin(a);return mat3(c,0,-s,0,1,0,s,0,c);}
+mat3 rotX(float a){float c=cos(a),s=sin(a);return mat3(1,0,0,0,c,s,0,-s,c);}
+float fbm3(vec3 p){return .55*n3(p)+.3*n3(p*2.1+vec3(4.2))+.15*n3(p*4.3+vec3(1.3));}
+float ribbon(vec3 p,float tt,float k){
+ float d=fbm3(p*.85+vec3(tt*.11,tt*.07,-tt*.05)+k);
+ float v=p.y*1.6+d*3.2+sin(p.x*1.7+tt*.2+k)*.6;
+ float b=1.-abs(sin(v*2.6));
+ return pow(b,7.)+pow(b,40.)*.8;
+}
+float silk(vec3 p,float tt){
+ vec3 q=p;
+ vec3 r2=vec3(p.z,p.x,p.y), r3=vec3(p.y,p.z,-p.x);
+ float a=ribbon(q,tt,0.)*smoothstep(.25,.65,fbm3(q*1.1+tt*.05));
+ float b=ribbon(r2,tt*.9,3.7)*smoothstep(.3,.7,fbm3(r2*1.1-tt*.04+2.));
+ float c=ribbon(r3,tt*1.1,7.1)*smoothstep(.35,.75,fbm3(r3*1.2+tt*.03+5.));
+ float veil=smoothstep(.45,.85,fbm3(p*.9+vec3(0.,tt*.06,0.)))*.35;
+ return a+b*.8+c*.6+veil;
+}
+vec3 pal(float k){
+ vec3 blue=vec3(.12,.32,1.),vio=vec3(.48,.16,1.),pink=vec3(1.,.16,.66),cyan=vec3(.25,.78,1.);
+ k=fract(k);
+ return k<.33?mix(blue,vio,k/.33):k<.66?mix(vio,pink,(k-.33)/.33):mix(pink,cyan*.9+blue*.1,(k-.66)/.34);
+}
+void main(){
+ vec2 uv=(gl_FragCoord.xy-.5*res)/(.5*res.y);
+ float tt=t*(1.+e*1.6);
+ float a=atan(uv.y,uv.x);
+ float R=.8+.012*sin(t*1.3)+e*.035*(n3(vec3(a*2.,tt*.8,0.))-.5)*2.;
+ float r=length(uv)/R;
+ vec3 col=vec3(0.);
+ float hue=.12+.5+.5*sin(a+tt*.22)*.42+fbm(vec3(uv*1.5,tt*.1))*.35;
+ float edgeN=fbm(vec3(a*2.2,tt*.35,7.));
+ if(r<1.){
+  float z=sqrt(1.-r*r);
+  vec3 n=vec3(uv/R,z);
+  mat3 m=rotY(ang)*rotX(.35+.12*sin(t*.31));
+  vec3 pf=m*n, pb=m*vec3(n.xy,-z);
+  float fres=pow(1.-z,1.7);
+  float sf=silk(pf,tt), sb=silk(pb+vec3(3.1),tt);
+  float grain=.6+.8*h(vec3(floor(gl_FragCoord.xy/1.4),floor(t*5.)));
+  float front=sf*(.3+2.6*fres)*grain;
+  float back=sb*(.3+.8*fres)*grain*.6;
+  vec3 cf=pal(hue+sf*.3+pf.y*.18), cb=mix(vec3(.25,.35,1.),pal(hue+.3+pb.x*.2),.5);
+  col+=cf*front*(1.2+e*.8)+cb*back;
+  float band=smoothstep(.62+.22*edgeN,1.,r);                 // ragged fiery zone along the rim
+  col+=pal(hue+.08+edgeN*.3)*band*band*(.85+1.3*sf)*(1.+e*.7);
+  float rim=exp(-(1.-r)*30.);
+  col+=mix(vec3(1.),pal(hue+.1*sin(a*2.)),.82)*rim*1.05;
+  col+=vec3(.06,.04,.16)*z;
+ }else{
+  float g=exp(-(r-1.)*7.)*.7+exp(-(r-1.)*30.)*.9;
+  col+=pal(hue+.05*sin(a*3.+tt))*g*(.9+e*.6);
+ }
+ col=1.-exp(-col*1.35);
+ float lum=dot(col,vec3(.3,.5,.2)); col=max(vec3(0.),mix(vec3(lum),col,1.45));
+ float al=clamp(max(max(col.r,col.g),col.b)*1.15,0.,1.);
+ gl_FragColor=vec4(col,al);
+}`;
+
+let GL_OK = null;
+function glSupported() {
+  if (GL_OK !== null) return GL_OK;
+  try {
+    const c = document.createElement("canvas"); c.width = c.height = 4;
+    const g = c.getContext("webgl");
+    if (!g) return (GL_OK = false);
+    const x = g.createShader(g.FRAGMENT_SHADER); g.shaderSource(x, FS); g.compileShader(x);
+    GL_OK = !!g.getShaderParameter(x, g.COMPILE_STATUS);
+    g.getExtension("WEBGL_lose_context")?.loseContext();
+  } catch { GL_OK = false; }
+  return GL_OK;
+}
+
+function makeGLOrb(canvas, size) {
+  if (!glSupported()) return null;
+  const dpr = Math.min(window.devicePixelRatio || 1, size > 120 ? 2 : 3);
+  canvas.width = canvas.height = Math.round(size * dpr);
+  const gl = canvas.getContext("webgl", { premultipliedAlpha: false, alpha: true, antialias: false });
+  if (!gl) return null;
+  const sh = (type, src) => { const x = gl.createShader(type); gl.shaderSource(x, src); gl.compileShader(x); return gl.getShaderParameter(x, gl.COMPILE_STATUS) ? x : null; };
+  const vs = sh(gl.VERTEX_SHADER, VS), fs = sh(gl.FRAGMENT_SHADER, FS);
+  if (!vs || !fs) return null;
+  const pr = gl.createProgram(); gl.attachShader(pr, vs); gl.attachShader(pr, fs); gl.linkProgram(pr);
+  if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) return null;
+  gl.useProgram(pr);
+  const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(pr, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  const U = { res: gl.getUniformLocation(pr, "res"), t: gl.getUniformLocation(pr, "t"), e: gl.getUniformLocation(pr, "e"), ang: gl.getUniformLocation(pr, "ang") };
+  gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  const o = { visible: true, energy: 0, burst: 0, levelRef: null, gl: true };
+  const seed = Math.random() * 50;
+  o.draw = (t) => {
+    if (gl.isContextLost()) return;
+    o.burst *= 0.94;
+    const live = o.levelRef ? o.levelRef() : 0;
+    o.smooth = (o.smooth || 0) * 0.82 + live * 0.18;
+    const e = Math.min(1.5, o.energy + o.burst + o.smooth * 1.3);
+    const dt = o.lastT ? Math.min(0.1, t - o.lastT) : 0; o.lastT = t;
+    o.ang = (o.ang || 0) + dt * (0.18 + 0.7 * e);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.uniform2f(U.res, canvas.width, canvas.height);
+    gl.uniform1f(U.t, t + seed); gl.uniform1f(U.e, e); gl.uniform1f(U.ang, o.ang);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  };
+  return o;
+}
+
 function makeOrb(canvas, size, dense) {
   const dpr = Math.min(window.devicePixelRatio || 1, 3);
   canvas.width = canvas.height = Math.round(size * dpr);
@@ -103,7 +222,7 @@ export default function Orb({ size = 54, dense = false, energy = 0, className = 
   const orb = useRef(null);
   useEffect(() => {
     const cv = ref.current; if (!cv) return;
-    const o = makeOrb(cv, size, dense);
+    const o = makeGLOrb(cv, size) || makeOrb(cv, size, dense);
     orb.current = o; orbs.add(o);
     const io = new IntersectionObserver(([en]) => { o.visible = en.isIntersecting; if (o.visible) kick(); });
     io.observe(cv);
