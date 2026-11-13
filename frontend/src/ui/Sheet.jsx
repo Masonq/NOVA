@@ -21,15 +21,23 @@ export async function shareJob(job) {
   try { await navigator.clipboard.writeText(r.url); toast("Ссылка скопирована"); } catch { toast(r.url); }
 }
 
+const open_sheets = { n: 0 };
+
 export default function Sheet({ open, onClose, children, title }) {
   useEffect(() => {
     if (!open) return;
     const close = () => onClose();
     pushBack(close);
-    const prev = document.body.style.overflow; document.body.style.overflow = "hidden";
+    // no body.style changes here: they make the iOS web view repaint the whole document; a class + CSS is enough
+    const root = document.documentElement;
+    open_sheets.n += 1; root.classList.add("sheet-open");
     const esc = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", esc);
-    return () => { popBack(close); document.body.style.overflow = prev; window.removeEventListener("keydown", esc); };
+    return () => {
+      popBack(close); window.removeEventListener("keydown", esc);
+      open_sheets.n = Math.max(0, open_sheets.n - 1);
+      if (!open_sheets.n) root.classList.remove("sheet-open");
+    };
   }, [open]);
   if (!open) return null;
   return (

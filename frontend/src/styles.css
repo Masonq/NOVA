@@ -294,7 +294,15 @@ button.result { display: block; width: 100%; text-align: left; background-size: 
 .bar .chip { height: 32px; }
 
 /* ---------- sheet ---------- */
-.sheet-wrap { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.55); display: flex; align-items: flex-end; justify-content: center; animation: fade .2s ease-out; }
+/* The dim layer animates its colour, never its opacity: an opacity animation on the wrapper makes iOS WebKit re-composite
+   the layers when it ends, and blurred (backdrop-filter) elements underneath flash on top for a frame or two. */
+.sheet-wrap { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.55); display: flex; align-items: flex-end; justify-content: center;
+  animation: dim .22s ease-out; overscroll-behavior: contain; touch-action: none; }
+@keyframes dim { from { background: rgba(0,0,0,0); } }
+.sheet-wrap .sheet { touch-action: pan-y; overscroll-behavior: contain; }
+/* While a sheet is open nothing underneath keeps a live blur: dimmed anyway, and WebKit has nothing to re-layer. */
+html.sheet-open .app *:not(.sheet-wrap):not(.sheet-wrap *) {
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 @keyframes fade { from { opacity: 0; } }
 .sheet { will-change: transform; width: 100%; max-width: 560px; max-height: 92dvh; overflow-y: auto; background: #141418; border: 1px solid var(--line); border-bottom: none; border-radius: 26px 26px 0 0; padding: 8px 16px calc(16px + var(--safe-b)); display: flex; flex-direction: column; gap: 6px; animation: up .34s cubic-bezier(.2,.9,.25,1); }
 @keyframes up { from { transform: translateY(100%); } }

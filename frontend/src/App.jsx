@@ -85,7 +85,8 @@ export default function App() {
     const root = ["home", "archive", "profile"].includes(route);
     // Visibility depends on the screen only. Toggling Telegram's button when a sheet opens makes Telegram animate its header
     // and cross-fade the whole web view (a visible flash), so a sheet on a tab screen closes by swipe or tap instead.
-    const sync = () => (root ? b.hide() : b.show());
+    // only tell Telegram when the state really changes: every call re-applies its header and may animate it
+    const sync = () => { const want = !root; if (b.__nova !== want) { b.__nova = want; want ? b.show() : b.hide(); } };
     const back = () => {
       haptic("light");
       if (backStack.length) { backStack[backStack.length - 1](); return; }
