@@ -57,7 +57,10 @@ def cost(kind: str, params: dict, prompt: str = "") -> int:
         k = PRICE["video_sound_k"] if params.get("sound") else 1
         return int(math.ceil(sec * per * k / 5) * 5)
     if kind == "music":
-        return int(PRICE["music"])
+        extra = 0
+        if params.get("voice_chars"):   # a track from a voice-over: the text is read again in rhythm first
+            extra = max(int(PRICE["tts_min"]), int(math.ceil(int(params["voice_chars"]) / 1000 * PRICE["tts_1k"])))
+        return int(PRICE["music"]) + extra
     if kind == "tts":
         return max(int(PRICE["tts_min"]), int(math.ceil(len(prompt) / 1000 * PRICE["tts_1k"])))
     raise ValueError(kind)

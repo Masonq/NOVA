@@ -138,8 +138,77 @@ async def run_video(job: Job):
 
 
 # ---------------- music ----------------
+RHYTHM = {
+    "Рэп": "Читай как рэп-читку под бит около 90 BPM: ритмично, уверенно, с акцентами на рифмах и паузами между строками.",
+    "Хип-хоп": "Читай как рэп-читку под бит около 90 BPM: ритмично, уверенно, с акцентами на рифмах и паузами между строками.",
+}
+RHYTHM_DEFAULT = "Читай напевно и ритмично, как спокойный речитатив под музыку: ровный темп, мягкие ударения, паузы в конце строк."
+
+
+async def run_music_from_voice(job: Job, p: dict):
+    """A track around the user's voice-over: the text is read again in rhythm by the same voice,
+    then Suno (Add Instrumental) builds the music around that vocal and keeps the words."""
+    async with Session() as db:
+        src = await db.get(Job, int(p["voice_job"]))
+    text, voice = src.prompt, (src.params or {}).get("voice")
+    vocal_rel = p.get("vocal")
+    if not vocal_rel:
+        await _update(job.id, status="running", progress=4, stage="Начитываю в ритм")
+        wav = await ai.speech(text[:4900], voice, RHYTHM.get(p.get("genre", ""), RHYTHM_DEFAULT))
+        vocal_rel = save_bytes(job, "vocal.wav", wav)
+        mp3 = vocal_rel[:-4] + ".mp3"
+        if await ffmpeg("-i", str(abs_path(vocal_rel)), "-b:a", "192k", str(abs_path(mp3))):
+            abs_path(vocal_rel).unlink(missing_ok=True)
+            vocal_rel = mp3
+        p = {**p, "vocal": vocal_rel}
+        await _update(job.id, params=p)
+    brief = p.get("brief")
+    if not brief:
+        await _update(job.id, progress=8, stage="Продумываю звучание")
+        wish = job.prompt if job.prompt and job.prompt != "Трек из озвучки" else ""
+        brief = await ai.music_brief(f"Музыка под готовый вокал с таким текстом: {text[:600]}" + (f". Пожелания: {wish}" if wish else ""),
+                                     p.get("genre", ""), p.get("mood", ""), True)
+        p = {**p, "brief": {**brief, "lyrics": text[:4900]}}
+        await _update(job.id, params=p)
+    task = p.get("task")
+    if not task:
+        await _update(job.id, progress=10, stage="Пишу музыку под голос")
+        task = await kie.create("ai-music-api/add-instrumental", {
+            "upload_url": f"{get_settings().public_url}/files/{vocal_rel}", "model": "V6",
+            "title": (brief.get("title") or "Трек из озвучки")[:80], "tags": (brief.get("style") or "modern pop")[:200],
+            "negative_tags": "off-key, distorted vocals, harsh noise, muddy mix", "lyrics": text[:4900],
+            "audio_weight": 0.85, "style_weight": 0.65,
+        })
+        p = {**p, "task": task}
+        await _update(job.id, params=p, stage="В очереди")
+
+    async def tick(state, el):
+        await _update(job.id, progress=min(92, 14 + int(78 * el / 150)), stage="Записываю" if state == "generating" else "В очереди")
+
+    res = await kie.wait(task, tick, timeout=900)
+    tracks = res.get("data") or res.get("sunoData") or []
+    t = tracks[0] if tracks else {}
+    url = t.get("audio_url") or t.get("audioUrl") or t.get("stream_audio_url")
+    if not url:
+        raise RuntimeError("трек не вернулся")
+    rel = await download(job, "track1.mp3", url, max_mb=60)
+    f = {"path": rel, "type": "audio", "title": t.get("title") or brief.get("title") or "", "duration": t.get("duration") or 0}
+    img = t.get("image_url") or t.get("imageUrl")
+    if img:
+        try:
+            f["cover"] = await download(job, "cover1.jpg", img, max_mb=10)
+            th = await asyncio.to_thread(make_thumb, f["cover"], 400)
+            if th:
+                f["cover_thumb"] = th
+        except Exception:
+            pass
+    return [f], 0, ""
+
+
 async def run_music(job: Job):
     p = job.params or {}
+    if p.get("voice_job"):
+        return await run_music_from_voice(job, p)
     vocal = not bool(p.get("instrumental", True))
     brief = p.get("brief")
     if not brief:   # Suno rejects artist names: describe the sound instead, add a title

@@ -207,6 +207,14 @@ h2 { font-size: 12.5px; font-weight: 600; color: var(--mut); margin: 0; }
 .pl-play { width: 42px; height: 42px; border-radius: 50%; background: var(--txt); color: var(--bg); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .ic-btn.plain { border: none; background: none; width: 34px; }
 
+.voicejob { display: flex; align-items: center; gap: 12px; padding: 12px 10px 12px 14px; border-color: rgba(10,132,255,.4); background: var(--accent-soft); }
+.voicejob .sr-t small { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
+.vj-ic { width: 38px; height: 38px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; background: rgba(10,132,255,.2); color: #8EC1FF; flex-shrink: 0; }
+.voicejob .ic-btn { width: 34px; height: 34px; flex-shrink: 0; }
+.vj-add { width: 100%; justify-content: flex-start; height: auto; min-height: 58px; padding: 10px 14px; text-align: left; }
+.vj-add > svg:first-child { color: #8EC1FF; }
+.vj-add > svg:last-child { margin-left: 6px; color: var(--mut2); }
+
 /* ---------- island, tasks ---------- */
 .island { position: relative; display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 16px; border-radius: 22px; background: #16161A; border: 1px solid var(--line2); overflow: hidden; text-align: left; }
 .isl-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px rgba(10,132,255,.2); animation: pulse 1.4s ease-in-out infinite; flex-shrink: 0; }

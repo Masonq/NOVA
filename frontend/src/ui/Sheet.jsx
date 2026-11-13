@@ -77,6 +77,8 @@ export function JobSheet({ job, file, onClose, go, onChange }) {
       {f && <Row ic="download" t="Скачать" on={() => saveFile(f.url, name)} />}
       {f && <Row ic="share" t="Поделиться" sub="страница с превью для Telegram и соцсетей" on={() => shareJob(job)} />}
       {job.kind === "image" && f && <Row ic="video" t="Оживить в видео" sub="картинка станет первым кадром" cls="accent" on={() => { onClose(); go("video", { image: f.url }); }} />}
+      {job.kind === "tts" && f && <Row ic="music" t="Сделать трек из этой озвучки" sub="тем же голосом и с этим текстом" cls="accent"
+        on={() => { onClose(); go("music", { voice_job: job.id, voice_text: job.prompt, voice: job.params?.voice }); }} />}
       {job.kind !== "tts" && <Row ic="spark" t="Сделать похожее" on={() => { onClose(); go(job.kind, { prompt: job.prompt }); }} />}
       <Row ic="trash" t="Удалить" cls="danger" on={del} />
     </Sheet>);

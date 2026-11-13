@@ -213,3 +213,36 @@ def test_artist_reference_is_detected():
         assert ARTIST_HINT.search(t), t
     for t in ("спокойный фон для видео о путешествиях", "песня про ночной город"):
         assert not ARTIST_HINT.search(t), t
+
+
+@A
+async def test_track_from_voice_over(client, monkeypatch):
+    from app import runner, kie, storage, ai
+    reads = []
+    async def speech(text, voice=None, instructions=""):
+        reads.append((text, voice, instructions)); return ai.pcm_to_wav(b"\x00\x00" * 24000)
+    monkeypatch.setattr(ai, "speech", speech)
+    text = "Я иду по ночному городу, огни горят, и мне не страшно"
+    h, tid = await _job(client, 8801, "tts", text, {"voice": "Puck", "tone": "Бодро"})
+    await runner.run_job({}, tid)
+    sent = {}
+    async def create(model, inp):
+        sent.update(inp); sent["endpoint"] = model; return "v1"
+    async def wait(task, tick, timeout):
+        return {"data": [{"audio_url": "https://a/x.mp3", "title": "Ночной город", "duration": 95}]}
+    async def dl(job, name, url, max_mb=300): return storage.save_bytes(job, name, b"1")
+    monkeypatch.setattr(kie, "create", create); monkeypatch.setattr(kie, "wait", wait); monkeypatch.setattr(runner, "download", dl)
+    q = (await client.post("/api/jobs/price", json={"kind": "music", "prompt": "Трек из озвучки", "params": {"voice_job": tid}}, headers=h)).json()
+    assert q["cost"] == 30 + 2
+    r = await client.post("/api/jobs", json={"kind": "music", "prompt": "Трек из озвучки", "params": {"voice_job": tid, "genre": "Рэп"}}, headers=h)
+    assert r.status_code == 200, r.text
+    jid = r.json()["id"]
+    await runner.run_job({}, jid)
+    j = (await client.get(f"/api/jobs/{jid}", headers=h)).json()
+    assert j["status"] == "done" and j["files"][0]["title"] == "Ночной город" and j["cost"] == 32
+    assert sent["endpoint"] == "ai-music-api/add-instrumental" and sent["model"] == "V6" and sent["lyrics"] == text and sent["audio_weight"] >= 0.8
+    assert sent["upload_url"].startswith("https://nova.test/files/") and sent["upload_url"].endswith("vocal.mp3")
+    assert reads[-1][1] == "Puck" and "рэп" in reads[-1][2].lower()                 # same voice, read in rhythm
+    h2 = await login(client, 8802)
+    bad = await client.post("/api/jobs", json={"kind": "music", "prompt": "Трек из озвучки", "params": {"voice_job": tid}}, headers=h2)
+    assert bad.status_code == 404                                                     # someone else's voice-over

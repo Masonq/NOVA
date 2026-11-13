@@ -53,7 +53,7 @@ class JobIn(BaseModel):
 ALLOWED = {
     "image": {"style": {"Фото", "Арт", "Логотип", "3D", "Аниме"}, "aspect": {"1:1", "16:9", "9:16", "3:4", "4:3"}},
     "video": {"duration": {5, 10, 15}, "quality": {"720p", "1080p"}, "aspect": {"16:9", "9:16", "1:1"}},
-    "music": {"genre": None, "mood": None, "instrumental": {True, False}},
+    "music": {"genre": None, "mood": None, "instrumental": {True, False}, "voice_job": None},
     "tts": {"tone": {"Спокойно", "Бодро", "Шёпот", "Диктор"}},
 }
 LIMITS = {"image": 1200, "video": 1500, "music": 2900, "tts": 5000}
@@ -68,7 +68,7 @@ def _clean(kind: str, params: dict) -> dict:
             v = params[k]
             if allowed is not None and v not in allowed:
                 raise HTTPException(422, f"Недопустимое значение «{k}»")
-            out[k] = v if allowed is not None else str(v)[:60]
+            out[k] = v if allowed is not None else (v if k == "voice_job" else str(v)[:60])
     s = get_settings()
     pub = s.public_url + "/files/"
     if kind == "image" and params.get("refs"):
@@ -83,6 +83,19 @@ def _clean(kind: str, params: dict) -> dict:
     return out
 
 
+async def _voice_source(db: AsyncSession, u: User, kind: str, params: dict) -> None:
+    """A track built around one of the user's voice-overs: check it and note its length (it is read again in rhythm)."""
+    if kind != "music" or not params.get("voice_job"):
+        return
+    try:
+        src = await db.get(Job, int(params["voice_job"]))
+    except (TypeError, ValueError):
+        src = None
+    if not src or src.user_id != u.id or src.kind != "tts" or src.status != "done" or not src.files:
+        raise HTTPException(404, "Озвучка не найдена или ещё не готова")
+    params.update(voice_job=src.id, voice_chars=len(src.prompt), instrumental=False)
+
+
 async def start_job(db: AsyncSession, u: User, kind: str, prompt: str, raw_params: dict) -> Job:
     """Validates, charges and queues a generation. Used by the API and by the voice agent."""
     await refresh_prices(db)
@@ -93,6 +106,7 @@ async def start_job(db: AsyncSession, u: User, kind: str, prompt: str, raw_param
     active = (await db.execute(select(Job.id).where(Job.user_id == u.id, Job.status.in_(("review", "queued", "running"))))).all()
     if len(active) >= ACTIVE_LIMIT:
         raise HTTPException(429, "Уже идут 3 генерации — дождитесь, пока одна закончится")
+    await _voice_source(db, u, kind, params)
     price = price_of(kind, params, prompt)
     if u.balance < price:
         raise HTTPException(402, f"Не хватает кредитов: нужно {price}, на балансе {u.balance}")
@@ -120,7 +134,9 @@ async def active_jobs(u: User = Depends(current_user), db: AsyncSession = Depend
 @router.post("/price")
 async def quote(body: JobIn, u: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
     await refresh_prices(db)
-    return {"cost": price_of(body.kind, _clean(body.kind, body.params or {}), body.prompt.strip()), "balance": u.balance}
+    params = _clean(body.kind, body.params or {})
+    await _voice_source(db, u, body.kind, params)
+    return {"cost": price_of(body.kind, params, body.prompt.strip()), "balance": u.balance}
 
 
 @router.get("/{jid}")

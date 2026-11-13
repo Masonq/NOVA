@@ -8,7 +8,7 @@ export const PRICE = { image: 12, image_edit: 18, agent_min: 5, agent_search: 3,
 export const loadPrices = () => api("/api/me/config").then((c) => Object.assign(PRICE, c.price)).catch(() => {});
 export function priceOf(kind, p = {}, text = "") {
   if (kind === "image") return p.refs?.length ? PRICE.image_edit : PRICE.image;
-  if (kind === "music") return PRICE.music;
+  if (kind === "music") return PRICE.music + (p.voice_chars ? Math.max(PRICE.tts_min, Math.ceil((p.voice_chars / 1000) * PRICE.tts_1k)) : 0);
   if (kind === "tts") return Math.max(PRICE.tts_min, Math.ceil((text.length / 1000) * PRICE.tts_1k));
   const per = p.quality === "1080p" ? PRICE.video_pro_s : PRICE.video_std_s;
   return Math.ceil(((p.duration || 5) * per * (p.sound ? PRICE.video_sound_k : 1)) / 5) * 5;

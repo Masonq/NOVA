@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { StudioTop, Opts, PromptBox, Dock, Progress, Toggle } from "../ui/Studio.jsx";
-import { JobSheet } from "../ui/Sheet.jsx";
+import Sheet, { JobSheet } from "../ui/Sheet.jsx";
+import Icon from "../ui/Icon.jsx";
+import { api } from "../api.js";
 import Player from "../ui/Player.jsx";
 import { useStudio } from "../studio.js";
 import { priceOf } from "../jobs.js";
@@ -10,6 +12,10 @@ const MOODS = ["Авто", "Спокойно", "Энергично", "Груст
 const coverUrl = (f) => f.cover_url || null;
 
 export default function MusicStudio({ go, me, reloadMe, params }) {
+  const [vj, setVj] = useState(params?.voice_job ? { id: params.voice_job, text: params.voice_text || "", voice: params.voice || "" } : null);
+  const [pick, setPick] = useState(false);
+  const [tts, setTts] = useState(null);
+  const openPick = () => { setPick(true); api("/api/jobs?limit=40").then((r) => setTts(r.filter((j) => j.kind === "tts" && j.status === "done"))).catch(() => setTts([])); };
   const [prompt, setPrompt] = useState(params?.prompt || "");
   const [genre, setGenre] = useState("Авто");
   const [mood, setMood] = useState("Авто");
@@ -20,10 +26,20 @@ export default function MusicStudio({ go, me, reloadMe, params }) {
   return (
     <main className="screen studio">
       <StudioTop title="Музыка" me={me} go={go} />
-      <PromptBox value={prompt} onChange={setPrompt} max={2900} placeholder={vocal ? "О чём песня и как звучит: тема, история, на кого похоже" : "Для чего трек и как звучит: фон для видео, учёба, тренировка"} />
+      {vj ? (
+        <div className="card voicejob">
+          <span className="vj-ic"><Icon n="wave" s={18} /></span>
+          <span className="sr-t"><b>Голос из озвучки{vj.voice ? ` · ${vj.voice}` : ""}</b><small>{vj.text}</small></span>
+          <button className="ic-btn" aria-label="Убрать голос" onClick={() => setVj(null)}><Icon n="x" s={14} /></button>
+        </div>
+      ) : (
+        <button className="row-btn vj-add" onClick={openPick}><Icon n="wave" /><span className="sr-t"><span>Голос из озвучки</span><small>ваш голос и текст станут треком</small></span><Icon n="chevron" s={15} /></button>
+      )}
+      <PromptBox value={prompt} onChange={setPrompt} max={2900}
+        placeholder={vj ? "Пожелания к музыке — необязательно: темп, инструменты, атмосфера" : vocal ? "О чём песня и как звучит: тема, история, на кого похоже" : "Для чего трек и как звучит: фон для видео, учёба, тренировка"} />
       <Opts label="Жанр" value={genre} options={GENRES} onChange={setGenre} hint={genre === "Авто" ? "по описанию" : ""} />
       <Opts label="Настроение" value={mood} options={MOODS} onChange={setMood} hint={mood === "Авто" ? "по описанию" : ""} />
-      <Toggle label="С вокалом" sub={vocal ? "ИИ напишет текст по описанию, поёт по-русски" : "только музыка, без голоса"} on={vocal} onChange={setVocal} />
+      {!vj && <Toggle label="С вокалом" sub={vocal ? "ИИ напишет текст по описанию, поёт по-русски" : "только музыка, без голоса"} on={vocal} onChange={setVocal} />}
       {s.active && (
         <section className="card render" aria-label="Идёт генерация">
           <p className="render-p">{s.active.prompt}</p>
@@ -36,9 +52,20 @@ export default function MusicStudio({ go, me, reloadMe, params }) {
             <Player key={f.url} src={f.url} cover={coverUrl(f)} title={f.title || j.prompt.slice(0, 40)}
               sub={[j.params?.genre, j.params?.instrumental === false ? "с вокалом" : "инструментал"].filter(Boolean).join(" · ")} onMore={() => setSheet({ j, f })} />)))}
         </section>)}
-      <Dock label={vocal ? "Создать песню" : "Создать трек"} price={priceOf("music")} balance={me?.balance} busy={s.busy}
-        disabled={prompt.trim().length < 2 || !!s.active}
-        onClick={() => s.run(prompt.trim(), { genre: genre === "Авто" ? "" : genre, mood: mood === "Авто" ? "" : mood, instrumental: !vocal })} />
+      <Dock label={vj ? "Создать трек из озвучки" : vocal ? "Создать песню" : "Создать трек"} price={priceOf("music", vj ? { voice_chars: vj.text.length } : {})}
+        balance={me?.balance} busy={s.busy} disabled={(!vj && prompt.trim().length < 2) || !!s.active}
+        onClick={() => s.run(prompt.trim() || "Трек из озвучки", { genre: genre === "Авто" ? "" : genre, mood: mood === "Авто" ? "" : mood,
+          instrumental: vj ? false : !vocal, ...(vj ? { voice_job: vj.id } : {}) })} />
+      <Sheet open={pick} onClose={() => setPick(false)} title="Голос из озвучки">
+        <h3 className="sheet-title">Выберите озвучку</h3>
+        {tts === null ? <div className="skeleton" /> : tts.length === 0 ? (
+          <div className="empty-state slim"><p>Озвучек пока нет</p><button className="cta small" onClick={() => go("tts")}>Сделать озвучку</button></div>
+        ) : tts.map((j) => (
+          <button key={j.id} className="sheet-row" onClick={() => { setVj({ id: j.id, text: j.prompt, voice: j.params?.voice || "" }); setPick(false); }}>
+            <span className="sr-ic"><Icon n="wave" /></span>
+            <span className="sr-t"><span>{j.prompt}</span><small>{[j.params?.voice, j.params?.tone].filter(Boolean).join(" · ")}</small></span>
+          </button>))}
+      </Sheet>
       <JobSheet job={sheet?.j} file={sheet?.f} onClose={() => setSheet(null)} go={go} onChange={() => s.reload()} />
     </main>);
 }
