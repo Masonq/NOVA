@@ -80,7 +80,9 @@ export default function App() {
     // the tab sections (home, archive, profile) have none
     const BACK = { feed: "archive", admin: "profile" };
     const root = ["home", "archive", "profile"].includes(route);
-    const sync = () => (backStack.length || !root ? b.show() : b.hide());
+    // Visibility depends on the screen only. Toggling Telegram's button when a sheet opens makes Telegram animate its header
+    // and cross-fade the whole web view (a visible flash), so a sheet on a tab screen closes by swipe or tap instead.
+    const sync = () => (root ? b.hide() : b.show());
     const back = () => {
       haptic("light");
       if (backStack.length) { backStack[backStack.length - 1](); return; }
