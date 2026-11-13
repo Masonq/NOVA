@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Icon from "./Icon.jsx";
 import { tg, pushBack, popBack } from "../tg.js";
 import { toast } from "./Toast.jsx";
@@ -39,9 +39,16 @@ export default function Sheet({ open, onClose, children, title }) {
       if (!open_sheets.n) root.classList.remove("sheet-open");
     };
   }, [open]);
+  // mount in the start state, switch to «in» on the next frames: no late-starting animation can flash the final state first
+  const [inn, setIn] = useState(false);
+  useEffect(() => {
+    if (!open) { setIn(false); return; }
+    let a = requestAnimationFrame(() => { a = requestAnimationFrame(() => setIn(true)); });
+    return () => cancelAnimationFrame(a);
+  }, [open]);
   if (!open) return null;
   return (
-    <div className="sheet-wrap" onClick={onClose}>
+    <div className={"sheet-wrap" + (inn ? " in" : "")} onClick={onClose}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
         <span className="grab" aria-hidden="true" />
         {children}

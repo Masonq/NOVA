@@ -296,16 +296,18 @@ button.result { display: block; width: 100%; text-align: left; background-size: 
 /* ---------- sheet ---------- */
 /* The dim layer animates its colour, never its opacity: an opacity animation on the wrapper makes iOS WebKit re-composite
    the layers when it ends, and blurred (backdrop-filter) elements underneath flash on top for a frame or two. */
-.sheet-wrap { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.55); display: flex; align-items: flex-end; justify-content: center;
-  animation: dim .22s ease-out; overscroll-behavior: contain; touch-action: none; }
-@keyframes dim { from { background: rgba(0,0,0,0); } }
+/* Enter by a class added a frame after mount (transitions), not by CSS animations: iOS WebKit may start an animation of a
+   freshly inserted element a few frames late, showing its final state first and then jumping back to the start — a flash. */
+.sheet-wrap { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,0); display: flex; align-items: flex-end; justify-content: center;
+  transition: background-color .22s ease-out; overscroll-behavior: contain; touch-action: none; }
+.sheet-wrap.in { background: rgba(0,0,0,.55); }
 .sheet-wrap .sheet { touch-action: pan-y; overscroll-behavior: contain; }
 /* While a sheet is open nothing underneath keeps a live blur: dimmed anyway, and WebKit has nothing to re-layer. */
 html.sheet-open .app *:not(.sheet-wrap):not(.sheet-wrap *) {
   -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 @keyframes fade { from { opacity: 0; } }
-.sheet { will-change: transform; width: 100%; max-width: 560px; max-height: 92dvh; overflow-y: auto; background: #141418; border: 1px solid var(--line); border-bottom: none; border-radius: 26px 26px 0 0; padding: 8px 16px calc(16px + var(--safe-b)); display: flex; flex-direction: column; gap: 6px; animation: up .34s cubic-bezier(.2,.9,.25,1); }
-@keyframes up { from { transform: translateY(100%); } }
+.sheet { will-change: transform; width: 100%; max-width: 560px; max-height: 92dvh; overflow-y: auto; background: #141418; border: 1px solid var(--line); border-bottom: none; border-radius: 26px 26px 0 0; padding: 8px 16px calc(16px + var(--safe-b)); display: flex; flex-direction: column; gap: 6px; transform: translateY(100%); transition: transform .34s cubic-bezier(.2,.9,.25,1); }
+.sheet-wrap.in .sheet { transform: none; }
 .grab { width: 38px; height: 5px; border-radius: 3px; background: #3A3A42; align-self: center; margin-bottom: 8px; }
 .sheet-head { display: flex; align-items: center; gap: 12px; padding: 4px 0 10px; }
 .sh-thumb { width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0; background-size: cover; background-position: center; }
@@ -632,7 +634,8 @@ img.sheet-media { object-fit: contain; background: var(--card); }
 .gcard { animation: fade-blur .7s .15s ease-out backwards; }
 
 /* sheet content cascades in after the sheet slides up */
-.sheet > *:not(.grab) { animation: sheet-in .32s .12s var(--ease-out) backwards; }
+.sheet > *:not(.grab) { opacity: 0; transform: translateY(8px); transition: opacity .3s .1s var(--ease-out), transform .3s .1s var(--ease-out); }
+.sheet-wrap.in .sheet > *:not(.grab) { opacity: 1; transform: none; }
 @keyframes sheet-in { from { opacity: 0; transform: translateY(8px); } }
 .sheet > :nth-child(3) { animation-delay: .05s; } .sheet > :nth-child(4) { animation-delay: .09s; } .sheet > :nth-child(5) { animation-delay: .13s; }
 .sheet > :nth-child(6) { animation-delay: .17s; } .sheet > :nth-child(7) { animation-delay: .21s; } .sheet > :nth-child(n+8) { animation-delay: .24s; }
