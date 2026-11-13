@@ -37,7 +37,9 @@ export default function App() {
   const DEPTH = { admin: 1, home: 0, archive: 0, profile: 0, image: 1, video: 1, music: 1, tts: 1, tasks: 1, chat: 1, agent: 1, feed: 2 };
   const dir = useMemo(() => {
     const a = DEPTH[prevRoute.current] ?? 0, b = DEPTH[route] ?? 0;
-    const d = prevRoute.current === route ? "tab" : b > a ? "fwd" : b < a ? "back" : "tab";
+    const ti = (r) => ["home", "archive", "profile"].indexOf(r);
+    const d = prevRoute.current === route ? "tab" : b > a ? "fwd" : b < a ? "back"
+      : ti(route) >= 0 && ti(prevRoute.current) >= 0 ? (ti(route) > ti(prevRoute.current) ? "tab-r" : "tab-l") : "tab";
     prevRoute.current = route;
     return d;
   }, [route]);

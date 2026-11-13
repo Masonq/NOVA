@@ -67,7 +67,7 @@ export default function TtsStudio({ go, me, reloadMe, params }) {
             <Player key={j.id} src={j.files[0].url} title={cardText(j).title} sub={`${j.params?.voice || ""} · ${j.params?.tone || ""}`}
               onMore={() => setSheet(j)} />))}
         </section>)}
-      <Dock label="Озвучить" price={priceOf("tts", {}, text)} balance={me?.balance} busy={s.busy}
+      <Dock job={s.active} label="Озвучить" price={priceOf("tts", {}, text)} balance={me?.balance} busy={s.busy}
         disabled={text.trim().length < 2 || !!s.active} onClick={() => s.run(text.trim(), { voice, tone, ...(sections.length ? { male, female } : {}) })} />
       <JobSheet job={sheet} onClose={() => setSheet(null)} go={go} onChange={() => s.reload()} />
     </main>);

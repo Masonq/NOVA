@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "./api.js";
 import { startJob, useActiveJobs } from "./jobs.js";
 import { toast } from "./ui/Toast.jsx";
+import { haptic } from "./tg.js";
 
 /** State shared by every studio: running job of this kind, the latest result and recent works. */
 export function useStudio(kind, reloadMe) {
@@ -16,7 +17,7 @@ export function useStudio(kind, reloadMe) {
   useEffect(() => { load(); }, []);
   const active = useActiveJobs((fin) => {
     if (fin?.kind !== kind) return;
-    if (fin.status === "done") setCurrent(fin);
+    if (fin.status === "done") { setCurrent(fin); haptic("success"); } else haptic("error");
     reloadMe?.(); load();
   }).filter((j) => j.kind === kind);
   const run = async (prompt, params) => {

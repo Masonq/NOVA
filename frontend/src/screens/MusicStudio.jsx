@@ -87,7 +87,7 @@ export default function MusicStudio({ go, me, reloadMe, params }) {
               sub={[j.params?.genre, j.params?.instrumental === false
                 ? (j.params?.artist_name || VOC[j.params?.brief?.vocals] || "с вокалом") : "инструментал"].filter(Boolean).join(" · ")} onMore={() => setSheet({ j, f })} />)))}
         </section>)}
-      <Dock label={vj ? "Создать трек из озвучки" : vocal ? "Создать песню" : "Создать трек"} price={priceOf("music", vj ? { voice_chars: vj.text.length } : {})}
+      <Dock job={s.active} label={vj ? "Создать трек из озвучки" : vocal ? "Создать песню" : "Создать трек"} price={priceOf("music", vj ? { voice_chars: vj.text.length } : {})}
         balance={me?.balance} busy={s.busy} disabled={(!vj && prompt.trim().length < 2) || !!s.active}
         onClick={() => s.run(prompt.trim() || "Трек из озвучки", { genre: genre.join(", "), mood: moodText(mood),
           instrumental: vj ? false : !vocal, ...(avoid.trim() ? { avoid: avoid.trim().replace(/,\s*$/, "") } : {}),

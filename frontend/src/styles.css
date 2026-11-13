@@ -580,13 +580,13 @@ img.sheet-media { object-fit: contain; background: var(--card); }
 
 /* ---------- motion: page transitions, staggered blocks, pop-ins, press feedback ---------- */
 @keyframes pg-in { from { opacity: 0; } }
-@keyframes from-right { from { opacity: 0; transform: translateX(30px); } }
-@keyframes from-left { from { opacity: 0; transform: translateX(-24px); } }
+@keyframes from-right { from { opacity: 0; transform: translateX(44px); } }
+@keyframes from-left { from { opacity: 0; transform: translateX(-36px); } }
 @keyframes rise { from { opacity: 0; transform: translateY(14px) scale(.985); } }
 @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.93); } }
 @keyframes dock-up { from { opacity: 0; transform: translateY(26px); } }
 @keyframes orb-in { from { opacity: 0; transform: scale(.72); filter: blur(14px); } 70% { filter: blur(0); } }
-@keyframes fade-blur { from { opacity: 0; filter: blur(10px); } }
+@keyframes fade-blur { from { opacity: 0; filter: blur(18px) saturate(.6); } 60% { opacity: 1; } }
 @keyframes drop { from { opacity: 0; transform: translateY(-12px) scale(.96); } }
 :root { --ease-out: cubic-bezier(.2,.8,.2,1); --spring: cubic-bezier(.3,1.35,.5,1); }
 
@@ -859,3 +859,48 @@ img.sheet-media { object-fit: contain; background: var(--card); }
 .composer.open .cmp-rec { height: 88px; padding: 0 8px; }
 html.kb-open .gnav { opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(20px); }
 .gnav { transition: opacity .2s, transform .25s; }
+
+/* ---------- motion v2 ---------- */
+/* tabs slide in from the side that was tapped */
+.page.tab-r .screen > :not(.dock):not(.studio-dock):not(.sheet-wrap):not(.island) { animation-name: from-right; }
+.page.tab-l .screen > :not(.dock):not(.studio-dock):not(.sheet-wrap):not(.island) { animation-name: from-left; }
+
+/* composer grows / folds smoothly (height set from JS, see Composer) */
+.composer.sizing { transition: height .34s cubic-bezier(.2,.9,.25,1), padding .2s, border-color .2s; }
+
+/* sheets: spring in, quick ease out; a strip of the sheet colour below covers the overshoot */
+.sheet { transition: transform .26s cubic-bezier(.4,0,.9,.5); box-shadow: 0 60px 0 0 #141418; }
+.sheet-wrap.in .sheet { transition: transform .52s cubic-bezier(.3,1.14,.5,1); }
+.sheet-wrap.leaving { pointer-events: none; }
+.sheet-wrap.leaving .sheet > *:not(.grab) { transition-delay: 0s; transition-duration: .15s; }
+
+/* toasts leave upwards */
+.toast { transition: opacity .28s ease-in, transform .3s cubic-bezier(.4,0,.6,1); }
+.toast.out { opacity: 0; transform: translateY(-16px) scale(.96); }
+
+/* choice: the check pops out of a point */
+@keyframes chk { from { transform: scale(0); } 60% { transform: scale(1.18); } }
+.g-check { animation: chk .36s var(--spring) both; }
+.cc.on .cc-vis, .asp.on .asp-box i, .v-card.on .v-ic { animation: chk-soft .34s var(--spring); }
+@keyframes chk-soft { from { transform: scale(.8); } }
+
+/* «Создать» turns into the progress of the generation */
+.dock-run { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 18px;
+  background: #1C1C24; color: var(--txt); cursor: default; }
+.dock-fill { position: absolute; inset: 0; transform-origin: left center; background: linear-gradient(90deg, #0A84FF, #6E5BFF); transition: transform .9s cubic-bezier(.2,.8,.2,1); }
+.dock-fill::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent); background-size: 200% 100%; animation: sh 1.6s linear infinite; }
+.dock-t, .dock-p { position: relative; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dock-p { font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.studio-dock .cta.wide { transition: background-color .3s, transform .16s; }
+
+/* balance: digits roll */
+.odo { display: inline-flex; font-variant-numeric: tabular-nums; transition: color .5s; }
+.odo-c { display: inline-block; height: 1.2em; line-height: 1.2em; overflow: hidden; }
+.odo-s { display: flex; flex-direction: column; transition: transform .75s cubic-bezier(.2,.9,.25,1); }
+.odo-s span { height: 1.2em; text-align: center; }
+.odo.up { color: #5BD07F; }
+.balance { align-items: center; }
+
+/* results: an image comes into focus, a video fades up */
+.vid video { animation: fade-blur .8s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .composer.sizing, .odo-s, .dock-fill { transition: none; } .g-check { animation: none; } }

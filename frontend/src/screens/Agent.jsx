@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import Count from "../ui/Count.jsx";
 import Icon from "../ui/Icon.jsx";
 import { openTopup } from "../ui/Topup.jsx";
 import Orb from "../ui/Orb.jsx";
@@ -110,7 +111,7 @@ export default function Agent({ go, me, reloadMe, params }) {
       <header className="ag-top">
         <button className="ic-btn back-btn" aria-label="Назад" onClick={() => go("home")}><Icon n="back" /></button>
         <button className="ag-voice" onClick={() => setPick(true)} aria-label="Выбрать голос"><Icon n="wave" s={15} />{vname ? vname[0].toUpperCase() + vname.slice(1) : "Голос"}</button>
-        <span className="balance" role="button" tabIndex={0} onClick={() => openTopup()} aria-label={`Баланс ${me?.balance ?? 0} кредитов, пополнить`}><Icon n="spark" s={14} w={2} />{me?.balance ?? "…"}</span>
+        <span className="balance" role="button" tabIndex={0} onClick={() => openTopup()} aria-label={`Баланс ${me?.balance ?? 0} кредитов, пополнить`}><Icon n="spark" s={14} w={2} /><Count value={me?.balance} /></span>
       </header>
 
       <section className={"ag-stage" + (heard || answer || confirm || jobs.length || params?.draft ? " compact" : "")}>

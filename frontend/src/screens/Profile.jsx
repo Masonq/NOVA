@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Count from "../ui/Count.jsx";
 import Icon from "../ui/Icon.jsx";
 import { openTopup } from "../ui/Topup.jsx";
 import { toast } from "../ui/Toast.jsx";
@@ -48,7 +49,7 @@ export default function Profile({ me, reload, go }) {
     <main className="screen profile">
       <header className="bar"><h1>Профиль</h1></header>
       <section className="card bal">
-        <div><span className="muted small">Баланс</span><b>{me?.balance ?? "…"} <small>кредитов</small></b></div>
+        <div><span className="muted small">Баланс</span><b><Count value={me?.balance} /> <small>кредитов</small></b></div>
         <button className="cta small" onClick={() => openTopup()}>Пополнить</button>
       </section>
       <PromoBox reloadMe={reload} onDone={() => api("/api/me/ledger").then(setLed).catch(() => {})} />

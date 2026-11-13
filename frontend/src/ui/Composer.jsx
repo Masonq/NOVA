@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Icon from "./Icon.jsx";
 import { haptic } from "../tg.js";
 import { toast } from "./Toast.jsx";
@@ -20,6 +20,20 @@ export default function Composer({ value, onChange, onSend, busy, placeholder = 
   const [focus, setFocus] = useState(false);
   const root = useRef(null);
   const open = focus || !!value.trim() || !!img || rec !== "off";          // grows while typing; folds back when empty and left
+  // grow / fold smoothly: measure the old and the new height and let CSS run between them
+  const lastH = useRef(0);
+  useLayoutEffect(() => {
+    const el = root.current; if (!el) return;
+    const to = el.offsetHeight, from = lastH.current;
+    lastH.current = to;
+    if (!from || from === to || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    el.style.height = from + "px"; el.style.overflow = "hidden";
+    void el.offsetHeight;
+    el.classList.add("sizing"); el.style.height = to + "px";
+    const done = () => { el.classList.remove("sizing"); el.style.height = ""; el.style.overflow = ""; lastH.current = el.offsetHeight; };
+    const t = setTimeout(done, 380);
+    return () => clearTimeout(t);
+  }, [open, !!img]);
   useEffect(() => {                       // the floating tab bar sits on the keyboard: hide it while typing on a phone
     const touch = window.matchMedia?.("(pointer: coarse)").matches;
     document.documentElement.classList.toggle("kb-open", !!(focus && touch));

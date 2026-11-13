@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import Count from "./Count.jsx";
 import Icon from "./Icon.jsx";
 import { upload } from "../api.js";
 import { toast } from "./Toast.jsx";
@@ -10,7 +11,7 @@ export function StudioTop({ title, me, go }) {
     <header className="bar studio-top">
       <button className="ic-btn back-btn" aria-label="Назад" onClick={() => go("home")}><Icon n="back" /></button>
       <h1>{title}</h1>
-      <span className="balance" role="button" tabIndex={0} onClick={() => openTopup()} aria-label={`Баланс ${me?.balance ?? 0} кредитов, пополнить`}><Icon n="spark" s={14} w={2} />{me?.balance ?? "…"}</span>
+      <span className="balance" role="button" tabIndex={0} onClick={() => openTopup()} aria-label={`Баланс ${me?.balance ?? 0} кредитов, пополнить`}><Icon n="spark" s={14} w={2} /><Count value={me?.balance} /></span>
     </header>);
 }
 
@@ -83,8 +84,18 @@ export function PromptBox({ value, onChange, placeholder, max, attach, onAttach,
     </div>);
 }
 
-export function Dock({ label, price, balance, disabled, onClick, busy }) {
+export function Dock({ label, price, balance, disabled, onClick, busy, job }) {
   const short = balance != null && price > balance;
+  if (job) {                // the button turns into the progress of the running generation
+    const pc = Math.max(4, Math.min(100, job.progress || 0));
+    return (
+      <div className="dock studio-dock">
+        <div className="cta wide dock-run" role="progressbar" aria-valuenow={pc} aria-valuemin={0} aria-valuemax={100} aria-label={job.stage || "Создаю"}>
+          <i className="dock-fill" style={{ transform: `scaleX(${pc / 100})` }} />
+          <span className="dock-t">{job.stage || "Создаю"}</span><span className="dock-p">{Math.round(pc)}%</span>
+        </div>
+      </div>);
+  }
   return (
     <div className="dock studio-dock">
       <button className={"cta wide" + (short ? " short" : "")} disabled={disabled || busy} onClick={short ? () => openTopup(price - balance) : onClick}>

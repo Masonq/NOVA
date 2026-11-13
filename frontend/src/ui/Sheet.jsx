@@ -60,6 +60,13 @@ function lock(on) {
 }
 
 export default function Sheet({ open, onClose, children, title }) {
+  // stays mounted for its slide-down after `open` turns false, so closing is animated too
+  const [mounted, setMounted] = useState(open);
+  useEffect(() => {
+    if (open) { setMounted(true); return; }
+    const t = setTimeout(() => setMounted(false), 300);
+    return () => clearTimeout(t);
+  }, [open]);
   useEffect(() => {
     if (!open) return;
     const close = () => onClose();
@@ -80,9 +87,10 @@ export default function Sheet({ open, onClose, children, title }) {
   const [inn, setIn] = useState(false);
   useEffect(() => {
     if (!open) { setIn(false); return; }
+    if (!mounted) return;
     let a = requestAnimationFrame(() => { a = requestAnimationFrame(() => setIn(true)); });
     return () => cancelAnimationFrame(a);
-  }, [open]);
+  }, [open, mounted]);
   // swipe down to close: the sheet follows the finger, the dim fades with it; far or fast enough → it slides away
   const box = useRef(null), wrap = useRef(null), g = useRef(null);
   const start = (y, x, fromGrab) => {
@@ -105,12 +113,15 @@ export default function Sheet({ open, onClose, children, title }) {
     const s = g.current, el = box.current, w = wrap.current; g.current = null;
     if (!s || !s.on || !el) return;
     const tr = s.trail || [], a = tr[0], z = tr[tr.length - 1];
-    const fast = a && z && z[0] > a[0] ? (z[1] - a[1]) / (z[0] - a[0]) > 0.5 : false;      // a flick: speed of the last moves
-    el.style.transition = w.style.transition = "";
+    const v = a && z && z[0] > a[0] ? (z[1] - a[1]) / (z[0] - a[0]) : 0;      // px/ms over the last moves
+    const fast = v > 0.5;                                                     // a flick
     if (s.dy > Math.min(140, el.offsetHeight * 0.28) || (fast && s.dy > 30)) {
+      // leaves at the speed it was thrown: the rest of the way over the finger's speed, 140–320 ms
+      const ms = Math.round(Math.max(140, Math.min(320, (el.offsetHeight - s.dy) / Math.max(v, 1.2))));
+      el.style.transition = `transform ${ms}ms cubic-bezier(.2,.7,.3,1)`; w.style.transition = `background-color ${ms}ms linear`;
       el.style.transform = "translateY(100%)"; w.style.backgroundColor = "rgba(0,0,0,0)";
-      haptic("light"); setTimeout(onClose, 230);
-    } else { el.style.transform = ""; w.style.backgroundColor = ""; }
+      haptic("light"); setTimeout(onClose, ms - 20);
+    } else { el.style.transition = w.style.transition = ""; el.style.transform = ""; w.style.backgroundColor = ""; }
   };
   const mouseGrab = (e) => {
     start(e.clientY, e.clientX, true);
@@ -118,9 +129,9 @@ export default function Sheet({ open, onClose, children, title }) {
     const up = () => { end(); window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); };
     window.addEventListener("pointermove", mv); window.addEventListener("pointerup", up);
   };
-  if (!open) return null;
+  if (!mounted && !open) return null;
   return (
-    <div ref={wrap} className={"sheet-wrap" + (inn ? " in" : "")} onClick={onClose}>
+    <div ref={wrap} className={"sheet-wrap" + (inn ? " in" : "") + (!open ? " leaving" : "")} onClick={open ? onClose : undefined}>
       <div ref={box} className="sheet" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}
         onTouchStart={(e) => start(e.touches[0].clientY, e.touches[0].clientX, !!e.target.closest?.(".grab-zone"))}
         onTouchMove={(e) => drag(e.touches[0].clientY, e.touches[0].clientX)} onTouchEnd={end} onTouchCancel={end}>
@@ -142,11 +153,14 @@ function Row({ ic, t, sub, on, cls }) {
 }
 
 export function JobSheet({ job, file, onClose, go, onChange, onArtist }) {
-  if (!job) return null;
-  return <JobSheetIn key={job.id} {...{ job, file, onClose, go, onChange, onArtist }} />;
+  const last = useRef(null);                  // keeps the content while the sheet slides away
+  if (job) last.current = { job, file };
+  const cur = last.current;
+  if (!cur) return null;
+  return <JobSheetIn key={cur.job.id} job={cur.job} file={cur.file} open={!!job} {...{ onClose, go, onChange, onArtist }} />;
 }
 
-function JobSheetIn({ job, file, onClose, go, onChange, onArtist }) {
+function JobSheetIn({ job, file, open, onClose, go, onChange, onArtist }) {
   const [naming, setNaming] = useState(false);
   const [aname, setAname] = useState("");
   const [saving, setSaving] = useState(false);
@@ -171,7 +185,7 @@ function JobSheetIn({ job, file, onClose, go, onChange, onArtist }) {
     await api(`/api/jobs/${job.id}`, { method: "DELETE" }); toast("Удалено"); onChange?.(null); onClose();
   };
   return (
-    <Sheet open={!!job} onClose={onClose} title="Действия">
+    <Sheet open={open} onClose={onClose} title="Действия">
       <div className="sheet-head">
         <span className={"sh-thumb k-" + job.kind} style={thumbOf(job) ? { backgroundImage: `url(${thumbOf(job)})` } : undefined} />
         <span className="sr-t"><b>{cardText(job).title}</b><small>{{ image: "Картинка", video: "Видео", music: "Трек", tts: "Озвучка", clip: "Клип", reel: "Ролик", greeting: "Поздравление" }[job.kind]}</small></span>

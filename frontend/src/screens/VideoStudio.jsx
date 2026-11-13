@@ -61,7 +61,7 @@ export default function VideoStudio({ go, me, reloadMe, params }) {
           <div className="recent">{s.recent.slice(0, 10).map((j) => <button key={j.id} className="thumb img" aria-label={j.prompt}
             style={{ backgroundImage: thumbOf(j) ? `url(${thumbOf(j)})` : undefined }} onClick={() => { s.setCurrent(j); window.scrollTo({ top: 0, behavior: "smooth" }); }} />)}</div>
         </section>)}
-      <Dock label="Создать видео" price={priceOf("video", p)} balance={me?.balance} busy={s.busy}
+      <Dock job={s.active} label="Создать видео" price={priceOf("video", p)} balance={me?.balance} busy={s.busy}
         disabled={prompt.trim().length < 2 || !!s.active} onClick={() => s.run(prompt.trim(), p)} />
       <JobSheet job={sheet && cur} file={vid} onClose={() => setSheet(false)} go={go}
         onChange={(j) => { if (!j) { s.setCurrent(null); s.reload(); } else s.setCurrent(j); }} />
