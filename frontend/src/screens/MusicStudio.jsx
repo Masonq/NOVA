@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { StudioTop, Opts, PromptBox, Dock, Progress } from "../ui/Studio.jsx";
-import { GenreTiles, MoodPad, LengthWave, VocalCards, AvoidField, WildToggle, moodText, moodColor, GENRE_ART } from "../ui/MusicControls.jsx";
+import { StudioTop, PromptBox, Dock, Progress } from "../ui/Studio.jsx";
+import { GenreTiles, MoodPad, LengthWave, VocalCards, AvoidField, WildToggle, VoicePick, moodText, moodColor, GENRE_ART } from "../ui/MusicControls.jsx";
+import { UserSound, Waveform } from "@phosphor-icons/react";
 import Sheet, { JobSheet } from "../ui/Sheet.jsx";
 import Icon from "../ui/Icon.jsx";
 import { api } from "../api.js";
@@ -50,12 +51,12 @@ export default function MusicStudio({ go, me, reloadMe, params }) {
       <StudioTop title="Музыка" me={me} go={go} />
       {vj ? (
         <div className="card voicejob">
-          <span className="vj-ic"><Icon n="wave" s={18} /></span>
+          <span className="row-ic on"><Waveform size={20} weight="duotone" /></span>
           <span className="sr-t"><b>Голос из озвучки{vj.voice ? ` · ${vj.voice}` : ""}</b><small>{vj.text}</small></span>
           <button className="ic-btn" aria-label="Убрать голос" onClick={() => setVj(null)}><Icon n="x" s={14} /></button>
         </div>
       ) : (
-        <button className="row-btn vj-add" onClick={openPick}><Icon n="wave" /><span className="sr-t"><span>Голос из озвучки</span><small>ваш голос и текст станут треком</small></span><Icon n="chevron" s={15} /></button>
+        <button className="row-btn vj-add" onClick={openPick}><span className="row-ic"><Waveform size={20} weight="duotone" /></span><span className="sr-t"><span>Голос из озвучки</span><small>ваш голос и текст станут треком</small></span><Icon n="chevron" s={15} /></button>
       )}
       <PromptBox value={prompt} onChange={setPrompt} max={2900}
         placeholder={vj ? "Пожелания к музыке — необязательно: темп, инструменты, атмосфера" : vocal ? "О чём песня и как звучит: тема, история, на кого похоже" : "Для чего трек и как звучит: фон для видео, учёба, тренировка"} />
@@ -63,17 +64,13 @@ export default function MusicStudio({ go, me, reloadMe, params }) {
       {!vj && <VocalCards vocal={vocal} onChange={setVocal} />}
       <GenreTiles value={genre} onChange={setGenre} />
       <MoodPad value={mood} onChange={setMood} />
-      {vj && <Opts label="Кто поёт" value={vjVoices} onChange={setVjVoices}
-        hint={{ same: `голос озвучки${vj.voice ? ` · ${vj.voice}` : ""}`, male: "мужской голос", female: "женский голос", duet: "ИИ поделит текст на партии" }[vjVoices]}
-        options={[{ v: "same", t: "Как в озвучке" }, { v: "male", t: "Мужской" }, { v: "female", t: "Женский" }, { v: "duet", t: "Дуэт" }]} />}
+      {vj && <VoicePick label="Кто поёт" value={vjVoices} onChange={setVjVoices} fromVoice voiceName={vj.voice} />}
       {!vj && vocal && (
         <button className="row-btn vj-add" onClick={() => { haptic("select"); setArtPick(true); }}>
-          <Icon n="user" /><span className="sr-t"><span>Исполнитель{artist ? ` · ${artist.name}` : ""}</span>
+          <span className="row-ic"><UserSound size={20} weight="duotone" /></span><span className="sr-t"><span>Исполнитель{artist ? ` · ${artist.name}` : ""}</span>
             <small>{artist ? "поёт ваш сохранённый исполнитель" : "один голос во всех ваших песнях"}</small></span><Icon n="chevron" s={15} />
         </button>)}
-      {!vj && vocal && !artist && <Opts label="Голос" value={voices} onChange={setVoices}
-        hint={{ auto: "ИИ решит по смыслу песни", male: "", female: "", duet: "ИИ распределит части" }[voices]}
-        options={[{ v: "auto", t: "Авто" }, { v: "male", t: "Мужской" }, { v: "female", t: "Женский" }, { v: "duet", t: "Дуэт" }]} />}
+      {!vj && vocal && !artist && <VoicePick label="Голос" value={voices} onChange={setVoices} />}
       {!vj && <LengthWave value={length} onChange={setLength} />}
       <AvoidField value={avoid} onChange={setAvoid} vocal={vocal || !!vj} />
       {!vj && <WildToggle on={wild} onChange={setWild} />}

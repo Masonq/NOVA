@@ -1,7 +1,7 @@
 import { useMemo, useRef } from "react";
 import Icon from "./Icon.jsx";
 import { haptic } from "../tg.js";
-import { Motif, FeatureToggle, MusicNotes, MicrophoneStage } from "./Creative.jsx";
+import { Motif, FeatureToggle, CardChoice, MusicNotes, MicrophoneStage, GenderMale, GenderFemale, UsersThree, Sparkle, Waveform } from "./Creative.jsx";
 
 /* ---------- genres: cover tiles ---------- */
 export const GENRE_ART = {
@@ -31,7 +31,7 @@ export function GenreTiles({ value, onChange, max = 3 }) {
         {Object.entries(GENRE_ART).map(([g, art]) => {
           const on = value.includes(g), dim = !on && value.length >= max;
           return (
-            <button key={g} className={"g-tile" + (on ? " on" : "") + (dim ? " dim" : "")} aria-pressed={on} onClick={() => toggle(g)}
+            <button key={g} className={"g-tile" + (on ? " on" : "") + (dim ? " dim" : "") + (g.length > 9 ? " long" : "")} aria-pressed={on} onClick={() => toggle(g)}
               style={{ "--ga": art.a, "--gb": art.b }}>
               <span className="g-ic" aria-hidden="true"><Motif m={art.m} /></span>
               <span>{g}</span>
@@ -163,5 +163,16 @@ export function AvoidField({ value, onChange, vocal }) {
 /* ---------- Эксперимент ---------- */
 export function WildToggle({ on, onChange }) {
   return <FeatureToggle on={on} onChange={onChange} title="Эксперимент" icon="spark" tone="wild"
-    sub="необычное звучание, модель V6 Wild" subOn="V6 Wild: смелее и неожиданнее" />;
+    sub="необычное звучание · V6 Wild" subOn="смелее и неожиданнее · V6 Wild" />;
+}
+
+/* ---------- who sings ---------- */
+const ic = (G) => <G size={22} weight="duotone" />;
+export function VoicePick({ label, value, onChange, fromVoice, voiceName }) {
+  const items = [
+    fromVoice ? { v: "same", t: "Как в озвучке", vis: ic(Waveform) } : { v: "auto", t: "Авто", vis: ic(Sparkle) },
+    { v: "male", t: "Мужской", vis: ic(GenderMale) }, { v: "female", t: "Женский", vis: ic(GenderFemale) }, { v: "duet", t: "Дуэт", vis: ic(UsersThree) },
+  ];
+  const hint = { auto: "ИИ решит по смыслу песни", same: `голос озвучки${voiceName ? ` · ${voiceName}` : ""}`, male: "мужской вокал", female: "женский вокал", duet: "ИИ поделит текст на партии" }[value];
+  return <CardChoice label={label} hint={hint} value={value} onChange={onChange} items={items} center />;
 }

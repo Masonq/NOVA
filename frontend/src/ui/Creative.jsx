@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import Icon from "./Icon.jsx";
 import { haptic } from "../tg.js";
+import { GenderMale, GenderFemale, UsersThree, UserSound, Waveform } from "@phosphor-icons/react";
 import { MicrophoneStage, DiscoBall, Headphones, SpeakerHifi, Equalizer, Guitar, CloudMoon, PianoKeys, FilmSlate, Plant,
   Camera, Palette, PenNib, Cube, Sparkle, Waves, Lightning, Microphone, Feather, MagicWand, Diamond, SpeakerHigh, MusicNotes } from "@phosphor-icons/react";
 
@@ -57,11 +58,11 @@ export function AspectPicker({ label = "Формат", value, onChange, items })
 }
 
 /** Option cards with a small picture and an optional price: duration, quality. items: [{ v, t, sub, vis }] */
-export function CardChoice({ label, hint, items, value, onChange }) {
+export function CardChoice({ label, hint, items, value, onChange, center }) {
   return (
     <div className="mc-block" role="radiogroup" aria-label={label}>
       <div className="opts-h"><span>{label}</span>{hint && <small>{hint}</small>}</div>
-      <div className="cc-row" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
+      <div className={"cc-row" + (center ? " center" : "")} style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
         {items.map((it) => {
           const on = value === it.v;
           return (
@@ -78,7 +79,7 @@ function FIcon({ tone }) {
   const G = { wild: MagicWand, gold: Diamond, sound: SpeakerHigh }[tone] || Sparkle;
   return <span className="f-ic"><G size={20} weight="duotone" /></span>;
 }
-export { MusicNotes, MicrophoneStage };
+export { MusicNotes, MicrophoneStage, GenderMale, GenderFemale, UsersThree, UserSound, Waveform, Sparkle };
 
 /** A switch card that comes alive when on. tone: wild | gold | sound */
 export function FeatureToggle({ on, onChange, title, sub, subOn, icon, tone = "wild" }) {

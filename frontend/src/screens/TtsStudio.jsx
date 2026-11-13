@@ -5,7 +5,8 @@ import { JobSheet } from "../ui/Sheet.jsx";
 import Player from "../ui/Player.jsx";
 import Icon from "../ui/Icon.jsx";
 import { useStudio } from "../studio.js";
-import { priceOf, parseSections, WHO_RU } from "../jobs.js";
+import { priceOf, parseSections, WHO_RU, cardText } from "../jobs.js";
+import { haptic } from "../tg.js";
 import { api } from "../api.js";
 import { toast } from "../ui/Toast.jsx";
 
@@ -47,7 +48,9 @@ export default function TtsStudio({ go, me, reloadMe, params }) {
       <StudioTop title="Озвучка" me={me} go={go} />
       <PromptBox value={text} onChange={setText} max={5000} placeholder="Вставьте текст — прочитаю его живым голосом" />
       {sections.length === 0 ? (
-        <p className="muted small tts-tip">Можно читать разными голосами: отметьте части как <code>[Куплет 1: мужской]</code>, <code>[Припев: женский]</code>, <code>[Бридж: дуэт]</code></p>
+        <div className="tts-tip"><span className="muted small">Разными голосами: нажмите метку — она встанет в текст, после неё пишите часть</span>
+          <div className="tag-row">{["[Куплет 1: мужской]", "[Припев: женский]", "[Бридж: дуэт]"].map((t) => (
+            <button key={t} className="tag-ins" onClick={() => { haptic("select"); setText((x) => (x.trim() ? x.replace(/\s*$/, "\n\n") : "") + t + "\n"); }}>{t}</button>))}</div></div>
       ) : (
         <div className="card parts">
           <b>Частей: {sections.length}</b>
@@ -61,7 +64,7 @@ export default function TtsStudio({ go, me, reloadMe, params }) {
       {list.length > 0 && (
         <section className="tracks" aria-label="Озвучки">
           {list.slice(0, 6).map((j) => j.files?.[0] && (
-            <Player key={j.id} src={j.files[0].url} title={j.prompt.slice(0, 44)} sub={`${j.params?.voice || ""} · ${j.params?.tone || ""}`}
+            <Player key={j.id} src={j.files[0].url} title={cardText(j).title} sub={`${j.params?.voice || ""} · ${j.params?.tone || ""}`}
               onMore={() => setSheet(j)} />))}
         </section>)}
       <Dock label="Озвучить" price={priceOf("tts", {}, text)} balance={me?.balance} busy={s.busy}
