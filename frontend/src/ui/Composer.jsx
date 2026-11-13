@@ -17,11 +17,19 @@ export default function Composer({ value, onChange, onSend, busy, placeholder = 
   const [img, setImg] = useState(null);           // { preview, url|null while uploading }
   const [rec, setRec] = useState("off");          // off | rec | stt
   const [sec, setSec] = useState(0);
+  const [focus, setFocus] = useState(false);
+  const root = useRef(null);
+  const open = focus || !!value.trim() || !!img || rec !== "off";          // grows while typing; folds back when empty and left
+  useEffect(() => {                       // the floating tab bar sits on the keyboard: hide it while typing on a phone
+    const touch = window.matchMedia?.("(pointer: coarse)").matches;
+    document.documentElement.classList.toggle("kb-open", !!(focus && touch));
+    return () => document.documentElement.classList.remove("kb-open");
+  }, [focus]);
 
   useEffect(() => {
     const el = ref.current; if (!el) return;
-    el.style.height = "auto"; el.style.height = Math.min(el.scrollHeight, 140) + "px";
-  }, [value, rec]);
+    el.style.height = "auto"; el.style.height = Math.min(el.scrollHeight, open ? 220 : 140) + "px";
+  }, [value, rec, open]);
   useEffect(() => () => { dict.current?.stop(); if (img?.preview) URL.revokeObjectURL(img.preview); }, []);   // eslint-disable-line
   useEffect(() => {
     if (rec !== "rec") return;
@@ -87,7 +95,9 @@ export default function Composer({ value, onChange, onSend, busy, placeholder = 
   const wave = () => (rec === "rec" ? stopRec() : rec === "off" ? startRec() : null);
 
   return (
-    <div className={"composer" + (img ? " has-att" : "") + (rec !== "off" ? " recording" : "")}>
+    <div ref={root} className={"composer" + (open ? " open" : "") + (img ? " has-att" : "") + (rec !== "off" ? " recording" : "")}
+      onFocus={() => setFocus(true)}
+      onBlur={(e) => { if (!root.current?.contains(e.relatedTarget)) setFocus(false); }}>
       {img && (
         <div className="cmp-att">
           <span className={"cmp-thumb" + (uploading ? " up" : "")} style={{ backgroundImage: `url(${img.preview})` }}>
@@ -101,7 +111,7 @@ export default function Composer({ value, onChange, onSend, busy, placeholder = 
       {attach && <input ref={file} type="file" accept="image/*" hidden onChange={pick} />}
       <label className="sr" htmlFor="composer-input">Сообщение</label>
       {rec === "off"
-        ? <textarea id="composer-input" ref={ref} rows={1} value={value} placeholder={img ? "Что сделать с фото?" : placeholder} autoFocus={autoFocus}
+        ? <textarea id="composer-input" ref={ref} rows={open ? 3 : 1} value={value} placeholder={img ? "Что сделать с фото?" : placeholder} autoFocus={autoFocus}
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
         : <div className="cmp-rec" aria-live="polite">
