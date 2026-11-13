@@ -1,0 +1,3 @@
+Nov 13 04:39:28 impressed-jade.ptr.network systemd[1]: Started nova-worker.service - NOVA worker.
+Nov 13 04:39:29 impressed-jade.ptr.network arq[381205]: 04:39:29: Starting worker for 2 functions: cron:cleanup_expired, cron:remind_expiring
+Nov 13 04:39:29 impressed-jade.ptr.network arq[381205]: 04:39:29: redis_version=7.0.15 mem_usage=965.34K clients_connected=1 db_keys=0
