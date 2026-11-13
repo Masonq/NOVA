@@ -1,10 +1,11 @@
 # Проверка сервисов
 
-2026-11-13 10:44 UTC
+2026-11-13 10:47 UTC
 
 - Kie: код 200, баланс 1080.0 кредитов success
 - OpenRouter: ключ работает, потрачено $0.27428675, лимит 5
-- Агент: инструмент create_media {"prompt":"Minimalist modern logo for a specialty coffee shop named 'Зерно', featuring a stylized elegant coffee bean wi за 4.0 с
-- Поиск в интернете: 200, 11.8 с: Если вы имеете в виду самый популярный запрос — **сербский динар**:
+- Агент: инструмент create_media {"prompt":"Modern minimalist logo for a coffee shop named 'Зерно'. A stylish stylized coffee bean combined with elegant  за 3.6 с
+- Поиск в интернете: 200, 11.9 с: Динар используется в нескольких странах. Курсы валют на сегодня (за **1 EUR**):
 
-* **1 EUR ≈ 117,6 RSD** (в обменниках Сербии обычно 116,5–117,2 на покупку / 118,5–119,0 на
+* **Сербский динар (RSD):** ≈ 117,6 RSD
+* **Тунисский динар (TND):** ≈ 3,33 TND
