@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-13 23:39 UTC
+# Установка NOVA 2026-11-13 23:43 UTC
 
-- Версия: 7267dd8 Studios polish: voice choice as icon cards, Phosphor row icons, genre grid on desktop, tap-to-insert part tags in TTS, clean track titles, layout fixes
+- Версия: e9bfd3f Choice tiles redesign: dark card with a vivid icon chip, colour border and tint when selected
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
