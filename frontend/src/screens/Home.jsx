@@ -84,7 +84,7 @@ export default function Home({ go, me }) {
         {done.length > 0 ? (
           <Carousel label="Ваши работы" height={360} items={done.slice(0, 8).map((j) => ({
             key: j.id, img: thumbOf(j), kind: j.kind, voice: j.params?.voice, seed: j.id, ...cardText(j),
-            onOpen: () => go(j.kind), onMore: () => setSheet(j),
+            onOpen: () => setSheet(j), onMore: () => setSheet(j),
           }))} />
         ) : (
           <div className="result empty">

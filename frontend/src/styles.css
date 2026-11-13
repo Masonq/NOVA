@@ -346,7 +346,8 @@ img.sheet-media { object-fit: contain; background: var(--card); }
   background: linear-gradient(180deg, #2A2A33, #16161B 62%); border: 1px solid rgba(255,255,255,.13);   /* opaque: nothing shows through */
   box-shadow: 0 22px 44px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.08); transform-style: flat; backface-visibility: hidden;
   transition: transform .5s cubic-bezier(.25,1,.35,1), opacity .4s; cursor: pointer; }
-.gcard.on { cursor: default; border-color: rgba(255,255,255,.24); }
+.gcard.on { cursor: pointer; border-color: rgba(255,255,255,.24); }
+.gcard.on:active { transform-origin: 50% 50%; filter: brightness(.92); }
 /* the picture takes the top and melts into the glass, like in the reference */
 .gmedia { position: absolute; left: 0; right: 0; top: 0; height: 64%; pointer-events: none;
   -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent); mask-image: linear-gradient(180deg, #000 55%, transparent); }

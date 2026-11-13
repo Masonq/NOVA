@@ -23,6 +23,7 @@ export default function Carousel({ items, index: start = 0, onChange, label = "�
   const [i, setI] = useState(start);
   const [drag, setDrag] = useState(0);
   const st = useRef(null);
+  const swiped = useRef(0);          // time of the last swipe: the click that follows it must not open the card
   const n = items.length;
   useEffect(() => { setI((x) => Math.min(x, Math.max(0, n - 1))); }, [n]);
   useEffect(() => { setI(start); }, [start]);
@@ -37,6 +38,7 @@ export default function Carousel({ items, index: start = 0, onChange, label = "�
   const up = () => {
     const s = st.current; st.current = null;
     if (!s || s.lock !== "x") { setDrag(0); return; }
+    swiped.current = Date.now();
     const fast = Math.abs(drag) / Math.max(1, Date.now() - s.t) > 0.4;
     const step = Math.abs(drag) > 70 || fast ? (drag < 0 ? 1 : -1) * Math.max(1, Math.round(Math.abs(drag) / 220)) : 0;
     setDrag(0); go(i + step);
@@ -61,10 +63,11 @@ export default function Carousel({ items, index: start = 0, onChange, label = "�
         return (
           <article key={it.key} className={"gcard k-" + (it.kind || "image") + (center ? " on" : "")} style={style}
             aria-hidden={!center} aria-label={`${k + 1} из ${n}: ${it.title}`}
-            onClick={() => { if (Math.abs(drag) < 4 && !center) go(k); }}>
+            role={center && it.onOpen ? "button" : undefined} tabIndex={center && it.onOpen ? 0 : -1}
+            onKeyDown={(e) => { if (center && it.onOpen && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); it.onOpen(); } }}
+            onClick={() => { if (Math.abs(drag) >= 4 || Date.now() - swiped.current < 350) return; if (!center) go(k); else if (it.onOpen) { haptic("light"); it.onOpen(); } }}>
             <span className="gmedia">{it.img ? <img src={it.img} alt="" draggable="false" loading="lazy" /> : <Art seed={it.seed} voice={it.voice} kind={it.kind} />}</span>
             <span className="gcard-dim" style={{ opacity: Math.min(0.55, a * 0.24) }} />
-            {center && it.onOpen && <button className="gchip l" onClick={(e) => { e.stopPropagation(); it.onOpen(); }}><Icon n="expand" s={13} />Открыть</button>}
             {center && it.onMore && <button className="gchip r" aria-label="Действия" onClick={(e) => { e.stopPropagation(); it.onMore(); }}><Icon n="more" s={15} /></button>}
             <div className="gcap">
               <div className="gcap-h"><b>{it.title}</b><span>{k + 1} / {n}</span></div>
