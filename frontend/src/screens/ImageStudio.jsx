@@ -30,7 +30,7 @@ export default function ImageStudio({ go, me, reloadMe, params }) {
         attach={ref} onAttach={setRef} attachLabel="Своё фото" />
       {ref && <p className="muted small pad">Нейросеть изменит ваше фото по описанию</p>}
       <div className="modes" role="radiogroup" aria-label="Качество">
-        {[["fast", "Быстро", "1K · около 10 с"], ["max", "Максимум", "Pro · 2K · около 40 с"]].map(([k, t, sub]) => (
+        {[["fast", "Быстро", "1K · до 30 с"], ["max", "Максимум", "Pro · 2K · около минуты"]].map(([k, t, sub]) => (
           <button key={k} role="radio" aria-checked={quality === k} className={"mode" + (quality === k ? " on" : "")} onClick={() => pickQ(k)}>
             <span className="md-t"><b>{t}</b><span className="md-p"><Icon n="spark" s={12} w={2.2} />{priceOf("image", { quality: k })}</span></span>
             <small>{sub}</small>
