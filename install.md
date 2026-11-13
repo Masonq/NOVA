@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-13 23:24 UTC
+# Установка NOVA 2026-11-13 23:28 UTC
 
-- Версия: c863df5 Studio tiles: Phosphor duotone icons instead of hand-drawn motifs
+- Версия: 1432638 Live icons: tile pictures move while selected, switch icons animate when on, home tools as gradient app icons
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
