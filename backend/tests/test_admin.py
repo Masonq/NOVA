@@ -9,8 +9,6 @@ def admin(monkeypatch):
     from app.routes import jobs as jm
     async def enq(jid): pass
     monkeypatch.setattr(jm, "enqueue", enq)
-    from app.routes import admin as am
-    monkeypatch.setattr(am, "enqueue", enq)
 
 
 @A
