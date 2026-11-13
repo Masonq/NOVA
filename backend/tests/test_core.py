@@ -87,7 +87,7 @@ async def test_site_login_via_bot(client):
 async def test_chat_stream_saves_reply(client, monkeypatch):
     from app.routes import chat as chatmod
     async def fake(models, contents, system):
-        assert contents[-1]["parts"][0]["text"] == "Привет"
+        assert contents[-1] == {"role": "user", "content": "Привет"}
         for t in ["При", "вет!"]:
             yield t
     monkeypatch.setattr(chatmod, "stream_text", fake)
@@ -102,7 +102,7 @@ async def test_chat_stream_saves_reply(client, monkeypatch):
 @A
 async def test_chat_model_down(client, monkeypatch):
     from app.routes import chat as chatmod
-    from app.gemini import GeminiError
+    from app.ai import AIError as GeminiError
     async def boom(*a):
         raise GeminiError("503")
         yield
@@ -153,3 +153,21 @@ async def test_delete_account(client):
     h = await login(client, 7001)
     assert (await client.delete("/api/me", headers=h)).json()["ok"]
     assert (await client.get("/api/me", headers=h)).status_code == 401
+
+
+@A
+async def test_speech_wraps_pcm(monkeypatch):
+    import httpx
+    from app import ai
+    class R:
+        status_code = 200; content = b"\x00\x00" * 2400; text = ""
+    class C:
+        def __init__(self, *a, **k): pass
+        async def __aenter__(self): return self
+        async def __aexit__(self, *a): return False
+        async def post(self, url, headers=None, json=None):
+            assert url.endswith("/audio/speech") and json["voice"] == "Sulafat" and json["response_format"] == "pcm"
+            return R()
+    monkeypatch.setattr(httpx, "AsyncClient", C)
+    wav = await ai.speech("Привет")
+    assert wav[:4] == b"RIFF" and len(wav) > 4000

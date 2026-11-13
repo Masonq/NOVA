@@ -7,7 +7,8 @@ class Settings(BaseSettings):
 
     bot_token: str = ""
     bot_username: str = "NovaAI_Agent"
-    gemini_key: str = ""
+    openrouter_key: str = ""
+    kie_key: str = ""
     database_url: str = "postgresql+asyncpg://nova:nova@127.0.0.1:5432/nova"
     redis_url: str = "redis://127.0.0.1:6379/5"
     jwt_secret: str = "dev-secret-change-me"
@@ -22,7 +23,9 @@ class Settings(BaseSettings):
     remind_before_days: int = 3
     chat_daily_limit: int = 200
 
-    chat_models: str = "gemini-3.8-flash,gemini-3.5-flash"
+    chat_models: str = "google/gemini-3.8-flash,google/gemini-3.5-flash"
+    tts_model: str = "google/gemini-3.8-flash-tts"
+    tts_voice: str = "Sulafat"
 
 
 @lru_cache

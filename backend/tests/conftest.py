@@ -1,6 +1,6 @@
 import os, sys, tempfile
 os.environ.update(DATABASE_URL="postgresql+asyncpg://nova:nova@127.0.0.1:5432/nova_test", BOT_TOKEN="123:TEST",
-                  JWT_SECRET="t"*40, WEBHOOK_SECRET="wh", GEMINI_KEY="x",
+                  JWT_SECRET="t"*40, WEBHOOK_SECRET="wh", OPENROUTER_KEY="x",
                   STORAGE_DIR=tempfile.mkdtemp(), STATIC_DIR=tempfile.mkdtemp(), PUBLIC_URL="https://nova.test")
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import pytest, pytest_asyncio, httpx

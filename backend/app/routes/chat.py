@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import get_settings
 from ..db import Session, get_db
-from ..gemini import GeminiError, stream_text
+from ..ai import AIError, stream_text
 from ..models import ChatMessage, Memory, User, now
 from ..security import current_user
 
@@ -56,7 +56,7 @@ async def send(body: ChatIn, u: User = Depends(current_user), db: AsyncSession =
     await db.commit()
     rows = (await db.execute(select(ChatMessage).where(ChatMessage.user_id == u.id)
                              .order_by(ChatMessage.id.desc()).limit(HISTORY))).scalars().all()
-    contents = [{"role": m.role, "parts": [{"text": m.text}]} for m in reversed(rows)]
+    contents = [{"role": "assistant" if m.role == "model" else "user", "content": m.text} for m in reversed(rows)]
     facts = (await db.execute(select(Memory.text).where(Memory.user_id == u.id).order_by(Memory.id.desc()).limit(30))).scalars().all()
     system = SYSTEM + (f"\nПользователя зовут {u.first_name}." if u.first_name else "")
     if facts:
@@ -69,7 +69,7 @@ async def send(body: ChatIn, u: User = Depends(current_user), db: AsyncSession =
             async for chunk in stream_text(s.chat_models, contents, system):
                 out.append(chunk)
                 yield _sse({"t": chunk})
-        except GeminiError:
+        except AIError:
             if not out:
                 yield _sse({"error": "Модель сейчас перегружена, попробуйте ещё раз через минуту"})
                 return

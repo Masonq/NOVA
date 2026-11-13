@@ -24,7 +24,8 @@ setv STORAGE_DIR "$APP/storage"
 setv STATIC_DIR "$APP/frontend/dist"
 setv BOT_USERNAME "NovaAI_Agent"
 [ -n "$(getv BOT_TOKEN)" ] || fail "нет BOT_TOKEN в $ENV"
-[ -n "$(getv GEMINI_KEY)" ] || fail "нет GEMINI_KEY в $ENV"
+[ -n "$(getv OPENROUTER_KEY)" ] || fail "нет OPENROUTER_KEY в $ENV"
+[ -n "$(getv KIE_KEY)" ] || log "Ключа Kie.ai пока нет — нужен с этапа 2 (видео)"
 mkdir -p "$APP/storage"; chown -R www-data:www-data "$APP/storage" 2>/dev/null || true; chmod 755 "$APP/storage"
 
 # --- system packages (only what is missing) ---
@@ -136,8 +137,9 @@ curl -fsS "https://api.telegram.org/bot$TOKEN/setChatMenuButton" -H 'Content-Typ
   -d "{\"menu_button\":{\"type\":\"web_app\",\"text\":\"NOVA\",\"web_app\":{\"url\":\"https://$DOMAIN/\"}}}" | grep -q '"ok":true' && log "Бот: кнопка меню открывает приложение" || fail "кнопка меню бота"
 curl -fsS "https://api.telegram.org/bot$TOKEN/setMyDescription" --data-urlencode "description=NOVA — ИИ-агент: голос, картинки и логотипы, видео, музыка и озвучка. Нажмите «Старт»." >/dev/null || true
 
-# --- russian check (only when asked: RUCHECK=1) ---
-if [ "${RUCHECK:-0}" = "1" ]; then
+# --- russian check: on first install or when asked (RUCHECK=1) ---
+if [ "${RUCHECK:-0}" = "1" ] || [ ! -f "$APP/.rucheck-done" ]; then
+  touch "$APP/.rucheck-done"
   timeout 600 "$APP/venv/bin/python" tools/russian_check.py /tmp/russian.md >/dev/null 2>&1 && log "Проверка русского: готова, см. russian.md" || log "Проверка русского: не завершилась"
 fi
 

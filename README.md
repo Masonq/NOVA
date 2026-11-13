@@ -5,7 +5,7 @@
 - `backend/` — FastAPI, PostgreSQL, Redis-воркер (arq)
 - `frontend/` — React/Vite, собранный `dist/` лежит в репозитории
 - `deploy/install.sh` — установка и обновление на сервере, отчёт в ветку `reports`
-- `tools/russian_check.py` — проверка русского языка у голосовых моделей
+- `tools/russian_check.py` — проверка русского у голосов Gemini (OpenRouter)
 
 Обновление на сервере:
 
