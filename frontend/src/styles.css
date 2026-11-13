@@ -366,6 +366,28 @@ img.sheet-media { object-fit: contain; background: var(--card); }
 .sheet-title { margin: 0 0 6px; font-size: 16px; font-weight: 650; text-align: center; }
 .sheet-row .v-play { width: 32px; height: 32px; }
 
+
+/* ---------- top-up ---------- */
+.tp-sub { margin: -2px 0 6px; }
+.packs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.pack { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 18px 6px 12px; border-radius: 18px; background: var(--card); border: 1.5px solid var(--line); text-align: center; }
+.pack.on { border-color: var(--accent); background: var(--accent-soft); }
+.pk-hit { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); padding: 3px 9px; border-radius: 9px; background: var(--accent); color: #fff; font-size: 10.5px; font-weight: 700; white-space: nowrap; }
+.pk-c { display: inline-flex; align-items: center; gap: 5px; font-size: 18px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.pk-b { font-size: 11px; color: var(--mut); min-height: 14px; }
+.pk-b.bonus { color: #7FD99A; font-weight: 600; }
+.pk-p { margin-top: 6px; font-size: 13.5px; font-weight: 650; color: var(--soft); font-variant-numeric: tabular-nums; }
+.payseg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 15px; background: var(--card); border: 1px solid var(--line); margin-top: 6px; }
+.payseg button { height: 40px; border-radius: 11px; font-size: 13.5px; font-weight: 600; color: var(--soft); white-space: nowrap; }
+.payseg button.on { background: var(--txt); color: var(--bg); }
+.tp-what { margin: 6px 2px 2px; text-align: center; }
+.tp-note { margin: 2px 0 0; }
+.sheet .cta.wide { width: 100%; height: 54px; margin-top: 4px; }
+.cta.short { background: var(--accent); color: #fff; }
+.cta.short .cta-price { background: rgba(255,255,255,.18); }
+.balance[role="button"] { cursor: pointer; }
+.center { text-align: center; }
+
 @media (min-width: 900px) {
   .screen { padding-top: 28px; }
   .result { height: 240px; }

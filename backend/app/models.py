@@ -90,3 +90,19 @@ class LoginCode(Base):
 
 Index("ix_jobs_user_created", Job.user_id, Job.created_at.desc())
 Index("ix_ledger_user_created", Ledger.user_id, Ledger.created_at.desc())
+
+
+class Payment(Base):
+    __tablename__ = "payments"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    method: Mapped[str] = mapped_column(String(12))          # stars | crypto
+    pack: Mapped[str] = mapped_column(String(16))
+    credits: Mapped[int] = mapped_column(Integer)
+    amount: Mapped[str] = mapped_column(String(24))          # "400" stars or "4.99" USD
+    currency: Mapped[str] = mapped_column(String(8))         # XTR | USD
+    payload: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    status: Mapped[str] = mapped_column(String(12), default="pending", index=True)   # pending | paid | expired | refunded
+    external_id: Mapped[str] = mapped_column(String(128), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

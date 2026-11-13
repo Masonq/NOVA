@@ -13,6 +13,23 @@ from .models import Job, User, now
 from .storage import remove_job_files
 from .runner import run_job
 
+
+async def sync_crypto(ctx):
+    """Pending crypto invoices of the last 2 hours: grant credits for the paid ones (no webhook needed)."""
+    from datetime import timedelta
+    from . import payments as P
+    from .models import Payment, now
+    if not get_settings().crypto_pay_token:
+        return
+    async with Session() as db:
+        rows = (await db.execute(select(Payment).where(Payment.method == "crypto", Payment.status == "pending",
+                                                       Payment.created_at > now() - timedelta(hours=2)))).scalars().all()
+        if rows:
+            try:
+                await P.crypto_sync(db, list(rows))
+            except Exception as e:
+                log.warning("crypto sync: %s", e)
+
 log = logging.getLogger("nova.worker")
 
 
@@ -80,7 +97,8 @@ async def startup(ctx):
 class WorkerSettings:
     functions = [run_job]
     job_timeout = 2400
-    cron_jobs = [cron(cleanup_expired, minute={7, 37}), cron(remind_expiring, hour={9}, minute={0})]
+    cron_jobs = [cron(cleanup_expired, minute={7, 37}), cron(remind_expiring, hour={9}, minute={0}),
+                 cron(sync_crypto, second={20}, run_at_startup=False)]
     on_startup = startup
     redis_settings = RedisSettings.from_dsn(get_settings().redis_url)
     max_jobs = 8

@@ -7,11 +7,11 @@ from sqlalchemy import text
 
 from .config import get_settings
 from .db import engine, init_db
-from .routes import agent, auth, chat, jobs, me, tg, voices
+from .routes import agent, auth, chat, jobs, me, pay, tg, voices
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 app = FastAPI(title="NOVA", docs_url=None, redoc_url=None, openapi_url=None)
-for r in (auth.router, me.router, chat.router, jobs.router, jobs.upload_router, voices.router, agent.router, tg.router):
+for r in (auth.router, me.router, chat.router, jobs.router, jobs.upload_router, voices.router, agent.router, pay.router, tg.router):
     app.include_router(r)
 
 

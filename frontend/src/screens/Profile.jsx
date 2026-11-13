@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Icon from "../ui/Icon.jsx";
+import { openTopup } from "../ui/Topup.jsx";
 import { toast } from "../ui/Toast.jsx";
 import { api, auth } from "../api.js";
 import { inTelegram, haptic } from "../tg.js";
@@ -23,7 +24,7 @@ export default function Profile({ me, reload }) {
       <header className="bar"><h1>Профиль</h1></header>
       <section className="card bal">
         <div><span className="muted small">Баланс</span><b>{me?.balance ?? "…"} <small>кредитов</small></b></div>
-        <button className="cta small" onClick={() => toast("Покупка кредитов появится в ближайшем обновлении")}>Пополнить</button>
+        <button className="cta small" onClick={() => openTopup()}>Пополнить</button>
       </section>
       <section aria-labelledby="mem-h">
         <div className="row-h"><h2 id="mem-h">Что я о вас знаю</h2>{mem?.length > 0 && <button className="link danger" onClick={forgetAll}>Забыть всё</button>}</div>

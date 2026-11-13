@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     bot_username: str = "NovaAI_Agent"
     openrouter_key: str = ""
     kie_key: str = ""
+    crypto_pay_token: str = ""
     database_url: str = "postgresql+asyncpg://nova:nova@127.0.0.1:5432/nova"
     redis_url: str = "redis://127.0.0.1:6379/5"
     jwt_secret: str = "dev-secret-change-me"

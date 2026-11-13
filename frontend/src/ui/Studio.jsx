@@ -3,13 +3,14 @@ import Icon from "./Icon.jsx";
 import { upload } from "../api.js";
 import { toast } from "./Toast.jsx";
 import { haptic } from "../tg.js";
+import { openTopup } from "./Topup.jsx";
 
 export function StudioTop({ title, me, go }) {
   return (
     <header className="bar studio-top">
       <button className="ic-btn" aria-label="Назад" onClick={() => go("home")}><Icon n="back" /></button>
       <h1>{title}</h1>
-      <span className="balance" aria-label={`Баланс ${me?.balance ?? 0} кредитов`}><Icon n="spark" s={14} w={2} />{me?.balance ?? "…"}</span>
+      <span className="balance" role="button" tabIndex={0} onClick={() => openTopup()} aria-label={`Баланс ${me?.balance ?? 0} кредитов, пополнить`}><Icon n="spark" s={14} w={2} />{me?.balance ?? "…"}</span>
     </header>);
 }
 
@@ -63,8 +64,8 @@ export function Dock({ label, price, balance, disabled, onClick, busy }) {
   const short = balance != null && price > balance;
   return (
     <div className="dock studio-dock">
-      <button className="cta wide" disabled={disabled || busy || short} onClick={onClick}>
-        {busy ? "Запускаю…" : short ? "Не хватает кредитов" : <>{label}<span className="cta-price"><Icon n="spark" s={13} w={2.2} />{price}</span></>}
+      <button className={"cta wide" + (short ? " short" : "")} disabled={disabled || busy} onClick={short ? () => openTopup(price - balance) : onClick}>
+        {busy ? "Запускаю…" : short ? <>Пополнить баланс<span className="cta-price"><Icon n="spark" s={13} w={2.2} />{price}</span></> : <>{label}<span className="cta-price"><Icon n="spark" s={13} w={2.2} />{price}</span></>}
       </button>
     </div>);
 }

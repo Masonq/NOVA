@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Icon from "../ui/Icon.jsx";
+import { openTopup } from "../ui/Topup.jsx";
 import Composer from "../ui/Composer.jsx";
 import { toast } from "../ui/Toast.jsx";
 import { api } from "../api.js";
@@ -59,7 +60,7 @@ export default function Home({ go, me }) {
     <main className="screen home">
       <header className="top">
         <span className="brand">NOVA</span>
-        <span className="balance" aria-label={`Баланс ${me?.balance ?? 0} кредитов`}><Icon n="spark" s={14} w={2} />{me?.balance ?? "…"}</span>
+        <span className="balance" role="button" tabIndex={0} onClick={() => openTopup()} aria-label={`Баланс ${me?.balance ?? 0} кредитов, пополнить`}><Icon n="spark" s={14} w={2} />{me?.balance ?? "…"}</span>
       </header>
       {a0 && (
         <button className="island" onClick={() => go("tasks")} aria-label="Открыть генерации в работе">

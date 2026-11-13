@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Icon from "../ui/Icon.jsx";
+import { openTopup } from "../ui/Topup.jsx";
 import Orb from "../ui/Orb.jsx";
 import Sheet, { JobSheet } from "../ui/Sheet.jsx";
 import { Progress } from "../ui/Studio.jsx";
@@ -101,7 +102,7 @@ export default function Agent({ go, me, reloadMe }) {
       <header className="ag-top">
         <button className="ic-btn" aria-label="Назад" onClick={() => go("home")}><Icon n="back" /></button>
         <button className="ag-voice" onClick={() => setPick(true)} aria-label="Выбрать голос"><Icon n="wave" s={15} />{vname ? vname[0].toUpperCase() + vname.slice(1) : "Голос"}</button>
-        <span className="balance" aria-label={`Баланс ${me?.balance ?? 0} кредитов`}><Icon n="spark" s={14} w={2} />{me?.balance ?? "…"}</span>
+        <span className="balance" role="button" tabIndex={0} onClick={() => openTopup()} aria-label={`Баланс ${me?.balance ?? 0} кредитов, пополнить`}><Icon n="spark" s={14} w={2} />{me?.balance ?? "…"}</span>
       </header>
 
       <section className={"ag-stage" + (heard || answer || confirm || jobs.length ? " compact" : "")}>
@@ -122,7 +123,7 @@ export default function Agent({ go, me, reloadMe }) {
             <div className="agc-h"><span className={"tag k-" + confirm.kind}>{WHAT[confirm.kind]}</span><b>{confirm.cost} кр.</b></div>
             <p>{confirm.prompt}</p>
             {confirm.cost > confirm.balance
-              ? <button className="cta wide" onClick={() => go("profile")}>Пополнить баланс</button>
+              ? <button className="cta wide" onClick={() => openTopup(confirm.cost - confirm.balance)}>Пополнить баланс</button>
               : <div className="agc-b"><button className="row-btn" onClick={() => send({ text: "нет, не надо" })}>Отмена</button>
                   <button className="cta" onClick={() => send({ text: "да, запускай" })}>Запустить</button></div>}
           </div>)}

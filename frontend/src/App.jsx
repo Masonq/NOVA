@@ -16,6 +16,7 @@ import Tasks from "./screens/Tasks.jsx";
 import Feed from "./screens/Feed.jsx";
 import Agent from "./screens/Agent.jsx";
 import TabBar from "./ui/TabBar.jsx";
+import Topup from "./ui/Topup.jsx";
 import { toast } from "./ui/Toast.jsx";
 
 const parse = () => (location.hash.replace(/^#\/?/, "") || "home").split("?")[0];
@@ -78,6 +79,7 @@ export default function App() {
       {!["chat", "image", "video", "music", "tts", "feed", "agent"].includes(route) && (
         <TabBar tabs={TABS} active={TABS.find((t) => t.k === route) ? route : "home"} onSelect={(k) => go(k)}
           side={{ orb: true, label: "Голосовой агент", accent: true, onClick: () => go("agent") }} />)}
+      <Topup me={me} reloadMe={loadMe} />
       <Toaster />
     </div>);
 }

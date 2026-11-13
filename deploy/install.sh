@@ -26,6 +26,7 @@ setv BOT_USERNAME "NovaAI_Agent"
 [ -n "$(getv BOT_TOKEN)" ] || fail "нет BOT_TOKEN в $ENV"
 [ -n "$(getv OPENROUTER_KEY)" ] || fail "нет OPENROUTER_KEY в $ENV"
 [ -n "$(getv KIE_KEY)" ] || log "Ключа Kie.ai пока нет — нужен с этапа 2 (видео)"
+[ -n "$(getv CRYPTO_PAY_TOKEN)" ] && log "Оплата криптой: токен есть" || log "Оплата криптой: токена нет — в приложении будут только Stars"
 mkdir -p "$APP/storage"; chown -R www-data:www-data "$APP/storage" 2>/dev/null || true; chmod 755 "$APP/storage"
 
 # --- system packages (only what is missing) ---
@@ -132,7 +133,7 @@ systemctl is-active --quiet nova-worker && log "Воркер: работает" 
 # --- telegram ---
 TOKEN=$(getv BOT_TOKEN); WH=$(getv WEBHOOK_SECRET)
 r=$(curl -fsS "https://api.telegram.org/bot$TOKEN/setWebhook" -d "url=https://$DOMAIN/api/tg/webhook" -d "secret_token=$WH" \
-     -d 'allowed_updates=["message","my_chat_member"]' -d "drop_pending_updates=false" || true)
+     -d 'allowed_updates=["message","my_chat_member","pre_checkout_query"]' -d "drop_pending_updates=false" || true)
 echo "$r" | grep -q '"ok":true' && log "Бот: вебхук подключён" || fail "вебхук бота: $r"
 curl -fsS "https://api.telegram.org/bot$TOKEN/setChatMenuButton" -H 'Content-Type: application/json' \
   -d "{\"menu_button\":{\"type\":\"web_app\",\"text\":\"NOVA\",\"web_app\":{\"url\":\"https://$DOMAIN/\"}}}" | grep -q '"ok":true' && log "Бот: кнопка меню открывает приложение" || fail "кнопка меню бота"
