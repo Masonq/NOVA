@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-13 23:22 UTC
+# Установка NOVA 2026-11-13 23:24 UTC
 
-- Версия: 926f960 Studios redesign: style and intonation tiles, format shapes, duration/quality cards with prices, glowing switches, prompt ideas, voice avatars
+- Версия: c863df5 Studio tiles: Phosphor duotone icons instead of hand-drawn motifs
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
