@@ -163,7 +163,8 @@ fi
 
 # --- live check of paid services (one test picture on the first run of stage 2) ---
 IMG=""; [ -f "$APP/.imgcheck3-done" ] || { IMG="--image"; touch "$APP/.imgcheck3-done"; }
-timeout 300 "$APP/venv/bin/python" tools/services_check.py /tmp/services.md $IMG >/dev/null 2>&1 && log "Сервисы: проверены, см. services.md" || log "Сервисы: проверка не завершилась"
+PAID=""; [ "${SVCCHECK:-0}" = "1" ] && PAID="--paid"      # paid model checks only when asked: never on every update
+timeout 300 "$APP/venv/bin/python" tools/services_check.py /tmp/services.md $IMG $PAID >/dev/null 2>&1 && log "Сервисы: проверены, см. services.md" || log "Сервисы: проверка не завершилась"
 
 echo >> "$REPORT"; log "Статус: $STATUS"
 

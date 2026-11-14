@@ -14,7 +14,7 @@ def env(k):
     return ""
 
 
-def main(path, image):
+def main(path, image, paid=False):
     out = ["# Проверка сервисов", "", time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime()), ""]
     with httpx.Client(timeout=120) as cl:
         k = env("KIE_KEY")
@@ -47,58 +47,62 @@ def main(path, image):
             out.append(f"- OpenRouter: ключ работает, потрачено ${r.get('usage')}, лимит {r.get('limit')}")
         except Exception as e:
             out.append(f"- OpenRouter: ошибка {e}")
-        # voice agent: does the model call the create tool (no generation is started here)?
-        try:
-            import json as _j
-            tools = [{"type": "function", "function": {"name": "create_media", "description": "Подготовить генерацию",
-                      "parameters": {"type": "object", "required": ["kind", "prompt"], "properties": {"kind": {"type": "string", "enum": ["image", "video", "music", "tts"]}, "prompt": {"type": "string"}}}}}]
-            t0 = time.time()
-            r = cl.post("https://openrouter.ai/api/v1/chat/completions", headers={"Authorization": "Bearer " + o}, json={
-                "model": "google/gemini-3.8-flash", "tools": tools,
-                "messages": [{"role": "system", "content": "Ты голосовой агент NOVA. Для генераций вызывай create_media."}, {"role": "user", "content": "Сделай логотип кофейни Зерно"}]}).json()
-            tc = (r["choices"][0]["message"].get("tool_calls") or [{}])[0].get("function", {})
-            out.append(f"- Агент: инструмент {tc.get('name') or 'не вызван'} {tc.get('arguments', '')[:120]} за {time.time() - t0:.1f} с")
-            t0 = time.time()
-            r = cl.post("https://openrouter.ai/api/v1/chat/completions", headers={"Authorization": "Bearer " + o}, json={
-                "model": "google/gemini-3.8-flash", "plugins": [{"id": "web", "max_results": 3}],
-                "messages": [{"role": "user", "content": "Какой сегодня курс евро к динару? Коротко."}]})
-            out.append(f"- Поиск в интернете: {r.status_code}, {time.time() - t0:.1f} с: {(r.json()['choices'][0]['message'].get('content') or '')[:160] if r.status_code == 200 else r.text[:160]}")
-        except Exception as e:
-            out.append(f"- Агент: ошибка {type(e).__name__} {e}")
-        # music: what the web knows about the sound of a referenced artist (used for Suno style tags)
-        try:
-            import sys as _s, asyncio as _a
-            _s.path.insert(0, "/opt/nova/backend"); os.environ.setdefault("BOT_TOKEN", env("BOT_TOKEN")); os.environ.setdefault("OPENROUTER_KEY", o)
-            from app.ai import artist_sound
-            snd = _a.run(artist_sound("трек на подобии треков исполнителя icegergert"))
-            out.append("- Звучание icegergert из интернета: " + (snd.replace(chr(10), " / ")[:500] if snd else "не нашлось"))
-        except Exception as e:
-            out.append(f"- Звучание артиста: ошибка {type(e).__name__} {e}")
-        if image:   # one real picture per photo mode through the images API (~$0.17 once)
-            tests = [({"model": "bytedance-seed/seedream-5-5", "resolution": "2K"}, "Photorealistic portrait of a barista in a cosy coffee shop, morning window light, 85mm lens"),
-                     ({"model": "openai/gpt-image-2.6-flare", "quality": "medium"}, "Minimalist vector logo of a coffee shop with the word \"Зерно\": a cup and a coffee bean, warm colours, plain background"),
-                     ({"model": "google/gemini-nano-banana-2.1", "resolution": "2K"}, "A cosy coffee cup on a wooden table, soft daylight")]
-            for extra, prompt in tests:
-                model, res = extra["model"], extra.get("resolution") or extra.get("quality")
+        # the checks below cost money (model calls, web search): only when asked (SVCCHECK=1), never on every update
+        if not paid:
+            out.append("- Платные проверки (агент, поиск, звучание артиста) пропущены: запускаются только по запросу")
+        else:
+            # voice agent: does the model call the create tool (no generation is started here)?
+            try:
+                import json as _j
+                tools = [{"type": "function", "function": {"name": "create_media", "description": "Подготовить генерацию",
+                          "parameters": {"type": "object", "required": ["kind", "prompt"], "properties": {"kind": {"type": "string", "enum": ["image", "video", "music", "tts"]}, "prompt": {"type": "string"}}}}}]
                 t0 = time.time()
-                try:
-                    r = cl.post("https://openrouter.ai/api/v1/images", headers={"Authorization": "Bearer " + o}, timeout=240,
-                                json={"prompt": prompt, "aspect_ratio": "1:1", "n": 1, **extra})
-                    if r.status_code != 200:
-                        out.append(f"- Фото {model} {res}: {r.status_code} {r.text[:200]}"); continue
-                    d = r.json(); it = (d.get("data") or [{}])[0]
-                    raw = base64.b64decode(it["b64_json"]) if it.get("b64_json") else b""
-                    size = ""
+                r = cl.post("https://openrouter.ai/api/v1/chat/completions", headers={"Authorization": "Bearer " + o}, json={
+                    "model": "google/gemini-3.8-flash", "tools": tools,
+                    "messages": [{"role": "system", "content": "Ты голосовой агент NOVA. Для генераций вызывай create_media."}, {"role": "user", "content": "Сделай логотип кофейни Зерно"}]}).json()
+                tc = (r["choices"][0]["message"].get("tool_calls") or [{}])[0].get("function", {})
+                out.append(f"- Агент: инструмент {tc.get('name') or 'не вызван'} {tc.get('arguments', '')[:120]} за {time.time() - t0:.1f} с")
+                t0 = time.time()
+                r = cl.post("https://openrouter.ai/api/v1/chat/completions", headers={"Authorization": "Bearer " + o}, json={
+                    "model": "google/gemini-3.8-flash", "plugins": [{"id": "web", "max_results": 3}],
+                    "messages": [{"role": "user", "content": "Какой сегодня курс евро к динару? Коротко."}]})
+                out.append(f"- Поиск в интернете: {r.status_code}, {time.time() - t0:.1f} с: {(r.json()['choices'][0]['message'].get('content') or '')[:160] if r.status_code == 200 else r.text[:160]}")
+            except Exception as e:
+                out.append(f"- Агент: ошибка {type(e).__name__} {e}")
+            # music: what the web knows about the sound of a referenced artist (used for Suno style tags)
+            try:
+                import sys as _s, asyncio as _a
+                _s.path.insert(0, "/opt/nova/backend"); os.environ.setdefault("BOT_TOKEN", env("BOT_TOKEN")); os.environ.setdefault("OPENROUTER_KEY", o)
+                from app.ai import artist_sound
+                snd = _a.run(artist_sound("трек на подобии треков исполнителя icegergert"))
+                out.append("- Звучание icegergert из интернета: " + (snd.replace(chr(10), " / ")[:500] if snd else "не нашлось"))
+            except Exception as e:
+                out.append(f"- Звучание артиста: ошибка {type(e).__name__} {e}")
+            if image:   # one real picture per photo mode through the images API (~$0.17 once)
+                tests = [({"model": "bytedance-seed/seedream-5-5", "resolution": "2K"}, "Photorealistic portrait of a barista in a cosy coffee shop, morning window light, 85mm lens"),
+                         ({"model": "openai/gpt-image-2.6-flare", "quality": "medium"}, "Minimalist vector logo of a coffee shop with the word \"Зерно\": a cup and a coffee bean, warm colours, plain background"),
+                         ({"model": "google/gemini-nano-banana-2.1", "resolution": "2K"}, "A cosy coffee cup on a wooden table, soft daylight")]
+                for extra, prompt in tests:
+                    model, res = extra["model"], extra.get("resolution") or extra.get("quality")
+                    t0 = time.time()
                     try:
-                        from PIL import Image; import io
-                        size = "%sx%s" % Image.open(io.BytesIO(raw)).size
-                    except Exception:
-                        pass
-                    out.append(f"- Фото {model} {res}: {time.time() - t0:.1f} с, {size}, {len(raw) // 1024} КБ, стоимость {(d.get('usage') or {}).get('cost')}")
-                except Exception as e:
-                    out.append(f"- Фото {model}: ошибка {type(e).__name__} {e}")
+                        r = cl.post("https://openrouter.ai/api/v1/images", headers={"Authorization": "Bearer " + o}, timeout=240,
+                                    json={"prompt": prompt, "aspect_ratio": "1:1", "n": 1, **extra})
+                        if r.status_code != 200:
+                            out.append(f"- Фото {model} {res}: {r.status_code} {r.text[:200]}"); continue
+                        d = r.json(); it = (d.get("data") or [{}])[0]
+                        raw = base64.b64decode(it["b64_json"]) if it.get("b64_json") else b""
+                        size = ""
+                        try:
+                            from PIL import Image; import io
+                            size = "%sx%s" % Image.open(io.BytesIO(raw)).size
+                        except Exception:
+                            pass
+                        out.append(f"- Фото {model} {res}: {time.time() - t0:.1f} с, {size}, {len(raw) // 1024} КБ, стоимость {(d.get('usage') or {}).get('cost')}")
+                    except Exception as e:
+                        out.append(f"- Фото {model}: ошибка {type(e).__name__} {e}")
     open(path, "w").write("\n".join(out) + "\n")
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], "--image" in sys.argv)
+    main(sys.argv[1], "--image" in sys.argv, "--paid" in sys.argv or "--image" in sys.argv)
