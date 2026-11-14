@@ -12,7 +12,7 @@ import { haptic } from "../tg.js";
 import { kickJobs, useActiveJobs, KIND, thumbOf, PRICE } from "../jobs.js";
 
 const STATUS = {
-  off: "Коснитесь сферы, чтобы начать разговор",
+  off: "Коснитесь, чтобы начать разговор",
   idle: "Говорите — я слушаю",
   listening: "Слушаю…",
   thinking: "Думаю…",
