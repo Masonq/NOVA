@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-13 23:56 UTC
+# Установка NOVA 2026-11-14 00:14 UTC
 
-- Версия: d420c23 Motion: page and tab slides, smooth composer, spring sheets with animated close, toasts, rolling balance, progress button, result reveal; Russian update notes
+- Версия: a254c08 Voice agent: streamed speech, early end of turn with resume, «not finished» detection, duck-then-decide barge-in, think tool
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
