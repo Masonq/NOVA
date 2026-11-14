@@ -19,9 +19,8 @@ export default function Composer({ value, onChange, onSend, busy, placeholder = 
   const [rec, setRec] = useState("off");          // off | rec | stt
   const [sec, setSec] = useState(0);
   const [focus, setFocus] = useState(false);
-  const [picking, setPicking] = useState(false);     // the photo picker is open: the field must not fold under the finger
   const root = useRef(null);
-  const open = focus || picking || !!value.trim() || !!img || rec !== "off";          // grows while typing; folds back when empty and left
+  const open = focus || !!value.trim() || !!img || rec !== "off";          // grows while typing; folds back when empty and left
   // folds back only when the user taps somewhere else on the page (not on blur: iOS fires stray blurs while the
   // keyboard opens and the field grows, which made it fold and unfold by itself)
   useEffect(() => {
@@ -57,16 +56,8 @@ export default function Composer({ value, onChange, onSend, busy, placeholder = 
     haptic("light"); onSend(t, img?.url || null);
   };
 
-  useEffect(() => {                      // the picker was closed without a photo: the page gets focus back
-    if (!picking) return;
-    const back = () => setTimeout(() => setPicking(false), 400);
-    window.addEventListener("focus", back);
-    const inp = file.current; inp?.addEventListener("cancel", back);
-    return () => { window.removeEventListener("focus", back); inp?.removeEventListener("cancel", back); };
-  }, [picking]);
   const pick = async (e) => {
     const f = e.target.files?.[0]; e.target.value = "";
-    setPicking(false);
     if (!f) return;
     if (!/^image\/(jpeg|png|webp|heic|heif)$/i.test(f.type) && !/\.(jpe?g|png|webp|heic)$/i.test(f.name)) { toast("Нужно фото в JPG, PNG или WebP", "error"); return; }
     haptic("select");
@@ -129,7 +120,7 @@ export default function Composer({ value, onChange, onSend, busy, placeholder = 
           </span>
         </div>)}
       {attach
-        ? <button ref={plusRef} className="ic-btn sq" aria-label="Прикрепить фото" onClick={() => { haptic("select"); setPicking(true); file.current?.click(); }} disabled={rec !== "off"}><Icon n="plus" /></button>
+        ? <button ref={plusRef} className="ic-btn sq" aria-label="Прикрепить фото" onClick={() => { haptic("select"); setFocus(false); ref.current?.blur(); file.current?.click(); }} disabled={rec !== "off"}><Icon n="plus" /></button>
         : null}
       {attach && <input ref={file} type="file" accept="image/*" hidden onChange={pick} />}
       <label className="sr" htmlFor="composer-input">Сообщение</label>

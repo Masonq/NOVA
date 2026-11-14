@@ -88,7 +88,7 @@ export function PromptBox({ value, onChange, placeholder, max, attach, onAttach,
       <div ref={foot} className="pbox-foot">
         {onAttach && (attach
           ? <span className="att" style={{ backgroundImage: `url(${attach})` }}><button aria-label="Убрать фото" onClick={() => onAttach(null)}><Icon n="x" s={12} w={2.4} /></button></span>
-          : <button className="att-add" aria-label={attachLabel} onClick={() => file.current?.click()} disabled={busy}><Icon n="clip" s={15} /><span className="att-l">{busy ? "Загружаю…" : attachLabel}</span></button>)}
+          : <button className="att-add" aria-label={attachLabel} onClick={() => { haptic("select"); setFocus(false); ref.current?.blur(); file.current?.click(); }} disabled={busy}><Icon n="clip" s={15} /><span className="att-l">{busy ? "Загружаю…" : attachLabel}</span></button>)}
         <input ref={file} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={pick} />
         {max && open && <span className="count">{value.length} / {max}</span>}
       </div>
