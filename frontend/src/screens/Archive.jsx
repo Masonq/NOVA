@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Icon from "../ui/Icon.jsx";
+import Art3D from "../ui/Art3D.jsx";
 import { JobSheet } from "../ui/Sheet.jsx";
 import { SlideTabs } from "../ui/TabBar.jsx";
 import { api } from "../api.js";
@@ -24,10 +25,10 @@ export default function Archive({ go, params }) {
         {jobs?.some((j) => j.kind === "image" || j.kind === "video") && <button className="chip" onClick={() => go("feed")}>Лента</button>}</header>
       {jobs?.length > 0 && (
         <SlideTabs label="Фильтр" items={FILTERS} value={f} onChange={setF} />)}
-      {jobs === null && <div className="skeleton" />}
+      {jobs === null && <div className="grid" aria-busy="true">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="skeleton cell-sk" />)}</div>}
       {jobs?.length === 0 && (
         <div className="empty-state">
-          <Icon n="clock" s={26} />
+          <Art3D name="picture" size={88} className="empty-art" />
           <p>Здесь будут все ваши работы</p>
           <span className="muted small">Картинки, видео, треки и&nbsp;озвучка хранятся 30&nbsp;дней</span>
           <button className="cta small" onClick={() => go("home")}>Создать первую</button>

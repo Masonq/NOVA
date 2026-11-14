@@ -33,7 +33,8 @@ export default function Admin({ go, params }) {
 function Stats() {
   const [s, setS] = useState(null);
   const [m, setM] = useState("revenue");
-  useEffect(() => { api("/api/admin/stats?days=30").then(setS).catch((e) => toast(e.message, "error")); }, []);
+  const [days, setDays] = useState(30);
+  useEffect(() => { api(`/api/admin/stats?days=${days}`).then(setS).catch((e) => toast(e.message, "error")); }, [days]);
   if (!s) return <div className="skeleton" />;
   const val = (r) => m === "revenue" ? r.stars * 0.013 + r.usd + (r.rub || 0) / 90 : m === "users" ? r.users : r.jobs;
   const max = Math.max(1, ...s.series.map(val));
@@ -41,7 +42,7 @@ function Stats() {
     <>
       <div className="kpis">
         <div className="kpi"><span>Пользователи</span><b>{fmt(s.users.total)}</b><small>{s.users.dau} за день · {s.users.wau} за неделю</small></div>
-        <div className="kpi"><span>Выручка 30 дн.</span><b>${fmt(s.money.revenue_usd)}</b><small>{fmt(s.money.stars)} ⭐ · {fmt(s.money.rub)} ₽ · ${s.money.usd}</small></div>
+        <div className="kpi"><span>Выручка {days} дн.</span><b>${fmt(s.money.revenue_usd)}</b><small>{fmt(s.money.stars)} ⭐ · {fmt(s.money.rub)} ₽ · ${s.money.usd}</small></div>
         <div className="kpi"><span>Расходы на модели</span><b>${usd(s.money.cost_usd)}</b><small>фактически, по OpenRouter и Kie</small></div>
         <div className={"kpi" + (s.money.margin_usd < 0 ? " neg" : " pos")}><span>Маржа</span><b>{s.money.margin_usd < 0 ? "−" : ""}${usd(Math.abs(s.money.margin_usd))}</b><small>{fmt(s.money.credits_spent)} кредитов потрачено</small></div>
       </div>
@@ -56,15 +57,14 @@ function Stats() {
         {Object.keys(s.costs?.by_provider || {}).length > 0 && <p className="muted small">За 30 дней: {Object.entries(s.costs.by_provider).map(([k, v]) => `${k === "kie" ? "Kie" : "OpenRouter"} $${usd(v)}`).join(" · ")}{s.costs.since ? ` · учёт с ${new Date(s.costs.since).toLocaleDateString("ru-RU")}` : ""}</p>}
       </section>
       <section className="card">
-        <div className="row-h"><h2>30 дней</h2></div>
+        <div className="row-h"><h2>Динамика</h2>
+          <div className="periods">{[[7, "7Д"], [30, "1М"], [90, "3М"]].map(([d, t]) =>
+            <button key={d} className={days === d ? "on" : ""} onClick={() => setDays(d)}>{t}</button>)}</div></div>
         <div className="payseg three">
           {[["revenue", "Выручка"], ["users", "Новые"], ["jobs", "Генерации"]].map(([k, t]) =>
             <button key={k} className={m === k ? "on" : ""} onClick={() => setM(k)}>{t}</button>)}
         </div>
-        <div className="bars" role="img" aria-label="График за 30 дней">
-          {s.series.map((r) => <span key={r.day} title={`${r.day}: ${val(r).toFixed(m === "revenue" ? 2 : 0)}`} style={{ height: `${Math.max(2, (val(r) / max) * 100)}%` }} />)}
-        </div>
-        <div className="bars-x"><span>{s.series[0].day.slice(5)}</span><span>сегодня</span></div>
+        <AreaChart key={m + days} points={s.series.map((r) => ({ x: r.day, y: val(r) }))} money={m === "revenue"} />
       </section>
       <section className="card">
         <div className="row-h"><h2>Генерации по типам</h2></div>
@@ -293,4 +293,38 @@ function Log() {
   return <ul className="list">{rows.map((r, i) => (
     <li key={i}><span><span className="t">{ACT[r.action] || r.action}{r.target ? ` · ${r.target}` : ""}</span>
       <span className="muted small">{r.admin} · {when(r.at)}{r.detail && r.action !== "prices" ? ` · ${r.detail.slice(0, 90)}` : ""}</span></span></li>))}</ul>;
+}
+
+
+/** Smooth area chart (like Walt): the total for the period on top, drag a finger to read any day. */
+function AreaChart({ points, money }) {
+  const [hi, setHi] = useState(null);
+  const W = 340, H = 140, n = points.length;
+  const max = Math.max(1e-9, ...points.map((p) => p.y));
+  const xy = points.map((p, i) => [n > 1 ? (i / (n - 1)) * W : W / 2, H - 8 - (p.y / max) * (H - 24)]);
+  const path = xy.reduce((d, [x, y], i) => {
+    if (!i) return `M${x},${y}`;
+    const [px, py] = xy[i - 1], cx = (px + x) / 2;
+    return d + ` C${cx},${py} ${cx},${y} ${x},${y}`;
+  }, "");
+  const sum = points.reduce((a, p) => a + p.y, 0);
+  const f = (v) => (money ? "$" + v.toFixed(2) : Math.round(v).toLocaleString("ru-RU"));
+  const cur = hi != null ? points[hi] : null;
+  const pick = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    setHi(Math.max(0, Math.min(n - 1, Math.round(((e.clientX - r.left) / r.width) * (n - 1)))));
+  };
+  return (
+    <div className="area">
+      <div className="area-h"><b>{cur ? f(cur.y) : f(sum)}</b><small>{cur ? new Date(cur.x).toLocaleDateString("ru-RU", { day: "numeric", month: "long" }) : `за ${n} дн.`}</small></div>
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label="График"
+        onPointerMove={pick} onPointerDown={pick} onPointerLeave={() => setHi(null)} style={{ touchAction: "pan-y" }}>
+        <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#3D8BFF" stopOpacity=".45" /><stop offset="1" stopColor="#3D8BFF" stopOpacity="0" /></linearGradient></defs>
+        <path d={`${path} L${W},${H} L0,${H} Z`} fill="url(#ag)" />
+        <path d={path} fill="none" stroke="#5AA8FF" strokeWidth="2" vectorEffect="non-scaling-stroke" className="area-line" />
+        {cur && <><line x1={xy[hi][0]} x2={xy[hi][0]} y1="0" y2={H} stroke="rgba(255,255,255,.25)" vectorEffect="non-scaling-stroke" />
+          <circle cx={xy[hi][0]} cy={xy[hi][1]} r="4" fill="#fff" vectorEffect="non-scaling-stroke" /></>}
+      </svg>
+      <div className="bars-x"><span>{points[0]?.x.slice(5)}</span><span>сегодня</span></div>
+    </div>);
 }

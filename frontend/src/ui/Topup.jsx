@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Sheet from "./Sheet.jsx";
 import Icon from "./Icon.jsx";
+import Art3D from "./Art3D.jsx";
 import { api } from "../api.js";
 import { PRICE } from "../jobs.js";
 import { tg, haptic, inTelegram } from "../tg.js";
@@ -88,7 +89,8 @@ export default function Topup({ me, reloadMe }) {
           <div className="packs" role="radiogroup" aria-label="Пакет">
             {data.packs.map((x) => (
               <button key={x.id} role="radio" aria-checked={pack === x.id} className={"pack" + (pack === x.id ? " on" : "")} onClick={() => { haptic("select"); setPack(x.id); }}>
-                {x.hit && <span className="pk-hit">Выгодно</span>}
+                {x.hit && <span className="ribbon green">Выгодно</span>}
+                <Art3D name={["3d-coin", "money-bag", "trophy"][Math.min(2, data.packs.indexOf(x))]} size={44} className="pk-art" />
                 <span className="pk-c"><Icon n="spark" s={15} w={2} />{fmt(x.total)}</span>
                 <span className={"pk-b" + (x.bonus ? " bonus" : "")}>{x.bonus ? `+${fmt(x.bonus)} бонусом` : "кредитов"}</span>
                 <span className="pk-p">{price(x)}</span>

@@ -16,6 +16,7 @@ const Tasks = lazy(() => import("./screens/Tasks.jsx"));
 const Feed = lazy(() => import("./screens/Feed.jsx"));
 const Agent = lazy(() => import("./screens/Agent.jsx"));
 const Admin = lazy(() => import("./screens/Admin.jsx"));
+const Invite = lazy(() => import("./screens/Invite.jsx"));
 import TabBar from "./ui/TabBar.jsx";
 import { loadPrices } from "./jobs.js";
 import Topup from "./ui/Topup.jsx";
@@ -23,7 +24,7 @@ import Onboarding from "./ui/Onboarding.jsx";
 import { toast } from "./ui/Toast.jsx";
 
 const ROUTES = new Set(["home", "archive", "profile", "image", "video", "music", "tts",
-  "tasks", "feed", "chat", "agent", "admin"]);
+  "tasks", "feed", "chat", "agent", "admin", "invite"]);
 // Telegram opens the app with its own data in the hash (#tgWebAppData=…): anything that isn't our screen is home
 const parse = () => { const r = location.hash.replace(/^#\/?/, "").split("?")[0]; return ROUTES.has(r) ? r : "home"; };
 const TABS = [{ k: "home", t: "Главная", i: "home" }, { k: "archive", t: "Архив", i: "clock" }, { k: "profile", t: "Профиль", i: "user" }];
@@ -34,7 +35,7 @@ export default function App() {
   const [route, setRoute] = useState(parse());
   const [onb, setOnb] = useState(() => !localStorage.getItem("nova_onb"));
   const prevRoute = useRef(route);
-  const DEPTH = { admin: 1, home: 0, archive: 0, profile: 0, image: 1, video: 1, music: 1, tts: 1, tasks: 1, chat: 1, agent: 1, feed: 2 };
+  const DEPTH = { admin: 1, home: 0, archive: 0, profile: 0, image: 1, video: 1, music: 1, tts: 1, tasks: 1, chat: 1, agent: 1, feed: 2, invite: 1 };
   const dir = useMemo(() => {
     const a = DEPTH[prevRoute.current] ?? 0, b = DEPTH[route] ?? 0;
     const ti = (r) => ["home", "archive", "profile"].indexOf(r);
@@ -83,7 +84,7 @@ export default function App() {
     const b = tg?.BackButton; if (!b || !inTelegram) return;
     // Telegram's own Back button replaces ours: an open sheet closes first, nested screens go to their parent,
     // the tab sections (home, archive, profile) have none
-    const BACK = { feed: "archive", admin: "profile" };
+    const BACK = { feed: "archive", admin: "profile", invite: "profile" };
     const root = ["home", "archive", "profile"].includes(route);
     // Visibility depends on the screen only. Toggling Telegram's button when a sheet opens makes Telegram animate its header
     // and cross-fade the whole web view (a visible flash), so a sheet on a tab screen closes by swipe or tap instead.
@@ -92,7 +93,7 @@ export default function App() {
     const back = () => {
       haptic("light");
       if (backStack.length) { backStack[backStack.length - 1](); return; }
-      if (!root) go(BACK[route] || "home");
+      if (!root) go((route === "invite" && params?.from) || BACK[route] || "home");
     };
     b.onClick(back); sync();
     window.addEventListener("nova:backstack", sync);
@@ -109,6 +110,7 @@ export default function App() {
   const Studio = STUDIOS[route];
   const screen = Studio ? <Studio key={route + JSON.stringify(params || {})} {...sp} />
     : route === "admin" && me?.is_admin ? <Admin go={go} params={params} />
+    : route === "invite" ? <Invite go={go} params={params} />
     : route === "agent" ? <Agent go={go} me={me} reloadMe={loadMe} params={params} />
     : route === "tasks" ? <Tasks go={go} />
     : route === "feed" ? <Feed go={go} />

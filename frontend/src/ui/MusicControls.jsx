@@ -14,7 +14,7 @@ export const GENRE_ART = {
   "Эмбиент":     { a: "#7EE0C3", b: "#0B3A33", m: "mist" },
   "Джаз":        { a: "#E8B26A", b: "#2E1B3D", m: "notes" },
   "Кино":        { a: "#9AA8FF", b: "#141B45", m: "film" },
-  "Фолк":        { a: "#A8D672", b: "#1E3511", m: "leaf" },
+  "Фолк":        { a: "#A8D672", b: "#1E3511", m: "leaf", isNew: true },
 };
 
 export function GenreTiles({ value, onChange, max = 3 }) {
@@ -36,6 +36,7 @@ export function GenreTiles({ value, onChange, max = 3 }) {
               <span className="g-ic" aria-hidden="true"><Motif m={art.m} size={22} /></span>
               <span>{g}</span>
               {on && <i className="g-check"><Icon n="check" s={11} w={3} /></i>}
+              {art.isNew && !on && <span className="ribbon">Новое</span>}
             </button>);
         })}
       </div>

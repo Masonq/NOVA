@@ -31,3 +31,15 @@ export function openLink(url) {
 export const backStack = [];
 export function pushBack(fn) { backStack.push(fn); window.dispatchEvent(new Event("nova:backstack")); }
 export function popBack(fn) { const i = backStack.lastIndexOf(fn); if (i >= 0) backStack.splice(i, 1); window.dispatchEvent(new Event("nova:backstack")); }
+
+
+/* The colour of Telegram's own top bar follows the screen (like Walt): a section with a coloured hero paints the bar in
+   the same colour, so there is no dark strip above it; leaving the section brings the dark bar back. */
+export const BASE_CHROME = "#0A0A0C";
+let chromeNow = BASE_CHROME;
+export function setChrome(color = BASE_CHROME) {
+  if (color === chromeNow) return;
+  chromeNow = color;
+  try { if (inTelegram) tg.setHeaderColor?.(color); } catch {}
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute("content", color);
+}

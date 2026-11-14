@@ -169,6 +169,8 @@ echo >> "$REPORT"; log "Статус: $STATUS"
 
 # --- bot profile: photo, description, commands (only when they change) ---
 "$APP/venv/bin/python" "$APP/tools/bot_profile.py" 2>&1 | tee -a "$REPORT" >/dev/null || log "Профиль бота: ошибка скрипта"
+timeout 300 "$APP/venv/bin/python" "$APP/tools/fetch_3d.py" "$APP/storage" 2>&1 | tail -3 | tee -a "$REPORT" >/dev/null || log "3D-картинки: ошибка скрипта"
+chown -R www-data:www-data "$APP/storage/3d" 2>/dev/null || true
 
 # --- autodeploy: a timer checks main every minute and installs new commits ---
 cat > /etc/systemd/system/nova-autodeploy.service << UNIT

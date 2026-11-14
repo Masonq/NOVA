@@ -3,11 +3,13 @@ import Count from "../ui/Count.jsx";
 import Icon from "../ui/Icon.jsx";
 import { openTopup } from "../ui/Topup.jsx";
 import Composer from "../ui/Composer.jsx";
+import Banners from "../ui/Banners.jsx";
+import Art3D from "../ui/Art3D.jsx";
 import { ImageSquare, VideoCamera, MusicNotes, Waveform } from "@phosphor-icons/react";
 import { toast } from "../ui/Toast.jsx";
 import { api } from "../api.js";
 import { haptic } from "../tg.js";
-import { useActiveJobs, KIND, thumbOf, cardText } from "../jobs.js";
+import { useActiveJobs, KIND, thumbOf, cardText, PRICE } from "../jobs.js";
 import { JobSheet } from "../ui/Sheet.jsx";
 import Carousel from "../ui/Carousel.jsx";
 
@@ -91,6 +93,12 @@ export default function Home({ go, me, reloadMe }) {
         {TOOLS.map((t) => <button key={t.k} className={"tool" + (t.k === "agent" ? " accent" : "")} onClick={() => tool(t)}>
           <span className="tool-ic grad" style={{ background: t.c }}><span className="f-ic"><t.G size={26} weight="duotone" color="#fff" /></span></span><span className="tool-t">{t.t}</span></button>)}
       </nav>
+      <Banners items={[
+        { id: "invite", title: `Приглашайте друзей: +${PRICE.ref_bonus ?? 100} кредитов за каждого`, sub: "Пригласить друга", art: "gift", bg: "linear-gradient(120deg,#2F7BFF,#5AB8FF)", onClick: () => go("invite", { from: "home" }) },
+        { id: "artist", title: "Новое: свой исполнитель — один голос во всех песнях", sub: "Попробовать", art: "mic", bg: "linear-gradient(120deg,#6A3DF0,#B26BFF)", onClick: () => go("music") },
+        { id: "video", title: "Оживите любое фото — оно станет видео", sub: "Оживить фото", art: "video-camera", bg: "linear-gradient(120deg,#F0447A,#FF9659)", onClick: () => go("video") },
+        { id: "pack", title: "Пакет 1 500 кредитов: +150 в подарок", sub: "Пополнить", art: "money-bag", bg: "linear-gradient(120deg,#0F9F7A,#3ED6A3)", onClick: () => openTopup() },
+      ]} />
       <section aria-labelledby="res-h">
         <div className="row-h"><h2 id="res-h">Ваши работы</h2>{done.length > 0 && <button className="link" onClick={() => go("archive")}>Архив</button>}</div>
         {loadErr && done.length === 0 ? (
@@ -106,7 +114,7 @@ export default function Home({ go, me, reloadMe }) {
           }))} />
         ) : (
           <div className="result empty">
-            <Icon n="spark" s={22} />
+            <Art3D name="magic-trick" size={88} className="empty-art" />
             <p>Здесь появится первая работа</p>
             <span className="muted small">Опишите идею в строке выше — {me?.spent ? `на балансе ${me?.balance ?? 0} кредитов` : `у вас ${me?.balance ?? 100} кредитов на старт`}</span>
           </div>

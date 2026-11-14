@@ -5,6 +5,10 @@ import { openTopup } from "../ui/Topup.jsx";
 import { toast } from "../ui/Toast.jsx";
 import { api, auth } from "../api.js";
 import { inTelegram, haptic, tg } from "../tg.js";
+import Sheet from "../ui/Sheet.jsx";
+import { PRICE } from "../jobs.js";
+import Art3D from "../ui/Art3D.jsx";
+import { CreditCard, Gift, Ticket, ClockCounterClockwise } from "@phosphor-icons/react";
 
 const tfmt = new Intl.DateTimeFormat("ru-RU", { hour: "2-digit", minute: "2-digit" });
 const dfmt = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long" });
@@ -31,6 +35,8 @@ export default function Profile({ me, reload, go }) {
   const [led, setLed] = useState(null);
   const [mem, setMem] = useState(null);
   const [more, setMore] = useState(false);
+  const [promo, setPromo] = useState(false);
+  const toHistory = () => document.getElementById("led-h")?.scrollIntoView({ behavior: "smooth", block: "start" });
   useEffect(() => {
     if (location.hash.includes("topup=card")) {           // came from Telegram to pay by card
       history.replaceState(null, "", location.pathname + "#/profile");
@@ -47,13 +53,25 @@ export default function Profile({ me, reload, go }) {
   };
   return (
     <main className="screen profile">
-      <header className="bar"><h1>Профиль</h1></header>
-      <section className="card bal">
-        <div><span className="muted small">Баланс</span><b><Count value={me?.balance} /> <small>кредитов</small></b></div>
-        <button className="cta small" onClick={() => openTopup()}>Пополнить</button>
+      <section className="pf-hero" aria-label="Баланс">
+        <span className="pf-cap">Баланс</span>
+        <b className="pf-bal"><Count value={me?.balance} /></b>
+        <span className="pf-unit">кредитов{me?.name ? ` · ${me.name}` : ""}</span>
+        <div className="pf-acts">
+          {[[CreditCard, "Пополнить", () => openTopup()], [Gift, "Пригласить", () => go("invite", { from: "profile" })],
+            [Ticket, "Промокод", () => setPromo(true)], [ClockCounterClockwise, "История", toHistory]].map(([G, t, fn]) => (
+            <button key={t} className="pf-act" onClick={() => { haptic("light"); fn(); }}><G size={22} weight="duotone" /><span>{t}</span></button>))}
+        </div>
       </section>
-      <PromoBox reloadMe={reload} onDone={() => api("/api/me/ledger").then(setLed).catch(() => {})} />
-      <Invite />
+      <button className="inv-row" onClick={() => { haptic("light"); go("invite", { from: "profile" }); }}>
+        <Art3D name="gift" size={52} className="inv-art" />
+        <span className="sr-t"><b>Пригласите друзей</b><small>+{PRICE.ref_bonus ?? 100} кредитов за каждого, кто пополнит баланс</small></span>
+        <Icon n="chevron" s={15} />
+      </button>
+      <Sheet open={promo} onClose={() => setPromo(false)} title="Промокод">
+        <h3 className="sheet-title">Промокод</h3>
+        <PromoBox reloadMe={reload} onDone={() => { setPromo(false); api("/api/me/ledger").then(setLed).catch(() => {}); }} />
+      </Sheet>
       <DesktopLogin />
       <Install />
       {me?.is_admin && (
@@ -66,6 +84,7 @@ export default function Profile({ me, reload, go }) {
       </section>
       <section aria-labelledby="led-h">
         <div className="row-h"><h2 id="led-h">История</h2></div>
+        {led === null && <div className="led-day">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton line" />)}</div>}
         {(() => {
           let left = more ? Infinity : PAGE, total = 0;
           const days = groupLedger(led);
@@ -116,26 +135,6 @@ function PromoBox({ reloadMe, onDone }) {
     </div>);
 }
 
-
-function Invite() {
-  const [r, setR] = useState(null);
-  useEffect(() => { api("/api/me/referral").then(setR).catch(() => {}); }, []);
-  if (!r) return null;
-  const text = `Попробуй NOVA — голосовой ИИ-агент: картинки, видео и музыка одной фразой. По моей ссылке +${r.friend_bonus} кредитов`;
-  const share = async () => {
-    haptic("light");
-    if (tg?.openTelegramLink && tg.initData) { tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(r.link)}&text=${encodeURIComponent(text)}`); return; }
-    try { if (navigator.share) { await navigator.share({ url: r.link, text }); return; } } catch (e) { if (e?.name === "AbortError") return; }
-    try { await navigator.clipboard.writeText(r.link); toast("Ссылка скопирована"); } catch { toast(r.link); }
-  };
-  return (
-    <section className="card invite">
-      <div className="inv-h"><span className="inv-ic"><Icon n="gift" s={20} /></span>
-        <span className="sr-t"><b>Пригласите друга</b><small>Другу +{r.friend_bonus} кредитов сразу, вам +{r.bonus} после его первой покупки</small></span></div>
-      <div className="inv-stats"><span><b>{r.invited}</b>пришли</span><span><b>{r.paid}</b>купили</span><span><b>+{r.earned}</b>заработано</span></div>
-      <button className="cta wide" onClick={share}>Поделиться ссылкой</button>
-    </section>);
-}
 
 function Install() {
   const standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
