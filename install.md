@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-14 01:02 UTC
+# Установка NOVA 2026-11-14 01:07 UTC
 
-- Версия: 383606d Invite page v2: own drawn illustration set (server, GPT Image), floating gift with twinkling stars, Walt-like hero and steps
+- Версия: 01fb813 Spend investigation report (spend.md in reports): OpenRouter key/account/activity, Kie balance, our cost records by day, kind, user
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
@@ -15,6 +15,6 @@
 - Статус: ok
 - Профиль бота: без изменений
 3D-картинки: 29 готово, 0 не скачалось
-Иллюстрации NOVA: нарисовано 8, уже были 0, не получилось 0
+Иллюстрации NOVA: нарисовано 0, уже были 8, не получилось 0
 - Автодеплой: включён — новые версии ставятся сами в течение минуты
 - Запуск: автодеплой
