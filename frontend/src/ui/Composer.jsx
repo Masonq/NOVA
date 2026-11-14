@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Icon from "./Icon.jsx";
 import { haptic } from "../tg.js";
 import { toast } from "./Toast.jsx";
@@ -21,25 +21,17 @@ export default function Composer({ value, onChange, onSend, busy, placeholder = 
   const [picking, setPicking] = useState(false);     // the photo picker is open: the field must not fold under the finger
   const root = useRef(null);
   const open = focus || picking || !!value.trim() || !!img || rec !== "off";          // grows while typing; folds back when empty and left
-  // grow / fold smoothly: measure the old and the new height and let CSS run between them
-  const lastH = useRef(0);
-  useLayoutEffect(() => {
-    const el = root.current; if (!el) return;
-    const to = el.offsetHeight, from = lastH.current;
-    lastH.current = to;
-    if (!from || from === to || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
-    el.style.height = from + "px"; el.style.overflow = "hidden";
-    void el.offsetHeight;
-    el.classList.add("sizing"); el.style.height = to + "px";
-    const done = () => { el.classList.remove("sizing"); el.style.height = ""; el.style.overflow = ""; lastH.current = el.offsetHeight; };
-    const t = setTimeout(done, 380);
-    return () => clearTimeout(t);
-  }, [open, !!img]);
-  useEffect(() => {                       // the floating tab bar sits on the keyboard: hide it while typing on a phone
-    const touch = window.matchMedia?.("(pointer: coarse)").matches;
-    document.documentElement.classList.toggle("kb-open", !!(focus && touch));
-    return () => document.documentElement.classList.remove("kb-open");
+  // folds back only when the user taps somewhere else on the page (not on blur: iOS fires stray blurs while the
+  // keyboard opens and the field grows, which made it fold and unfold by itself)
+  useEffect(() => {
+    if (!focus) return;
+    const out = (e) => { if (!root.current?.contains(e.target)) setFocus(false); };
+    document.addEventListener("pointerdown", out, true);
+    return () => document.removeEventListener("pointerdown", out, true);
   }, [focus]);
+  // the floating tab bar sits on the keyboard: hide it while the field itself has focus on a phone
+  const kb = (on) => { if (window.matchMedia?.("(pointer: coarse)").matches) document.documentElement.classList.toggle("kb-open", on); };
+  useEffect(() => () => document.documentElement.classList.remove("kb-open"), []);
 
   useEffect(() => {
     const el = ref.current; if (!el) return;
@@ -122,10 +114,7 @@ export default function Composer({ value, onChange, onSend, busy, placeholder = 
       onFocus={() => setFocus(true)}
       // a tap on our own buttons keeps the typing focus (iOS doesn't focus buttons, so the field would fold under the finger)
       onMouseDown={(e) => { if (e.target.closest("button")) e.preventDefault(); }}
-      onBlur={(e) => {
-        if (root.current?.contains(e.relatedTarget)) return;
-        setTimeout(() => { if (!root.current?.contains(document.activeElement)) setFocus(false); }, 120);
-      }}>
+>
       {img && (
         <div className="cmp-att">
           <span className={"cmp-thumb" + (uploading ? " up" : "")} style={{ backgroundImage: `url(${img.preview})` }}>
@@ -139,7 +128,7 @@ export default function Composer({ value, onChange, onSend, busy, placeholder = 
       {attach && <input ref={file} type="file" accept="image/*" hidden onChange={pick} />}
       <label className="sr" htmlFor="composer-input">Сообщение</label>
       {rec === "off"
-        ? <textarea id="composer-input" ref={ref} rows={open ? 3 : 1} value={value} placeholder={img ? "Что сделать с фото?" : placeholder} autoFocus={autoFocus}
+        ? <textarea id="composer-input" ref={ref} rows={open ? 3 : 1} onFocusCapture={() => kb(true)} onBlurCapture={() => kb(false)} value={value} placeholder={img ? "Что сделать с фото?" : placeholder} autoFocus={autoFocus}
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
         : <div className="cmp-rec" aria-live="polite">

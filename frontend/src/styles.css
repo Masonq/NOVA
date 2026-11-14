@@ -852,6 +852,7 @@ img.sheet-media { object-fit: contain; background: var(--card); }
 .composer.open { padding: 10px 10px 8px; border-radius: 24px; }
 .composer.open .cmp-att { order: 0; }
 .composer.open textarea, .composer.open .cmp-rec { order: 1; flex-basis: 100%; }
+.composer textarea { transition: min-height .3s cubic-bezier(.2,.9,.25,1); min-height: 22px; }
 .composer.open textarea { min-height: 88px; padding: 4px 6px 6px; font-size: 16px; line-height: 23px; }
 .composer.open > .ic-btn.sq { order: 2; }
 .composer.open .seg { order: 3; margin-left: auto; }
@@ -866,7 +867,6 @@ html.kb-open .gnav { opacity: 0; pointer-events: none; transform: translateX(-50
 .page.tab-l .screen > :not(.dock):not(.studio-dock):not(.sheet-wrap):not(.island) { animation-name: from-left; }
 
 /* composer grows / folds smoothly (height set from JS, see Composer) */
-.composer.sizing { transition: height .34s cubic-bezier(.2,.9,.25,1), padding .2s, border-color .2s; }
 
 /* sheets: spring in, quick ease out; a strip of the sheet colour below covers the overshoot */
 .sheet { transition: transform .26s cubic-bezier(.4,0,.9,.5); box-shadow: 0 60px 0 0 #141418; }
@@ -903,4 +903,4 @@ html.kb-open .gnav { opacity: 0; pointer-events: none; transform: translateX(-50
 
 /* results: an image comes into focus, a video fades up */
 .vid video { animation: fade-blur .8s ease-out both; }
-@media (prefers-reduced-motion: reduce) { .composer.sizing, .odo-s, .dock-fill { transition: none; } .g-check { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .composer textarea, .odo-s, .dock-fill { transition: none; } .g-check { animation: none; } }
