@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-14 00:18 UTC
+# Установка NOVA 2026-11-14 00:24 UTC
 
-- Версия: 296e11c Agent orb: back to the sphere while a better design is chosen
+- Версия: 8fb2ad7 Fix the agent sphere's blue patches and square edge; composer no longer folds and unfolds by itself
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
