@@ -209,6 +209,7 @@ if [ ! -d "$R/.git" ]; then
 fi
 git -C "$R" fetch -q origin reports 2>/dev/null && git -C "$R" reset -q --hard origin/reports 2>/dev/null || true
 [ -d "$APP/storage/art" ] && mkdir -p "$R/art" && cp "$APP/storage/art/"*.webp "$R/art/" 2>/dev/null
+bash "$APP/tools/spend.sh" "$R/spend.md" 2>/dev/null || true
 cp "$REPORT" "$R/install.md"; [ -f /tmp/russian.md ] && cp /tmp/russian.md "$R/russian.md"; [ -f /tmp/services.md ] && cp /tmp/services.md "$R/services.md"
 journalctl -u nova-api -n 200 --no-pager > "$R/api.log" 2>/dev/null || true
 journalctl -u nova-worker -n 200 --no-pager > "$R/worker.log" 2>/dev/null || true
