@@ -18,8 +18,9 @@ export default function Composer({ value, onChange, onSend, busy, placeholder = 
   const [rec, setRec] = useState("off");          // off | rec | stt
   const [sec, setSec] = useState(0);
   const [focus, setFocus] = useState(false);
+  const [picking, setPicking] = useState(false);     // the photo picker is open: the field must not fold under the finger
   const root = useRef(null);
-  const open = focus || !!value.trim() || !!img || rec !== "off";          // grows while typing; folds back when empty and left
+  const open = focus || picking || !!value.trim() || !!img || rec !== "off";          // grows while typing; folds back when empty and left
   // grow / fold smoothly: measure the old and the new height and let CSS run between them
   const lastH = useRef(0);
   useLayoutEffect(() => {
@@ -58,8 +59,16 @@ export default function Composer({ value, onChange, onSend, busy, placeholder = 
     haptic("light"); onSend(t, img?.url || null);
   };
 
+  useEffect(() => {                      // the picker was closed without a photo: the page gets focus back
+    if (!picking) return;
+    const back = () => setTimeout(() => setPicking(false), 400);
+    window.addEventListener("focus", back);
+    const inp = file.current; inp?.addEventListener("cancel", back);
+    return () => { window.removeEventListener("focus", back); inp?.removeEventListener("cancel", back); };
+  }, [picking]);
   const pick = async (e) => {
     const f = e.target.files?.[0]; e.target.value = "";
+    setPicking(false);
     if (!f) return;
     if (!/^image\/(jpeg|png|webp|heic|heif)$/i.test(f.type) && !/\.(jpe?g|png|webp|heic)$/i.test(f.name)) { toast("Нужно фото в JPG, PNG или WebP", "error"); return; }
     haptic("select");
@@ -111,7 +120,12 @@ export default function Composer({ value, onChange, onSend, busy, placeholder = 
   return (
     <div ref={root} className={"composer" + (open ? " open" : "") + (img ? " has-att" : "") + (rec !== "off" ? " recording" : "")}
       onFocus={() => setFocus(true)}
-      onBlur={(e) => { if (!root.current?.contains(e.relatedTarget)) setFocus(false); }}>
+      // a tap on our own buttons keeps the typing focus (iOS doesn't focus buttons, so the field would fold under the finger)
+      onMouseDown={(e) => { if (e.target.closest("button")) e.preventDefault(); }}
+      onBlur={(e) => {
+        if (root.current?.contains(e.relatedTarget)) return;
+        setTimeout(() => { if (!root.current?.contains(document.activeElement)) setFocus(false); }, 120);
+      }}>
       {img && (
         <div className="cmp-att">
           <span className={"cmp-thumb" + (uploading ? " up" : "")} style={{ backgroundImage: `url(${img.preview})` }}>
@@ -120,7 +134,7 @@ export default function Composer({ value, onChange, onSend, busy, placeholder = 
           </span>
         </div>)}
       {attach
-        ? <button className="ic-btn sq" aria-label="Прикрепить фото" onClick={() => { haptic("select"); file.current?.click(); }} disabled={rec !== "off"}><Icon n="plus" /></button>
+        ? <button className="ic-btn sq" aria-label="Прикрепить фото" onClick={() => { haptic("select"); setPicking(true); file.current?.click(); }} disabled={rec !== "off"}><Icon n="plus" /></button>
         : null}
       {attach && <input ref={file} type="file" accept="image/*" hidden onChange={pick} />}
       <label className="sr" htmlFor="composer-input">Сообщение</label>
