@@ -27,10 +27,14 @@ function toWav16k(chunks, rate) {
 }
 
 export class Voice {
-  constructor({ onUtterance, onBargeIn, onState }) {
-    this.onUtterance = onUtterance; this.onBargeIn = onBargeIn; this.onState = onState || (() => {});
+  /** onUtterance(wav) — a phrase is over (sent early, after ~0.55 s of quiet);
+   *  onResume() — the user went on talking before the answer started: drop that request, the phrase continues;
+   *  onBargeIn() — the user really talks over NOVA (not a cough): playback stopped. */
+  constructor({ onUtterance, onBargeIn, onResume, onState }) {
+    this.onUtterance = onUtterance; this.onBargeIn = onBargeIn; this.onResume = onResume; this.onState = onState || (() => {});
     this.level = 0; this.muted = false; this.speaking = false; this.listening = false;
-    this.queue = []; this.playing = null; this.nextSeq = 0; this.pend = new Map();
+    this.sents = new Map(); this.nextSeq = 0; this.srcs = new Set(); this.t = 0; this.turnDone = true;
+    this.tentative = null;            // the last phrase, kept to be continued if the user goes on talking
   }
 
   async start() {
@@ -40,34 +44,49 @@ export class Voice {
     const src = this.ctx.createMediaStreamSource(this.stream);
     this.proc = this.ctx.createScriptProcessor(2048, 1, 1);
     this.outAn = this.ctx.createAnalyser(); this.outAn.fftSize = 512; this.outAn.connect(this.ctx.destination);
+    this.duckGain = this.ctx.createGain(); this.duckGain.connect(this.outAn);
     const rate = this.ctx.sampleRate, chunkMs = (2048 / rate) * 1000;
     const pre = []; const preMax = Math.ceil(400 / chunkMs);
-    let floor = 0.006, rec = null, quiet = 0, loud = 0, startT = 0;
+    let floor = 0.006, rec = null, quiet = 0, loud = 0, startT = 0, duckQuiet = 0;
     this.proc.onaudioprocess = (e) => {
       const d = e.inputBuffer.getChannelData(0);
       let s = 0; for (let i = 0; i < d.length; i += 2) s += d[i] * d[i];
       const rms = Math.sqrt(s / (d.length / 2));
       const copy = new Float32Array(d);
       if (this.muted) { this.level *= 0.8; return; }
-      // while NOVA speaks, the speaker's echo leaks into the mic (iPhone AEC isn't perfect): a much higher bar for barge-in,
-      // a longer run of loud chunks, and a short deaf window at the start of every sentence when the echo is strongest
-      const echo = this.speaking && performance.now() - (this.sentenceAt || 0) < 400;
+      // while NOVA speaks, the speaker's echo leaks into the mic: a higher bar, and a short deaf window when a sentence starts
+      const echo = this.speaking && performance.now() - (this.sentenceAt || 0) < 300;
       const thr = Math.max(0.012, floor * 3) * (this.speaking ? 3.4 : 1);
       if (!rec) {
         floor = floor * 0.97 + Math.min(rms, 0.05) * 0.03;
         pre.push(copy); if (pre.length > preMax) pre.shift();
         loud = rms > thr && !echo ? loud + 1 : 0;
-        if (loud >= (this.speaking ? Math.ceil(350 / chunkMs) : 2)) {
-          if (this.speaking) { this.stopPlayback(); this.onBargeIn?.(); }
-          rec = [...pre]; quiet = 0; startT = performance.now(); this.listening = true; this.onState("listening");
+        if (this.speaking) {
+          // talking over NOVA: first she turns down and listens; real speech (~0.35 s) stops her, a cough lets her go on
+          if (loud >= 2 && !this.ducked) this._duck(true);
+          if (this.ducked) { duckQuiet = loud ? 0 : duckQuiet + chunkMs; if (duckQuiet > 450) this._duck(false); }
+          if (loud >= Math.ceil(350 / chunkMs)) {
+            this.stopPlayback(); this.onBargeIn?.();
+            rec = [...pre]; quiet = 0; startT = performance.now(); this.listening = true; this.onState("listening");
+          }
+        } else if (loud >= 2) {
+          const t = this.tentative;
+          if (t && (t.hold || performance.now() - t.at < 2500)) {      // the same phrase goes on: continue it, cancel the early request
+            this.tentative = null; this.onResume?.();
+            rec = [...t.chunks, ...pre]; startT = t.start;
+          } else { this.tentative = null; rec = [...pre]; startT = performance.now(); }
+          quiet = 0; this.listening = true; this.onState("listening");
         }
       } else {
         rec.push(copy);
         quiet = rms < thr * 0.7 ? quiet + chunkMs : 0;
         const dur = performance.now() - startT;
-        if ((quiet > 850 && dur > 450) || dur > 30000) {
+        if ((quiet > 550 && dur > 400) || dur > 45000) {
           const chunks = rec; rec = null; this.listening = false; pre.length = 0; loud = 0;
-          if (dur - quiet > 300) { const w = toWav16k(chunks, rate); this.onUtterance(w); } else this.onState("idle");
+          if (dur - quiet > 300) {
+            this.tentative = { chunks, at: performance.now(), start: startT };
+            this.onUtterance(toWav16k(chunks, rate));
+          } else this.onState("idle");
         }
       }
       if (!this.speaking) this.level = this.level * 0.6 + Math.min(1, rms * 9) * 0.4;
@@ -84,30 +103,55 @@ export class Voice {
   }
 
   setMuted(m) { this.muted = m; }
+  /** The server says the phrase isn't finished: keep it, the next words are added to it. */
+  hold() { if (this.tentative) this.tentative.hold = true; }
+  /** The answer has started: the phrase is final. */
+  commit() { this.tentative = null; }
 
-  /** Sentences arrive with seq numbers; they are played strictly in order. */
-  async enqueue(seq, url) {
-    try {
-      const r = await fetch(url); const buf = await this.ctx.decodeAudioData(await r.arrayBuffer());
-      this.pend.set(seq, buf); this._pump();
-    } catch { this.pend.set(seq, null); this._pump(); }
+  _duck(on) {
+    this.ducked = on;
+    const g = this.duckGain.gain, now = this.ctx.currentTime;
+    g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(on ? 0.22 : 1, now + (on ? 0.06 : 0.2));
   }
+
+  /** Streamed sound: pieces of sentence `seq` (16-bit PCM, 24 kHz, base64) are played gaplessly, sentences strictly in order. */
+  pcm(seq, b64) {
+    const bin = atob(b64), n = bin.length >> 1, f = new Float32Array(n);
+    for (let i = 0; i < n; i++) { let v = bin.charCodeAt(2 * i) | (bin.charCodeAt(2 * i + 1) << 8); if (v > 32767) v -= 65536; f[i] = v / 32768; }
+    const st = this.sents.get(seq) || { q: [], ended: false };
+    st.q.push(f); this.sents.set(seq, st); this._pump();
+  }
+  pcmEnd(seq) { const st = this.sents.get(seq) || { q: [], ended: false }; st.ended = true; this.sents.set(seq, st); this._pump(); }
   _pump() {
-    if (this.playing) return;
-    while (this.pend.has(this.nextSeq) && this.pend.get(this.nextSeq) === null) { this.pend.delete(this.nextSeq); this.nextSeq++; }
-    const buf = this.pend.get(this.nextSeq);
-    if (!buf) { if (this.speaking && this.turnDone && !this.pend.size) { this.speaking = false; this.onState("idle"); } return; }
-    this.pend.delete(this.nextSeq); this.nextSeq++;
-    const s = this.ctx.createBufferSource(); s.buffer = buf; s.connect(this.outAn);
-    this.playing = s; this.speaking = true; this.sentenceAt = performance.now(); this.onState("speaking");
-    s.onended = () => { if (this.playing === s) { this.playing = null; this._pump(); } };
-    s.start();
+    if (!this.ctx) return;
+    for (;;) {
+      const st = this.sents.get(this.nextSeq);
+      if (!st) break;
+      while (st.q.length) {
+        const f = st.q.shift(), buf = this.ctx.createBuffer(1, f.length, 24000); buf.copyToChannel(f, 0);
+        const s = this.ctx.createBufferSource(); s.buffer = buf; s.connect(this.duckGain);
+        const now = this.ctx.currentTime;
+        if (this.t < now + 0.02) { this.t = now + 0.06; if (!st.started) this.sentenceAt = performance.now(); }   // (re)start with a small cushion
+        st.started = true;
+        s.start(this.t); this.t += buf.duration; this.srcs.add(s);
+        s.onended = () => { this.srcs.delete(s); this._idleCheck(); };
+        if (!this.speaking) { this.speaking = true; this.onState("speaking"); }
+      }
+      if (!st.ended) break;
+      this.sents.delete(this.nextSeq); this.nextSeq++;
+    }
   }
-  newTurn() { this.stopPlayback(); this.nextSeq = 0; this.pend.clear(); this.turnDone = false; }
-  endTurn() { this.turnDone = true; this._pump(); }
+  _idleCheck() {
+    if (!this.srcs.size && this.turnDone && !this.sents.size && this.speaking) {
+      this.speaking = false; if (this.ducked) this._duck(false); this.onState("idle");
+    }
+  }
+  newTurn() { this.stopPlayback(); this.nextSeq = 0; this.sents.clear(); this.turnDone = false; }
+  endTurn() { this.turnDone = true; this._idleCheck(); }
   stopPlayback() {
-    const p = this.playing; this.playing = null; this.pend.clear();
-    if (p) { try { p.onended = null; p.stop(); } catch {} }
+    for (const s of this.srcs) { try { s.onended = null; s.stop(); } catch {} }
+    this.srcs.clear(); this.sents.clear(); this.t = 0;
+    if (this.ducked) this._duck(false);
     if (this.speaking) { this.speaking = false; this.onState("idle"); }
   }
   stop() {

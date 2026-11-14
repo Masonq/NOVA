@@ -58,13 +58,15 @@ export default function Agent({ go, me, reloadMe, params }) {
     if (payload.text) setHeard(payload.text);
     setHeardImg(payload.image || null);
     payload = { ...payload, speak: !!voice.current };          // typed with the mic off: the answer is read, not voiced
-    let gotAudio = false;
+    let gotAudio = false, waited = false;
     try {
       await stream("/api/agent/turn", payload, (e) => {
         if (ac.signal.aborted) return;
         if (e.type === "heard") setHeard(e.text || "Не расслышала — повторите, пожалуйста");
         else if (e.type === "text") setAnswer((a) => a + e.t);
-        else if (e.type === "audio") { gotAudio = true; voice.current?.enqueue(e.seq, e.url); }
+        else if (e.type === "pcm") { if (!gotAudio) { gotAudio = true; voice.current?.commit(); } voice.current?.pcm(e.seq, e.d); }
+        else if (e.type === "pcm_end") voice.current?.pcmEnd(e.seq);
+        else if (e.type === "wait") { waited = true; voice.current?.hold(); setHeard((e.heard || "") + "…"); setPhase("listening"); }
         else if (e.type === "step") setSteps((s) => e.done ? s.map((x) => x.text === e.text ? { ...x, done: true } : x) : [...s, { text: e.text, done: false }]);
         else if (e.type === "confirm") { setConfirm(e); haptic("light"); }
         else if (e.type === "confirm_cancel") setConfirm(null);
@@ -73,13 +75,14 @@ export default function Agent({ go, me, reloadMe, params }) {
         else if (e.type === "memory") toast(`Запомнила: ${e.text}`);
         else if (e.type === "error") toast(e.text, "error");
         else if (e.type === "notice") toast(e.text);
-        else if (e.type === "done") { reloadMe?.(); }
+        else if (e.type === "done") { if (!e.wait) { voice.current?.commit(); reloadMe?.(); } }
       }, ac.signal);
     } catch (er) {
       if (er.name !== "AbortError") { toast(er.message, "error"); setPhase(!voice.current ? "off" : muted ? "muted" : "idle"); }
       return;
     }
     if (ac.signal.aborted) return;
+    if (waited) return;                           // still the user's turn: keep listening
     voice.current?.endTurn();
     if (!gotAudio) setPhase(!voice.current ? "off" : muted ? "muted" : "idle");
   };
@@ -90,6 +93,7 @@ export default function Agent({ go, me, reloadMe, params }) {
     const v = new Voice({
       onUtterance: (w) => send({ audio: w.b64 }),
       onBargeIn: () => { ctrl.current?.abort(); navigator.sendBeacon?.("/api/agent/barge"); },     // visible in the server log
+      onResume: () => { ctrl.current?.abort(); setPhase("listening"); },     // went on talking: the early request is dropped
       onState: (s) => setPhase((p) => (s === "idle" ? (p === "thinking" ? p : "idle") : s)),
     });
     try { await v.start(); voice.current = v; setPhase("idle"); }

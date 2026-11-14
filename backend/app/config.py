@@ -29,6 +29,7 @@ class Settings(BaseSettings):
 
     chat_models: str = "google/gemini-3.8-flash,google/gemini-3.5-flash"
     tts_model: str = "google/gemini-3.8-flash-tts"
+    agent_tts_model: str = "google/gemini-3.8-flash-lite-tts"     # the voice agent: faster first sound, same voices
     tts_voice: str = "Sulafat"
 
 

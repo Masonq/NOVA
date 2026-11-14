@@ -150,6 +150,60 @@ async def speech(text: str, voice: str | None = None, instructions: str = STYLE,
     raise AIError(f"озвучка: {last}")
 
 
+async def speech_stream(text: str, voice: str | None = None, instructions: str = STYLE, model: str | None = None):
+    """Streaming TTS for the voice agent: yields raw PCM chunks (24 kHz, 16-bit, mono) as OpenRouter sends them,
+    so a sentence starts playing before it is fully voiced. Falls back to the main TTS model if the fast one is refused."""
+    s = get_settings()
+    models = [m for m in dict.fromkeys([model or s.agent_tts_model, s.tts_model]) if m]
+    last = ""
+    async with httpx.AsyncClient(timeout=httpx.Timeout(60, connect=10)) as cl:
+        for m in models:
+            body = {"model": m, "input": text, "voice": voice if voice in VOICES else s.tts_voice,
+                    "instructions": instructions, "response_format": "pcm"}
+            for attempt in range(3):
+                if attempt:
+                    await asyncio.sleep(0.4 * attempt)
+                sent = 0
+                try:
+                    async with cl.stream("POST", f"{BASE}/audio/speech", headers=_headers(), json=body) as r:
+                        if r.status_code != 200:
+                            last = f"{m}: {r.status_code} {(await r.aread())[:160]!r}"
+                            if r.status_code == 402:
+                                costs.out_of_funds("openrouter", last[:120])
+                            if r.status_code in RETRY_STATUS:
+                                continue
+                            break                       # unknown model / bad voice: try the next model
+                        gid = r.headers.get("x-generation-id") or r.headers.get("x-openrouter-generation-id")
+                        odd = b""
+                        async for chunk in r.aiter_bytes():
+                            chunk = odd + chunk
+                            cut = len(chunk) - len(chunk) % 2      # whole 16-bit samples only
+                            odd = chunk[cut:]
+                            if cut:
+                                sent += cut
+                                yield chunk[:cut]
+                        if gid:
+                            costs.openrouter(gen_id=gid, note=m)
+                        else:
+                            costs.record("openrouter", sent / 48000 * 25 * 9e-6, m + " (по длине звука)")
+                        if sent:
+                            return
+                        last = f"{m}: пустой ответ"
+                except httpx.HTTPError as e:
+                    last = f"{m}: {type(e).__name__}"
+                    if sent:                            # half a sentence already played: don't start it over
+                        return
+    raise AIError(f"озвучка: {last}")
+
+
+async def think(question: str, context: str = "") -> str:
+    """Deeper answer for the voice agent: the same model with reasoning on. Short, spoken style."""
+    msgs = [{"role": "system", "content": "Ты помогаешь голосовому ассистенту. Подумай как следует и дай точный ответ по-русски: "
+             "до 4 коротких предложений, без списков и markdown, числа — словами там, где так естественнее произносить."},
+            {"role": "user", "content": (f"Контекст разговора:\n{context}\n\n" if context else "") + f"Вопрос: {question}"}]
+    return (await complete("google/gemini-3.8-flash", msgs, timeout=60, reasoning={"effort": "high"}, max_tokens=4000)).strip()
+
+
 # The best model per task at a mid price (Nov 2026): Seedream 5.5 for pictures, GPT Image 2.6 for logos and text,
 # Nano Banana 2.1 for edits of the user's own photo (keeps faces and objects recognisable).
 IMAGE_ROUTES = {

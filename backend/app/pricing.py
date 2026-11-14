@@ -17,6 +17,7 @@ DEFAULT_PRICE = {
     "tts_min": 2,
     "agent_min": 5,         # voice agent, per minute of speech
     "agent_search": 3,      # voice agent, each web search
+    "agent_think": 3,       # voice agent, each «Сейчас подумаю» (reasoning model)
     "chat_msg": 1,          # text chat, per message
     "welcome": 100,         # credits for a new user (~$0.35 of model cost if all spent)
     "ref_friend": 50,       # extra credits for a user who came by a friend's link

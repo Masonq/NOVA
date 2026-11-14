@@ -44,9 +44,15 @@ SYSTEM = """Ты — NOVA, голосовой ИИ-агент в приложе�
 - search_archive — найти работы пользователя (за последние 30 дней).
 - web_search — свежие факты, новости, погода, цены.
 - remember / forget — запомнить или забыть факт о пользователе, когда он просит или сообщает что-то важное о себе.
+- think — для вопросов, где надо подумать: расчёты, сравнения, задачи, советы с несколькими условиями, планы.
+  Сначала скажи одну короткую фразу вроде «Сейчас подумаю.», потом вызови think и перескажи итог своими словами.
+  На простые вопросы и болтовню отвечай сразу, без think.
 Не выдумывай факты. Если не знаешь — скажи и предложи поискать."""
 HEARD_RULE = """Ответ начинай строго с [[точная расшифровка того, что сказал пользователь]], затем сразу свой ответ.
-Если в аудио нет речи или она неразборчива — ответь [[]] и попроси повторить."""
+Если в аудио нет речи или она неразборчива — ответь [[]] и попроси повторить.
+Если фраза явно оборвана на полуслове и человек ещё не договорил (обрывается на «и», «но», «а ещё», «ну», «эээ»,
+«потому что», на незаконченном перечислении) — ответь только [[расшифровка]] <WAIT> и больше ничего: он продолжит говорить.
+Законченный вопрос или просьбу никогда не помечай <WAIT>."""
 
 TOOLS = [
     {"type": "function", "function": {"name": "create_media", "description": "Подготовить генерацию: показать цену и ждать согласия пользователя",
@@ -63,6 +69,8 @@ TOOLS = [
     {"type": "function", "function": {"name": "search_archive", "description": "Найти работы пользователя по словам из описания",
         "parameters": {"type": "object", "required": ["query"], "properties": {"query": {"type": "string"},
             "kind": {"type": "string", "enum": ["image", "video", "music", "tts"]}}}}},
+    {"type": "function", "function": {"name": "think", "description": "Подумать над непростым вопросом (расчёт, сравнение, задача, совет)",
+        "parameters": {"type": "object", "required": ["question"], "properties": {"question": {"type": "string", "description": "Вопрос полностью, со всеми условиями"}}}}},
     {"type": "function", "function": {"name": "web_search", "description": "Поиск свежей информации в интернете",
         "parameters": {"type": "object", "required": ["query"], "properties": {"query": {"type": "string"}}}}},
     {"type": "function", "function": {"name": "remember", "description": "Запомнить факт о пользователе",
@@ -256,6 +264,14 @@ async def run_tool(name: str, args: dict, u: User, emit, image: str | None = Non
                 await db.execute(delete(Memory).where(Memory.user_id == u.id, Memory.text.ilike(f"%{about[:40]}%")))
                 await db.commit()
             return "Забыл."
+    if name == "think":
+        await emit({"type": "step", "text": "Думаю"})
+        try:
+            ans = await ai.think(args.get("question") or "")
+        except ai.AIError:
+            ans = "Не получилось подумать — ответь как можешь сам."
+        await emit({"type": "step", "text": "Думаю", "done": True})
+        return "Итог размышления (перескажи коротко, своими словами): " + ans
     return "Неизвестный инструмент."
 
 
@@ -316,22 +332,27 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
 
         tts_gate = asyncio.Semaphore(2)          # two sentences at a time: the first plays at once, no burst into the rate limit
 
-        async def speak(seq: int, text: str):
-            if not speak_on:
-                return None
-            async with tts_gate:
-                try:
-                    wav = await ai.speech(text, voice)
-                except Exception as e:           # logged, and the next sentences still play (see voices_in_order)
-                    log.warning("agent tts failed for user %s, sentence %s: %s", uid, seq, e)
-                    return None
-            name = f"{secrets.token_urlsafe(8)}.wav"
-            (d / name).write_bytes(wav)
-            return {"seq": seq, "url": f"{s.public_url}/files/agent/{uid}/{name}", "sec": round(wav_seconds(wav), 2), "text": text}
+        def speak(seq: int, text: str):
+            """Starts voicing a sentence now; its PCM chunks go into its own queue (None closes it)."""
+            box: asyncio.Queue = asyncio.Queue()
+
+            async def run_tts():
+                n = 0
+                if speak_on:
+                    async with tts_gate:
+                        try:
+                            async for ch in ai.speech_stream(text, voice):
+                                n += len(ch); await box.put(ch)
+                        except Exception as e:   # logged; the next sentences still play (see voices_in_order)
+                            log.warning("agent tts failed for user %s, sentence %s: %s", uid, seq, e)
+                await box.put(None)
+                return n
+            return (box, asyncio.create_task(run_tts()), text)
 
         async def producer():
             nonlocal heard
             buf, seq, pre = "", 0, ""
+            gate, decided = "", not raw              # only a spoken turn may be «not finished yet»
             convo = list(msgs)
             for _ in range(4):                      # up to 3 tool rounds
                 calls = None
@@ -347,13 +368,22 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
                             val = pre[m.end():] if m else pre
                         else:
                             continue
+                    if not decided:
+                        gate += val
+                        if len(gate.lstrip()) < 6:
+                            continue
+                        decided = True
+                        if gate.lstrip().startswith("<WAIT"):
+                            waiting.append(True); await emit({"type": "wait", "heard": heard or ""})
+                            return
+                        val, gate = gate, ""
                     if not val:
                         continue
                     answer.append(val); buf += val
                     await emit({"type": "text", "t": val})
                     ready, buf = split_ready(buf, seq == 0)
                     for sent in ready:
-                        tts_tasks.append(asyncio.create_task(speak(seq, sent))); seq += 1
+                        tts_tasks.append(speak(seq, sent)); seq += 1
                 if heard is None:                   # round ended (e.g. tool call) before the transcript was closed
                     m = re.match(r"\s*\[\[(.*?)\]\]\s*", pre, re.S)
                     heard = m.group(1).strip() if m else ""
@@ -363,6 +393,14 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
                     if rest.strip():
                         answer.append(rest); buf += rest
                         await emit({"type": "text", "t": rest})
+                if not decided and gate.strip():
+                    decided = True
+                    if gate.lstrip().startswith("<WAIT"):
+                        waiting.append(True); await emit({"type": "wait", "heard": heard or ""})
+                        return
+                    answer.append(gate); buf += gate
+                    await emit({"type": "text", "t": gate}); gate = ""
+                decided = True
                 if not calls:
                     break
                 convo.append({"role": "assistant", "content": "".join(answer) or None,
@@ -371,6 +409,8 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
                 for i, c in enumerate(calls):
                     if c["name"] == "web_search":
                         searches.append(1)
+                    if c["name"] == "think":
+                        thinks.append(1)
                     try:
                         args = json.loads(c["arguments"] or "{}")
                     except json.JSONDecodeError:
@@ -378,29 +418,44 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
                     res = await run_tool(c["name"], args, u, emit, image_url)
                     convo.append({"role": "tool", "tool_call_id": c["id"] or f"c{i}", "content": res})
             if buf.strip():
-                tts_tasks.append(asyncio.create_task(speak(seq, buf.strip())))
+                tts_tasks.append(speak(seq, buf.strip()))
             await emit({"type": "_textdone"})
             if tts_tasks and speak_on:               # no sentence could be voiced: say so instead of silence
-                await asyncio.gather(*tts_tasks, return_exceptions=True)
-                if all(t.done() and not t.result() for t in tts_tasks):
+                await asyncio.gather(*(t for _, t, _ in tts_tasks), return_exceptions=True)
+                if all(t.done() and not t.exception() and not t.result() for _, t, _ in tts_tasks):
                     await emit({"type": "notice", "text": "Голос временно недоступен — ответ текстом"})
 
         async def voices_in_order():
+            """Streams the sentences strictly in order, chunk by chunk, while later ones are already being voiced."""
             sent, out_seq = 0, 0
             while True:
                 while sent < len(tts_tasks):
-                    a = await tts_tasks[sent]
+                    box, _, text = tts_tasks[sent]
                     sent += 1
-                    if a:                            # numbered when sent: a failed sentence leaves no gap the player would wait for
-                        nonlocal_out.append(a["sec"])
-                        await emit({"type": "audio", **a, "seq": out_seq})
+                    got, pend = 0, b""
+                    while True:
+                        ch = await box.get()
+                        if ch is not None:
+                            pend += ch
+                        # the very first piece goes out at once (~0.1 s of sound), then ~0.3 s pieces
+                        if pend and (ch is None or len(pend) >= (4800 if not got and out_seq == 0 else 14400)):
+                            got += len(pend)
+                            await emit({"type": "pcm", "seq": out_seq, "d": base64.b64encode(pend).decode()})
+                            pend = b""
+                        if ch is None:
+                            break
+                    if got:                          # numbered when sent: a failed sentence leaves no gap the player would wait for
+                        nonlocal_out.append(got / 48000)
+                        await emit({"type": "pcm_end", "seq": out_seq, "sec": round(got / 48000, 2), "text": text})
                         out_seq += 1
                 if done_flag.is_set() and sent >= len(tts_tasks):
                     return
-                await asyncio.sleep(0.05)
+                await asyncio.sleep(0.03)
 
         nonlocal_out: list[float] = []
         searches: list[int] = []
+        thinks: list[int] = []
+        waiting: list[bool] = []
         done_flag = asyncio.Event()
 
         async def run():
@@ -417,21 +472,30 @@ async def turn(body: TurnIn, u: User = Depends(current_user), db: AsyncSession =
         prod = asyncio.create_task(run())
         speaker = asyncio.create_task(voices_in_order())
         finished = False
-        while not finished:
-            try:
-                o = await asyncio.wait_for(q.get(), timeout=0.2)
-            except asyncio.TimeoutError:
-                if prod.done() and speaker.done() and q.empty():
-                    finished = True
-                continue
-            if o.get("type") == "_textdone":
-                continue
-            yield _sse(o)
+        try:
+            while not finished:
+                try:
+                    o = await asyncio.wait_for(q.get(), timeout=0.2)
+                except asyncio.TimeoutError:
+                    if prod.done() and speaker.done() and q.empty():
+                        finished = True
+                    continue
+                if o.get("type") == "_textdone":
+                    continue
+                yield _sse(o)
+        except BaseException:                    # the app hung up (the user went on talking or interrupted): stop all work
+            for t in [prod, speaker, *(t for _, t, _ in tts_tasks)]:
+                t.cancel()
+            raise
         await prod
+        if waiting:                              # the user hasn't finished: nothing is charged or saved, the app keeps listening
+            yield _sse({"type": "done", "balance": None, "cost": 0, "heard": heard or "", "wait": True})
+            return
         out_sec = sum(nonlocal_out)
         reply = "".join(answer).strip()
         price = max(1, math.ceil((in_sec + out_sec) / 60 * PRICE["agent_min"])) if (reply or heard) else 0
         price += len(searches) * int(PRICE.get("agent_search", 0))
+        price += len(thinks) * int(PRICE.get("agent_think", 0))
         bal = None
         async with Session() as db2:
             user = await db2.get(User, uid)

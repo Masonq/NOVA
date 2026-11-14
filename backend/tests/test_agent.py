@@ -23,6 +23,10 @@ def env(monkeypatch):
     async def speech(text, voice=None, instructions=""):
         return ai.pcm_to_wav(b"\x00\x00" * 24000 * 3)          # 3 s per sentence
     monkeypatch.setattr(ai, "speech", speech)
+    async def speech_stream(text, voice=None, instructions="", model=None):
+        for _ in range(3):                                      # 3 s per sentence, in 1 s pieces
+            yield b"\x00\x00" * 24000
+    monkeypatch.setattr(ai, "speech_stream", speech_stream)
     from app.routes import jobs as jm
     q = []
     async def enq(jid): q.append(jid)
@@ -55,7 +59,7 @@ async def test_voice_turn_confirm_and_launch(client, env):
     types = [e["type"] for e in ev]
     assert types[0] == "heard" and ev[0]["text"] == "Сделай логотип кофейни"
     assert "confirm" in types and next(e for e in ev if e["type"] == "confirm")["cost"] == 12
-    auds = [e for e in ev if e["type"] == "audio"]
+    auds = [e for e in ev if e["type"] == "pcm_end"]
     assert [a["seq"] for a in auds] == sorted(a["seq"] for a in auds) and len(auds) == 3
     done = ev[-1]
     assert done["type"] == "done" and done["cost"] == 1 and done["balance"] == 299   # 1.5 s in + 9 s out -> 1 credit
@@ -109,16 +113,16 @@ async def test_settings_and_empty_balance(client, env):
 @A
 async def test_failed_sentence_leaves_no_gap(client, env, monkeypatch):
     calls = []
-    async def speech(text, voice=None, instructions=""):
+    async def speech(text, voice=None, instructions="", model=None):
         calls.append(text)
         if "Второе" in text:
             raise ai.AIError("озвучка: 429 rate limited")
-        return ai.pcm_to_wav(b"\x00\x00" * 24000)
-    monkeypatch.setattr(ai, "speech", speech)
+        yield b"\x00\x00" * 24000
+    monkeypatch.setattr(ai, "speech_stream", speech)
     h = await login(client, 9551)
     env["script"] += [[("text", "[[Расскажи]] Первое предложение здесь. Второе предложение тоже здесь. Третье предложение в конце.")]]
     ev = events((await client.post("/api/agent/turn", json={"audio": wav_b64()}, headers=h)).text)
-    auds = [e for e in ev if e["type"] == "audio"]
+    auds = [e for e in ev if e["type"] == "pcm_end"]
     assert len(calls) == 3 and [a["seq"] for a in auds] == [0, 1] and auds[1]["text"].startswith("Третье")
 
 
@@ -153,16 +157,17 @@ async def test_no_funds_notice_and_one_alert(client, env, monkeypatch):
     monkeypatch.setattr(get_settings(), "admin_tg_ids", "777")
     from app.queue import pool
     await (await pool()).delete("nova:alert:funds:openrouter")
-    async def speech(text, voice=None, instructions=""):
+    async def speech(text, voice=None, instructions="", model=None):
         costs.out_of_funds("openrouter", "maximum cost exceeds your available credits")
         raise ai.AIError("озвучка: 402")
-    monkeypatch.setattr(ai, "speech", speech)
+        yield b""
+    monkeypatch.setattr(ai, "speech_stream", speech)
     h = await login(client, 9561)
     env["script"] += [[("text", "[[Привет]] Привет! Как дела? Чем помочь?")]]
     ev = events((await client.post("/api/agent/turn", json={"audio": wav_b64()}, headers=h)).text)
     import asyncio; await asyncio.sleep(0.3)
     assert any(e["type"] == "notice" and "Голос временно недоступен" in e["text"] for e in ev)
-    assert any(e["type"] == "text" for e in ev) and not any(e["type"] == "audio" for e in ev)
+    assert any(e["type"] == "text" for e in ev) and not any(e["type"] in ("pcm", "pcm_end") for e in ev)
     assert len(sent) == 1 and sent[0][0] == 777 and "OpenRouter" in sent[0][1]
 
 
@@ -189,7 +194,7 @@ async def test_typed_turn_with_photo_no_voice_and_photo_becomes_source(client, e
         aim.stream_events = old
     user_msg = seen["msgs"][-1]["content"]
     assert user_msg[1]["image_url"]["url"].startswith("data:image/png;base64,")
-    assert not any(e["type"] == "audio" for e in ev)                 # typed: answer is read, not voiced
+    assert not any(e["type"] in ("pcm", "pcm_end") for e in ev)                 # typed: answer is read, not voiced
     conf = next(e for e in ev if e["type"] == "confirm")
     assert conf["cost"] == 18                                         # photo edit price
     uid = (await client.get("/api/me", headers=h)).json()["id"]
@@ -239,3 +244,57 @@ async def test_stream_retries_busy_model_and_flags_spent_key(monkeypatch):
         assert False
     except aim.AIError as e:
         assert e.code == 403 and flagged == ["openrouter"]
+
+
+@A
+async def test_unfinished_phrase_waits_without_charge(client, env):
+    h = await login(client, 9541)
+    bal = (await client.get("/api/me", headers=h)).json()["balance"]
+    env["script"] += [[("text", "[[Сделай мне логотип и]] <WA"), ("text", "IT>")]]
+    ev = events((await client.post("/api/agent/turn", json={"audio": wav_b64()}, headers=h)).text)
+    assert {"type": "wait", "heard": "Сделай мне логотип и"} in ev
+    assert ev[-1]["type"] == "done" and ev[-1]["wait"] is True and not any(e["type"] in ("text", "pcm") for e in ev)
+    assert (await client.get("/api/me", headers=h)).json()["balance"] == bal          # nothing charged
+    # a finished phrase streams sound: first piece small, all pieces of a sentence share its seq, then pcm_end
+    env["script"] += [[("text", "[[Привет]] Привет! Рада слышать.")]]
+    ev = events((await client.post("/api/agent/turn", json={"audio": wav_b64()}, headers=h)).text)
+    pcm = [e for e in ev if e["type"] == "pcm"]
+    ends = [e for e in ev if e["type"] == "pcm_end"]
+    assert [e["seq"] for e in ends] == [0, 1] and ends[0]["text"] == "Привет!"
+    import base64 as b
+    assert len(b.b64decode(pcm[0]["d"])) == 48000 and {e["seq"] for e in pcm} == {0, 1}
+
+
+@A
+async def test_think_tool_reasons_and_costs_extra(client, env, monkeypatch):
+    async def think(q, context=""):
+        assert "кредит" in q
+        return "Выгоднее большой пакет: кредит выходит дешевле."
+    monkeypatch.setattr(ai, "think", think)
+    h = await login(client, 9542)
+    bal = (await client.get("/api/me", headers=h)).json()["balance"]
+    env["script"] += [
+        [("text", "[[Какой пакет выгоднее по цене кредита?]] Сейчас подумаю. "), ("tools", [{"id": "t1", "name": "think", "arguments": json.dumps({"question": "Какой пакет выгоднее по цене кредита?"})}])],
+        [("text", "Выгоднее большой пакет.")],
+    ]
+    ev = events((await client.post("/api/agent/turn", json={"audio": wav_b64()}, headers=h)).text)
+    steps = [e for e in ev if e["type"] == "step"]
+    assert steps[0] == {"type": "step", "text": "Думаю"} and steps[-1]["done"] is True
+    assert ev[-1]["cost"] >= 1 + 3 and (await client.get("/api/me", headers=h)).json()["balance"] == bal - ev[-1]["cost"]
+
+
+@A
+async def test_speech_stream_falls_back_and_keeps_whole_samples(monkeypatch):
+    import httpx
+    from app import ai as aim
+    seen = []
+    def handler(req):
+        m = json.loads(req.content)["model"]
+        seen.append(m)
+        if "lite" in m:
+            return httpx.Response(400, json={"error": "unknown model"})
+        return httpx.Response(200, content=b"\x01" * 4801)          # odd byte count: the last half-sample is held back
+    real = httpx.AsyncClient
+    monkeypatch.setattr(aim.httpx, "AsyncClient", lambda **kw: real(transport=httpx.MockTransport(handler), **kw))
+    out = b"".join([c async for c in aim.speech_stream("Привет", "Sulafat")])
+    assert len(out) == 4800 and seen[0].endswith("lite-tts") and not seen[-1].endswith("lite-tts")
