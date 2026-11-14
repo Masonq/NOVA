@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-14 00:33 UTC
+# Установка NOVA 2026-11-14 00:39 UTC
 
-- Версия: e45c1e6 «+» folds the field at once, on home and in the studios
+- Версия: 10f1f2e Tab bar: press and slide like Telegram — a glass lens follows the finger, release opens the tab
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
