@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-14 00:30 UTC
+# Установка NOVA 2026-11-14 00:33 UTC
 
-- Версия: 04ccd77 Studios: compact prompt line that opens while typing, same smooth motion as home
+- Версия: e45c1e6 «+» folds the field at once, on home and in the studios
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
