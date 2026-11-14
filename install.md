@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-14 00:17 UTC
+# Установка NOVA 2026-11-14 00:18 UTC
 
-- Версия: 14d0971 Composer: stays open while the photo picker is shown and when its own buttons are tapped
+- Версия: 296e11c Agent orb: back to the sphere while a better design is chosen
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
