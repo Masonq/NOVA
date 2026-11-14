@@ -171,6 +171,8 @@ echo >> "$REPORT"; log "Статус: $STATUS"
 "$APP/venv/bin/python" "$APP/tools/bot_profile.py" 2>&1 | tee -a "$REPORT" >/dev/null || log "Профиль бота: ошибка скрипта"
 timeout 300 "$APP/venv/bin/python" "$APP/tools/fetch_3d.py" "$APP/storage" 2>&1 | tail -3 | tee -a "$REPORT" >/dev/null || log "3D-картинки: ошибка скрипта"
 chown -R www-data:www-data "$APP/storage/3d" 2>/dev/null || true
+timeout 900 "$APP/venv/bin/python" "$APP/tools/gen_art.py" "$APP/storage" 2>&1 | tail -10 | tee -a "$REPORT" >/dev/null || log "Иллюстрации: ошибка скрипта"
+chown -R www-data:www-data "$APP/storage/art" 2>/dev/null || true
 
 # --- autodeploy: a timer checks main every minute and installs new commits ---
 cat > /etc/systemd/system/nova-autodeploy.service << UNIT
@@ -206,6 +208,7 @@ if [ ! -d "$R/.git" ]; then
   else mkdir -p "$R" && git -C "$R" init -q -b reports && git -C "$R" remote add origin "$URL"; fi
 fi
 git -C "$R" fetch -q origin reports 2>/dev/null && git -C "$R" reset -q --hard origin/reports 2>/dev/null || true
+[ -d "$APP/storage/art" ] && mkdir -p "$R/art" && cp "$APP/storage/art/"*.webp "$R/art/" 2>/dev/null
 cp "$REPORT" "$R/install.md"; [ -f /tmp/russian.md ] && cp /tmp/russian.md "$R/russian.md"; [ -f /tmp/services.md ] && cp /tmp/services.md "$R/services.md"
 journalctl -u nova-api -n 200 --no-pager > "$R/api.log" 2>/dev/null || true
 journalctl -u nova-worker -n 200 --no-pager > "$R/worker.log" 2>/dev/null || true
