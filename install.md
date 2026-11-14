@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-14 00:16 UTC
+# Установка NOVA 2026-11-14 00:17 UTC
 
-- Версия: bb66ff2 New agent orb: shader light ring (adapted from React Bits Orb) that breathes with the voice
+- Версия: 14d0971 Composer: stays open while the photo picker is shown and when its own buttons are tapped
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
