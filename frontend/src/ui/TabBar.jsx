@@ -10,6 +10,38 @@ export default function TabBar({ tabs, active, onSelect, side }) {
   const [lens, setLens] = useState(null);
   const [moving, setMoving] = useState(false);
   const prev = useRef(active);
+  // press and slide along the bar (like Telegram): a glass lens follows the finger, the tab under it lights up,
+  // releasing opens that tab
+  const [drag, setDrag] = useState(null);           // { x, over } while the finger is down
+  const g = useRef(null), skipClick = useRef(false);
+  const tabAt = (cx) => {
+    for (const t of tabs) { const r = btns.current[t.k]?.getBoundingClientRect(); if (r && cx >= r.left - 1 && cx <= r.right + 1) return t.k; }
+    return null;
+  };
+  const down = (e) => {
+    if (!lens || (e.pointerType === "mouse" && e.button !== 0)) return;
+    const pr = wrap.current.getBoundingClientRect();
+    g.current = { id: e.pointerId, x0: e.clientX, left: pr.left, width: pr.width, moved: false, over: active };
+  };
+  const move = (e) => {
+    const s = g.current; if (!s || s.id !== e.pointerId) return;
+    if (!s.moved && Math.abs(e.clientX - s.x0) < 6) return;
+    if (!s.moved) { s.moved = true; try { wrap.current.setPointerCapture(e.pointerId); } catch {} haptic("light"); }
+    const W = 68;                                   // the lens shrinks to one tab's size while it follows the finger
+    const x = Math.max(3, Math.min(s.width - W - 3, e.clientX - s.left - W / 2));
+    const over = tabAt(e.clientX) || s.over;
+    if (over !== s.over) { s.over = over; haptic("select"); }
+    setDrag({ x, over });
+  };
+  const up = (e) => {
+    const s = g.current; g.current = null;
+    if (!s || s.id !== e.pointerId) return;
+    if (s.moved) {
+      skipClick.current = true; setTimeout(() => { skipClick.current = false; }, 0);
+      setDrag(null);
+      if (s.over && s.over !== active) onSelect(s.over);
+    }
+  };
 
   // Final geometry is computed ahead of time: labels are still opening while the lens flies.
   const target = () => {
@@ -44,12 +76,15 @@ export default function TabBar({ tabs, active, onSelect, side }) {
 
   return (
     <nav className="gnav" aria-label="Разделы">
-      <div className="gnav-pill" ref={wrap}>
-        {lens && <span className={"gnav-lens" + (moving ? " moving" : "")} style={{ transform: `translateX(${lens.x}px)`, width: lens.w }} aria-hidden="true" />}
+      <div className={"gnav-pill" + (drag ? " dragging" : "")} ref={wrap}
+        onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={() => { g.current = null; setDrag(null); }}
+        onClickCapture={(e) => { if (skipClick.current) { e.stopPropagation(); e.preventDefault(); } }}>
+        {lens && <span className={"gnav-lens" + (moving ? " moving" : "") + (drag ? " grab" : "")}
+          style={{ transform: `translateX(${drag ? drag.x : lens.x}px)`, width: drag ? 68 : lens.w }} aria-hidden="true" />}
         {tabs.map((t) => {
           const on = t.k === active;
           return (
-            <button key={t.k} ref={(el) => (btns.current[t.k] = el)} className={"gnav-tab" + (on ? " on" : "")}
+            <button key={t.k} ref={(el) => (btns.current[t.k] = el)} className={"gnav-tab" + (on ? " on" : "") + (drag?.over === t.k ? " over" : "")}
               aria-current={on ? "page" : undefined} aria-label={t.t} onClick={() => { if (!on) { haptic("select"); onSelect(t.k); } }}>
               <Icon n={t.i} s={20} w={on ? 2.1 : 1.8} />
               <span className="gnav-l">{t.t}</span>
