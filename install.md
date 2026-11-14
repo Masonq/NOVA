@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-14 00:14 UTC
+# Установка NOVA 2026-11-14 00:16 UTC
 
-- Версия: a254c08 Voice agent: streamed speech, early end of turn with resume, «not finished» detection, duck-then-decide barge-in, think tool
+- Версия: bb66ff2 New agent orb: shader light ring (adapted from React Bits Orb) that breathes with the voice
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
