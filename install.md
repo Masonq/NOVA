@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-14 00:24 UTC
+# Установка NOVA 2026-11-14 00:26 UTC
 
-- Версия: 8fb2ad7 Fix the agent sphere's blue patches and square edge; composer no longer folds and unfolds by itself
+- Версия: 371f98c Composer: grow and fold as one smooth motion (FLIP), no one-frame hitch
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
