@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-14 01:07 UTC
+# Установка NOVA 2026-11-14 01:15 UTC
 
-- Версия: 01fb813 Spend investigation report (spend.md in reports): OpenRouter key/account/activity, Kie balance, our cost records by day, kind, user
+- Версия: 5819dc8 Updates no longer spend money: paid service checks (agent test, web search, artist sound) run only on request
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова

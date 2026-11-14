@@ -1,18 +1,18 @@
-# Расходы — расследование 2026-11-14 01:08 UTC
+# Расходы — расследование 2026-11-14 01:15 UTC
 
 ## OpenRouter: что говорит сам OpenRouter
 ```
 Ключ NOVA (/key):
   label: sk-or-v1-de2...992
-  usage: 6.2088015
-  usage_daily: 1.17687125
-  usage_weekly: 6.2088015
-  usage_monthly: 6.2088015
+  usage: 6.299136
+  usage_daily: 1.26720575
+  usage_weekly: 6.299136
+  usage_monthly: 6.299136
   limit: None
   limit_remaining: None
   is_free_tier: False
 Весь аккаунт (/credits):
-   {'total_credits': 124, 'total_usage': 114.374617924}
+   {'total_credits': 124, 'total_usage': 114.464952424}
 Активность по дням и моделям (/activity, последние дни):
    {'error': {'message': 'Only management keys can fetch activity for an account', 'code': 403}}
 ```
