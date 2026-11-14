@@ -905,3 +905,14 @@ html.kb-open .gnav { opacity: 0; pointer-events: none; transform: translateX(-50
 @media (prefers-reduced-motion: reduce) { .odo-s, .dock-fill { transition: none; } .g-check { animation: none; } }
 
 .composer { position: relative; }      /* offsets of the field and buttons are measured from the box */
+
+/* ---------- studio prompt: compact line, opens while typing ---------- */
+.pbox { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 9px 9px 9px 14px; cursor: text; transition: border-color .2s; }
+.pbox textarea { flex: 1; min-width: 0; width: auto; min-height: 22px; padding: 2px 0; }
+.pbox .pbox-foot { margin-top: 0; min-height: 34px; }
+.pbox:not(.open) .pbox-foot:empty, .pbox:not(.open) .pbox-foot:not(:has(button)) { display: none; }
+.pbox.open { padding: 12px 12px 10px; cursor: auto; }
+.pbox.open textarea { flex-basis: 100%; min-height: 66px; padding: 2px 4px; font-size: 16px; line-height: 23px; }
+.pbox.open .pbox-foot { flex-basis: 100%; margin-top: 2px; }
+.pbox:not(.open) .att-add { width: 34px; padding: 0; justify-content: center; }
+.pbox:not(.open) .att-l { display: none; }

@@ -4,6 +4,7 @@ import { haptic } from "../tg.js";
 import { toast } from "./Toast.jsx";
 import { api, upload } from "../api.js";
 import { Dictation } from "../agent/voice.js";
+import { useFlip } from "./flip.js";
 
 const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 
@@ -39,37 +40,9 @@ export default function Composer({ value, onChange, onSend, busy, placeholder = 
     el.style.height = "auto"; el.style.height = Math.min(el.scrollHeight, open ? 220 : 140) + "px";
   }, [value, rec, open]);
 
-  // grow / fold as one motion: the box changes height while the field and the buttons glide from their old places to
-  // the new ones (FLIP: measure before and after, start from the old place with a transform, let it run to zero)
+  // grow / fold as one motion (see useFlip)
   const plusRef = useRef(null), segRef = useRef(null), sendRef = useRef(null);
-  const geo = useRef(null), anim = useRef(0);
-  const parts = () => [ref.current, plusRef.current, segRef.current, sendRef.current];
-  useLayoutEffect(() => {
-    const box = root.current, old = geo.current;
-    if (!box || !old || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
-    const h1 = box.offsetHeight;
-    if (Math.abs(h1 - old.h) < 2) return;
-    clearTimeout(anim.current);
-    const ease = "cubic-bezier(.22,.9,.25,1)", dur = 320;
-    box.style.transition = "none"; box.style.height = old.h + "px"; box.style.overflow = "hidden";
-    parts().forEach((el, i) => {
-      const o = old.pos[i]; if (!el || !o) return;
-      el.style.transition = "none"; el.style.transform = `translate(${o[0] - el.offsetLeft}px, ${o[1] - el.offsetTop}px)`;
-    });
-    void box.offsetHeight;
-    box.style.transition = `height ${dur}ms ${ease}`; box.style.height = h1 + "px";
-    parts().forEach((el) => { if (el) { el.style.transition = `transform ${dur}ms ${ease}`; el.style.transform = ""; } });
-    anim.current = setTimeout(() => {
-      box.style.transition = box.style.height = box.style.overflow = "";
-      parts().forEach((el) => { if (el) el.style.transition = ""; });
-    }, dur + 30);
-  }, [open, !!img, rec]);
-  // remembers where everything stands (offsets ignore transforms), as the starting point of the next change
-  useLayoutEffect(() => {
-    const box = root.current; if (!box) return;
-    geo.current = { h: box.style.height ? parseFloat(box.style.height) : box.offsetHeight,
-      pos: parts().map((el) => (el ? [el.offsetLeft, el.offsetTop] : null)) };
-  });
+  useFlip(root, () => [ref.current, plusRef.current, segRef.current, sendRef.current], [open, !!img, rec]);
   useEffect(() => () => { dict.current?.stop(); if (img?.preview) URL.revokeObjectURL(img.preview); }, []);   // eslint-disable-line
   useEffect(() => {
     if (rec !== "rec") return;

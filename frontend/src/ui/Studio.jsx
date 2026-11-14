@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useFlip, useStickyFocus } from "./flip.js";
 import Count from "./Count.jsx";
 import Icon from "./Icon.jsx";
 import { upload } from "../api.js";
@@ -60,11 +61,18 @@ export function Toggle({ label, sub, on, onChange }) {
     </button>);
 }
 
+const shortHint = (t = "") => { const m = t.split(/[:—,]/)[0].trim(); return m.length < t.length ? m + "…" : t; };
+
+/** The studio prompt: one compact line until you tap it; then it opens up (text above, photo and counter below)
+ *  with the same smooth motion as the home field. Stays open while it has text or a photo. */
 export function PromptBox({ value, onChange, placeholder, max, attach, onAttach, attachLabel = "Фото" }) {
-  const ref = useRef(null);
+  const ref = useRef(null), box = useRef(null), foot = useRef(null);
   const file = useRef(null);
   const [busy, setBusy] = useState(false);
-  useEffect(() => { const t = ref.current; if (t) { t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 220) + "px"; } }, [value]);
+  const [focus, setFocus] = useStickyFocus(box);
+  const open = focus || !!value.trim() || !!attach || busy;
+  useLayoutEffect(() => { const t = ref.current; if (t) { t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, open ? 220 : 66) + "px"; } }, [value, open]);
+  useFlip(box, () => [ref.current, foot.current], [open]);
   const pick = async (e) => {
     const f = e.target.files?.[0]; e.target.value = "";
     if (!f) return;
@@ -72,14 +80,17 @@ export function PromptBox({ value, onChange, placeholder, max, attach, onAttach,
     try { onAttach(await upload(f)); haptic("light"); } catch (er) { toast(er.message, "error"); } finally { setBusy(false); }
   };
   return (
-    <div className="pbox">
-      <textarea ref={ref} rows={3} value={value} maxLength={max} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} aria-label={placeholder} />
-      <div className="pbox-foot">
+    <div ref={box} className={"pbox" + (open ? " open" : "")} onFocus={() => setFocus(true)}
+      onMouseDown={(e) => { if (e.target.closest("button")) e.preventDefault(); }}
+      onClick={(e) => { if (!open && !e.target.closest("button")) ref.current?.focus(); }}>
+      <textarea ref={ref} rows={open ? 3 : 1} value={value} maxLength={max} placeholder={open ? placeholder : shortHint(placeholder)}
+        onChange={(e) => onChange(e.target.value)} aria-label={placeholder} />
+      <div ref={foot} className="pbox-foot">
         {onAttach && (attach
           ? <span className="att" style={{ backgroundImage: `url(${attach})` }}><button aria-label="Убрать фото" onClick={() => onAttach(null)}><Icon n="x" s={12} w={2.4} /></button></span>
-          : <button className="att-add" onClick={() => file.current?.click()} disabled={busy}><Icon n="clip" s={15} />{busy ? "Загружаю…" : attachLabel}</button>)}
+          : <button className="att-add" aria-label={attachLabel} onClick={() => file.current?.click()} disabled={busy}><Icon n="clip" s={15} /><span className="att-l">{busy ? "Загружаю…" : attachLabel}</span></button>)}
         <input ref={file} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={pick} />
-        {max && <span className="count">{value.length} / {max}</span>}
+        {max && open && <span className="count">{value.length} / {max}</span>}
       </div>
     </div>);
 }
