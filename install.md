@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-14 00:39 UTC
+# Установка NOVA 2026-11-14 00:54 UTC
 
-- Версия: 10f1f2e Tab bar: press and slide like Telegram — a glass lens follows the finger, release opens the tab
+- Версия: d6a4aa9 Walt-style package: promo banners, 3D art, invite page with coloured hero, profile balance hero, skeletons, ribbons, admin area chart
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
@@ -14,5 +14,6 @@
 
 - Статус: ok
 - Профиль бота: без изменений
+3D-картинки: 29 готово, 0 не скачалось
 - Автодеплой: включён — новые версии ставятся сами в течение минуты
 - Запуск: автодеплой
