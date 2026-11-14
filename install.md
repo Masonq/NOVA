@@ -1,6 +1,6 @@
-# Установка NOVA 2026-11-14 00:26 UTC
+# Установка NOVA 2026-11-14 00:30 UTC
 
-- Версия: 371f98c Composer: grow and fold as one smooth motion (FLIP), no one-frame hitch
+- Версия: 04ccd77 Studios: compact prompt line that opens while typing, same smooth motion as home
 - Оплата криптой: токена нет
 - ЮKassa: ключи есть (магазин 1410333)
 - База данных: готова
